@@ -41,7 +41,7 @@ class TdGroup(click.Group):
         return OutputMode.JSON
 
 
-@click.group(cls=TdGroup)
+@click.group(cls=TdGroup, context_settings={"help_option_names": ["-h", "--help"]})
 @click.option("--json", "output_json", is_flag=True, help="Force JSON output.")
 @click.option("--plain", is_flag=True, help="Force plain text output (no color).")
 @click.version_option(version=__version__, prog_name="td")
