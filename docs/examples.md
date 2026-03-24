@@ -9,7 +9,7 @@ Auto-generated example output for every td command.
 
 ```
 $ td --help
-Usage: cli [OPTIONS] COMMAND [ARGS]...
+Usage: td [OPTIONS] COMMAND [ARGS]...
 
   td — AI-native Todoist CLI.
 
@@ -881,7 +881,7 @@ Try `td ls` to see your tasks.
 
 ```
 $ td add --help
-Usage: cli add [OPTIONS] CONTENT...
+Usage: td add [OPTIONS] CONTENT...
 
   Create a new task.
 
@@ -908,7 +908,7 @@ Options:
 
 ```
 $ td ls --help
-Usage: cli ls [OPTIONS]
+Usage: td ls [OPTIONS]
 
   List tasks.
 
@@ -932,7 +932,7 @@ Options:
 
 ```
 $ td done --help
-Usage: cli done [OPTIONS] TASK_ID
+Usage: td done [OPTIONS] TASK_ID
 
   Complete a task.
 
@@ -953,7 +953,7 @@ Options:
 
 ```
 $ td edit --help
-Usage: cli edit [OPTIONS] TASK_ID
+Usage: td edit [OPTIONS] TASK_ID
 
   Update a task.
 
@@ -979,7 +979,7 @@ Options:
 
 ```
 $ td delete --help
-Usage: cli delete [OPTIONS] TASK_ID
+Usage: td delete [OPTIONS] TASK_ID
 
   Delete a task.
 
@@ -1001,7 +1001,7 @@ Options:
 
 ```
 $ td quick --help
-Usage: cli quick [OPTIONS] TEXT...
+Usage: td quick [OPTIONS] TEXT...
 
   Natural language task creation.
 
@@ -1024,7 +1024,7 @@ Options:
 
 ```
 $ td inbox --help
-Usage: cli inbox [OPTIONS]
+Usage: td inbox [OPTIONS]
 
   Show unprocessed inbox tasks.
 
@@ -1045,7 +1045,7 @@ Options:
 
 ```
 $ td projects --help
-Usage: cli projects [OPTIONS]
+Usage: td projects [OPTIONS]
 
   List all projects.
 
@@ -1067,7 +1067,7 @@ Options:
 
 ```
 $ td sections --help
-Usage: cli sections [OPTIONS]
+Usage: td sections [OPTIONS]
 
   List sections in a project.
 
@@ -1089,7 +1089,7 @@ Options:
 
 ```
 $ td labels --help
-Usage: cli labels [OPTIONS]
+Usage: td labels [OPTIONS]
 
   List all labels.
 
@@ -1111,7 +1111,7 @@ Options:
 
 ```
 $ td schema --help
-Usage: cli schema [OPTIONS]
+Usage: td schema [OPTIONS]
 
   Output full capability manifest as JSON.
 

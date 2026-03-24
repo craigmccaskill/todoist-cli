@@ -8,19 +8,16 @@ in Rich, JSON, and Plain modes. Writes results to docs/examples.md.
 from __future__ import annotations
 
 import json
-import sys
-from io import StringIO
 from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
-from rich.console import Console
 
 from td.cli import cli
-
 
 # ---------------------------------------------------------------------------
 # Mock data factories
 # ---------------------------------------------------------------------------
+
 
 def _make_task(
     id: str = "8bx9a0c2",
@@ -155,17 +152,21 @@ LABELS = [
 # Runner helpers
 # ---------------------------------------------------------------------------
 
+
 def run_cmd(args: list[str], api: MagicMock | None = None) -> str:
     """Run a CLI command and return the output."""
     runner = CliRunner()
+    invoke_kwargs = {"args": args, "prog_name": "td"}
     if api:
-        with patch("td.cli.tasks.get_client", return_value=api), \
-             patch("td.cli.projects.get_client", return_value=api), \
-             patch("td.cli.sections.get_client", return_value=api), \
-             patch("td.cli.labels.get_client", return_value=api):
-            result = runner.invoke(cli, args)
+        with (
+            patch("td.cli.tasks.get_client", return_value=api),
+            patch("td.cli.projects.get_client", return_value=api),
+            patch("td.cli.sections.get_client", return_value=api),
+            patch("td.cli.labels.get_client", return_value=api),
+        ):
+            result = runner.invoke(cli, **invoke_kwargs)
     else:
-        result = runner.invoke(cli, args)
+        result = runner.invoke(cli, **invoke_kwargs)
     return result.output
 
 
@@ -190,6 +191,7 @@ def make_api() -> MagicMock:
 # ---------------------------------------------------------------------------
 # Generate examples
 # ---------------------------------------------------------------------------
+
 
 def generate() -> str:
     lines: list[str] = []
@@ -237,13 +239,30 @@ def generate() -> str:
     example("Show inbox tasks.", "td --json inbox", output)
 
     # --- td add ---
-    output = run_cmd(
-        ["--json", "add", "Review PR for auth module", "-p", "Work", "--priority", "1", "-d", "tomorrow", "-l", "work", "-l", "code-review"],
-        make_api(),
+    add_args = [
+        "--json",
+        "add",
+        "Review PR for auth module",
+        "-p",
+        "Work",
+        "--priority",
+        "1",
+        "-d",
+        "tomorrow",
+        "-l",
+        "work",
+        "-l",
+        "code-review",
+    ]
+    output = run_cmd(add_args, make_api())
+    add_cmd = (
+        "td --json add "
+        '"Review PR for auth module" '
+        "-p Work --priority 1 -d tomorrow -l work -l code-review"
     )
     example(
         "Create a task with project, priority, due date, and labels.",
-        'td --json add "Review PR for auth module" -p Work --priority 1 -d tomorrow -l work -l code-review',
+        add_cmd,
         output,
     )
 
@@ -274,15 +293,28 @@ def generate() -> str:
     example("Complete a task.", "td --json done 8bx9a0c2", output)
 
     # --- td edit ---
-    output = run_cmd(
-        ["--json", "edit", "8bx9a0c2", "--content", "Review PR for auth module (updated)", "--priority", "2"],
-        make_api(),
+    edit_args = [
+        "--json",
+        "edit",
+        "8bx9a0c2",
+        "--content",
+        "Review PR for auth module (updated)",
+        "--priority",
+        "2",
+    ]
+    output = run_cmd(edit_args, make_api())
+    edit_cmd = (
+        'td --json edit 8bx9a0c2 --content "Review PR for auth module (updated)" --priority 2'
     )
-    example("Update a task.", 'td --json edit 8bx9a0c2 --content "Review PR for auth module (updated)" --priority 2', output)
+    example("Update a task.", edit_cmd, output)
 
     # --- td delete ---
     output = run_cmd(["--json", "delete", "8bx9a0c2", "--yes"], make_api())
-    example("Delete a task (with --yes to skip confirmation).", "td --json delete 8bx9a0c2 --yes", output)
+    example(
+        "Delete a task (with --yes to skip confirmation).",
+        "td --json delete 8bx9a0c2 --yes",
+        output,
+    )
 
     # --- td projects ---
     heading("Organization Commands")
@@ -333,15 +365,34 @@ def generate() -> str:
     example(
         "Interactive authentication setup (prompts for token).",
         "td init",
-        "Get your API token from: https://app.todoist.com/app/settings/integrations/developer\n\nAPI token: ********\nValidating token...\nAuthenticated. Found 4 project(s).\n\nConfig saved to ~/.config/td/config.toml\nTry `td ls` to see your tasks.",
+        "Get your API token from: "
+        "https://app.todoist.com/app/settings/integrations/developer"
+        "\n\nAPI token: ********"
+        "\nValidating token..."
+        "\nAuthenticated. Found 4 project(s)."
+        "\n\nConfig saved to ~/.config/td/config.toml"
+        "\nTry `td ls` to see your tasks.",
     )
 
     # --- Individual command help ---
     heading("Command Help")
 
-    for cmd in ["add", "ls", "done", "edit", "delete", "quick", "inbox", "projects", "sections", "labels", "schema"]:
+    cmds = [
+        "add",
+        "ls",
+        "done",
+        "edit",
+        "delete",
+        "quick",
+        "inbox",
+        "projects",
+        "sections",
+        "labels",
+        "schema",
+    ]
+    for cmd in cmds:
         output = run_cmd([cmd, "--help"])
-        example(f"", f"td {cmd} --help", output)
+        example("", f"td {cmd} --help", output)
 
     return "\n".join(lines)
 

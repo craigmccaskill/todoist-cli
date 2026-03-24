@@ -11,6 +11,12 @@ Prioritized list of features and improvements beyond the Tier 1 MVP.
 - [ ] `td log` — End-of-day review: show tasks completed today/this week
 - [ ] `td focus <project>` — Show only tasks for one project, sorted by priority
 
+### UX Improvements
+- [ ] `td undo <id>` — Uncomplete a task (SDK has `uncomplete_task()`)
+- [ ] Change `td ls` default to show today + overdue only (add `--all` for everything)
+- [ ] Document priority mapping clearly (user-facing: 1=urgent, API: 4=urgent) in help text and README
+- [ ] Reconsider priority display in plain mode — `p1`/`p4` is confusing vs Todoist's native numbering
+
 ### Power Features (from original brief)
 - [ ] `td quick` improvements — already in Tier 1, but could add `td quick` with stdin pipe support
 - [ ] `td interactive` / `td i` — TUI for reviewing/processing inbox (rich or textual)

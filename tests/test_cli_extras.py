@@ -36,9 +36,7 @@ class TestEditCommand:
         api.update_task.return_value = _mock_task(content="Updated")
 
         runner = CliRunner()
-        result = runner.invoke(
-            cli, ["--json", "edit", "t1", "--content", "Updated"]
-        )
+        result = runner.invoke(cli, ["--json", "edit", "t1", "--content", "Updated"])
 
         assert result.exit_code == 0
         data = json.loads(result.output)
@@ -51,9 +49,7 @@ class TestEditCommand:
         api.update_task.return_value = _mock_task()
 
         runner = CliRunner()
-        result = runner.invoke(
-            cli, ["--json", "edit", "t1", "--priority", "1"]
-        )
+        result = runner.invoke(cli, ["--json", "edit", "t1", "--priority", "1"])
 
         assert result.exit_code == 0
         # Priority 1 (user) = 4 (API)
@@ -119,9 +115,7 @@ class TestAddWithProject:
         api.add_task.return_value = _mock_task()
 
         runner = CliRunner()
-        result = runner.invoke(
-            cli, ["--json", "add", "Test", "-p", "Work"]
-        )
+        result = runner.invoke(cli, ["--json", "add", "Test", "-p", "Work"])
 
         assert result.exit_code == 0
         _, kwargs = api.add_task.call_args
