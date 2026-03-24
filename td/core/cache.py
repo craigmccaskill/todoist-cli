@@ -42,7 +42,8 @@ def load_result_cache(max_age: int = 600) -> dict[str, str]:
         data = json.loads(path.read_text())
         if time.time() - data.get("timestamp", 0) > max_age:
             return {}
-        return data.get("ids", {})
+        ids: dict[str, str] = data.get("ids", {})
+        return ids
     except (json.JSONDecodeError, KeyError):
         return {}
 
@@ -100,6 +101,7 @@ def load_name_cache(max_age: int = 300) -> dict[str, Any]:
         data = json.loads(path.read_text())
         if time.time() - data.get("timestamp", 0) > max_age:
             return {}
-        return data
+        result: dict[str, Any] = data
+        return result
     except (json.JSONDecodeError, KeyError):
         return {}
