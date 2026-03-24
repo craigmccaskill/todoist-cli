@@ -26,7 +26,7 @@ class TestInit:
         monkeypatch.setattr("td.cli.config_cmd.TodoistAPI", lambda token: mock_api)
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["init"], input="test-token-123\n")
+        result = runner.invoke(cli, ["init"], input="test-token-123\n1\n")
 
         assert result.exit_code == 0
         assert "Authenticated" in result.output
