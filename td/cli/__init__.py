@@ -60,7 +60,7 @@ def cli(ctx: click.Context, output_json: bool, plain: bool) -> None:
 def _register_commands() -> None:
     from td.cli.config_cmd import completions, init
     from td.cli.labels import labels
-    from td.cli.projects import projects
+    from td.cli.projects import project_add, projects
     from td.cli.schema_cmd import schema
     from td.cli.sections import sections
     from td.cli.tasks import add, delete, done, edit, inbox, ls, quick, undo
@@ -77,6 +77,7 @@ def _register_commands() -> None:
     cli.add_command(quick)
     cli.add_command(undo)
     cli.add_command(projects)
+    cli.add_command(project_add)
     cli.add_command(sections)
     cli.add_command(labels)
 

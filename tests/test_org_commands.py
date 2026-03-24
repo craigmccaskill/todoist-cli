@@ -71,6 +71,55 @@ class TestProjectsCommand:
         assert len(data["data"]) == 1
 
 
+class TestProjectAddCommand:
+    @patch("td.cli.projects.get_client")
+    def test_creates_project(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        proj = _mock_project(name="New Project", id="p99")
+        api.add_project.return_value = proj
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "project-add", "New", "Project"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["ok"] is True
+        assert data["data"]["name"] == "New Project"
+        api.add_project.assert_called_once()
+
+    @patch("td.cli.projects.get_client")
+    def test_creates_with_parent(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        parent = _mock_project(name="Work", id="p1")
+        api.get_projects.return_value = iter([[parent]])
+        child = _mock_project(name="Sub Project", id="p99")
+        api.add_project.return_value = child
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli, ["--json", "project-add", "Sub", "Project", "--parent", "Work"]
+        )
+
+        assert result.exit_code == 0
+        _, kwargs = api.add_project.call_args
+        assert kwargs["parent_id"] == "p1"
+
+    @patch("td.cli.projects.get_client")
+    def test_creates_favorite(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.add_project.return_value = _mock_project(name="Fav", is_favorite=True)
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "project-add", "Fav", "--favorite"])
+
+        assert result.exit_code == 0
+        _, kwargs = api.add_project.call_args
+        assert kwargs["is_favorite"] is True
+
+
 class TestSectionsCommand:
     @patch("td.cli.sections.get_client")
     def test_lists_sections(self, mock_gc: MagicMock) -> None:

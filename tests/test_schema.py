@@ -34,6 +34,7 @@ class TestSchemaCommand:
             "inbox",
             "quick",
             "undo",
+            "project-add",
             "projects",
             "sections",
             "labels",
