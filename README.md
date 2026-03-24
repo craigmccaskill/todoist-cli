@@ -1,23 +1,25 @@
 # td — AI-Native Todoist CLI
 
 [![CI](https://github.com/craigmccaskill/todoist-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/craigmccaskill/todoist-cli/actions/workflows/ci.yml)
-[![PyPI version](https://img.shields.io/pypi/v/todoist-cli.svg)](https://pypi.org/project/todoist-cli/)
-[![Python versions](https://img.shields.io/pypi/pyversions/todoist-cli.svg)](https://pypi.org/project/todoist-cli/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![codecov](https://codecov.io/gh/craigmccaskill/todoist-cli/branch/main/graph/badge.svg)](https://codecov.io/gh/craigmccaskill/todoist-cli)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
-A modern Todoist CLI built on REST API v2, designed for both humans and AI agents.
+> A modern Todoist CLI built on REST API v2, designed for both humans and AI agents.
 
-<!-- TODO: Add terminal demo GIF here -->
+**Status:** Alpha — feature-complete for core task management. [See the roadmap.](https://github.com/users/craigmccaskill/projects/1)
+
+<!-- TODO: Replace with terminal recording -->
 <!-- ![td demo](docs/demo.gif) -->
 
-## Why td?
+## Features
 
-- **sachaos/todoist** (~1.4k stars) is semi-abandoned and uses the deprecated Sync API
-- **MCP integrations** are plagued by auth flakiness and burn excessive tokens on simple operations
-- **No existing CLI is AI-discoverable** — agents can't introspect capabilities, errors are unstructured, output assumes a human reader
-
-**td** is the first CLI designed with AI discoverability as a first-class concern.
+- **TTY-aware output** — pretty tables for humans, structured JSON when piped. No flags needed.
+- **Capability manifest** — `td schema` dumps every command, argument, and option as JSON. An agent calls it once and knows everything.
+- **Structured errors** — machine-readable error codes and actionable suggestions on stderr.
+- **Idempotent operations** — `--idempotent` flag prevents duplicate task creation, solving the #1 agent failure mode.
+- **Natural language input** — `td quick "Buy milk tomorrow p1 #Errands"` parsed by Todoist's engine.
+- **Three output modes** — Rich (terminal), JSON (agents/pipes), Plain (cut/awk).
+- **Library-first architecture** — CLI and future MCP server are thin frontends over the same tested core.
 
 ## Install
 
@@ -63,7 +65,7 @@ td is built for AI agents as a first-class use case.
 
 ### Automatic JSON output
 
-When stdout is not a TTY (i.e., piped or called by an agent), td outputs structured JSON automatically. No flags needed.
+When stdout is not a TTY (i.e., piped or called by an agent), td outputs structured JSON automatically:
 
 ```bash
 # Human in terminal sees a pretty table
@@ -73,10 +75,10 @@ td ls
 td ls | jq '.data[].content'
 ```
 
-You can also force output format:
+Force a specific format:
 
 ```bash
-td ls --json     # Force JSON even in TTY
+td ls --json     # JSON even in TTY
 td ls --plain    # Tab-separated, no color — for cut/awk
 ```
 
@@ -109,34 +111,26 @@ Errors go to stderr as structured JSON with codes and actionable suggestions:
 td add "Deploy v2.1" -p Releases --idempotent
 ```
 
-Returns the existing task if identical content already exists in the project. Prevents the most common agent failure mode.
+Returns the existing task if identical content already exists. The JSON response includes `"created": false` so agents know no duplicate was made.
 
-## Configuration
+## Architecture
 
-Config lives at `~/.config/td/config.toml` (respects `XDG_CONFIG_HOME`).
-
-```toml
-[auth]
-api_token = "your-todoist-api-token"
+```
+td/
+  core/       # Pure business logic — no CLI dependency
+    tasks.py, projects.py, labels.py, sections.py, config.py, client.py
+  cli/        # Thin Click frontend
+    tasks.py, projects.py, labels.py, sections.py, output.py, errors.py
+  schema.py   # Click command tree → JSON capability manifest
 ```
 
-You can also set `TD_API_TOKEN` as an environment variable (preferred for agents and CI).
-
-## Shell Completions
-
-```bash
-# Generate completion script
-td completions zsh   # or bash, fish
-
-# Add to your shell profile
-eval "$(td completions zsh)"
-```
+The core is a library. The CLI is one frontend. An MCP server ([planned](https://github.com/craigmccaskill/todoist-cli/issues/27)) will be another — same logic, different protocol.
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `td add` | Create a task |
+| `td add` | Create a task (with project, priority, due date, labels) |
 | `td quick` | Natural language task creation |
 | `td ls` | List and filter tasks |
 | `td inbox` | Show unprocessed inbox tasks |
@@ -148,7 +142,30 @@ eval "$(td completions zsh)"
 | `td labels` | List labels |
 | `td schema` | Output capability manifest (JSON) |
 | `td init` | Set up authentication |
-| `td completions` | Generate shell completions |
+| `td completions` | Generate shell completions (bash/zsh/fish) |
+
+See [docs/examples.md](docs/examples.md) for full output examples of every command.
+
+## Configuration
+
+Config lives at `~/.config/td/config.toml` (respects `XDG_CONFIG_HOME`).
+
+```toml
+[auth]
+api_token = "your-todoist-api-token"
+```
+
+Or set `TD_API_TOKEN` as an environment variable (preferred for agents and CI).
+
+## Why td?
+
+Existing options are broken:
+
+- **sachaos/todoist** (~1.4k stars) — semi-abandoned, uses the deprecated Sync API
+- **MCP integrations** — auth flakiness, excessive token usage for simple operations
+- **Every other CLI** — unstructured output, no introspection, agents can't self-discover capabilities
+
+td closes the gap: a maintained, fast CLI where AI discoverability is a design constraint, not an afterthought.
 
 ## Contributing
 
