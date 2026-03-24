@@ -82,14 +82,18 @@ def add(
 @click.option("-p", "--project", "project_name", help="Filter by project.")
 @click.option("-l", "--label", help="Filter by label.")
 @click.option("-f", "--filter", "query", help="Todoist filter query.")
+@click.option("--all", "show_all", is_flag=True, help="Show all tasks (default: today + overdue).")
+@click.option("--ids", is_flag=True, help="Output only task IDs, one per line. For piping.")
 @click.pass_context
 def ls(
     ctx: click.Context,
     project_name: str | None,
     label: str | None,
     query: str | None,
+    show_all: bool,
+    ids: bool,
 ) -> None:
-    """List tasks."""
+    """List tasks. Defaults to today + overdue unless filtered."""
     api = get_client()
     fmt = _get_formatter(ctx)
 
@@ -97,13 +101,22 @@ def ls(
     if project_name:
         project_id = resolve_project(api, project_name).id
 
+    # Default to today + overdue when no filters specified
+    if not query and not project_name and not label and not show_all:
+        query = "overdue | today"
+
     tasks = list_tasks(
         api,
         project_id=project_id,
         label=label,
         filter_query=query,
     )
-    fmt.task_list(tasks)
+
+    if ids:
+        for task in tasks:
+            click.echo(task.id)
+    else:
+        fmt.task_list(tasks)
 
 
 @click.command()

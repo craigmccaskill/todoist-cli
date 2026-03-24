@@ -181,18 +181,44 @@ class TestCliCommands:
         assert data["data"]["created"] is True
 
     @patch("td.cli.tasks.get_client")
-    def test_ls_command(self, mock_gc: MagicMock) -> None:
+    def test_ls_default_today(self, mock_gc: MagicMock) -> None:
         api = MagicMock()
         mock_gc.return_value = api
-        api.get_tasks.return_value = iter([[_mock_task(), _mock_task()]])
+        api.filter_tasks.return_value = iter([[_mock_task(), _mock_task()]])
 
         runner = CliRunner()
         result = runner.invoke(cli, ["--json", "ls"])
 
         assert result.exit_code == 0
+        api.filter_tasks.assert_called_once_with(query="overdue | today")
         data = json.loads(result.output)
         assert data["type"] == "task_list"
         assert len(data["data"]) == 2
+
+    @patch("td.cli.tasks.get_client")
+    def test_ls_ids_flag(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.filter_tasks.return_value = iter([[_mock_task(id="t1"), _mock_task(id="t2")]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["ls", "--ids"])
+
+        assert result.exit_code == 0
+        lines = result.output.strip().split("\n")
+        assert lines == ["t1", "t2"]
+
+    @patch("td.cli.tasks.get_client")
+    def test_ls_all_flag(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_tasks.return_value = iter([[_mock_task()]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "ls", "--all"])
+
+        assert result.exit_code == 0
+        api.get_tasks.assert_called_once()
 
     @patch("td.cli.tasks.get_client")
     @patch("td.cli.tasks.get_inbox_project")

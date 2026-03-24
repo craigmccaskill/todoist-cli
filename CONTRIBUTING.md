@@ -30,7 +30,7 @@ ruff format --check .
 # Type check
 mypy td/
 
-# Tests
+# Tests (CI enforces 85% minimum coverage)
 pytest
 
 # All at once
