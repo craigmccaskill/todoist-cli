@@ -44,6 +44,22 @@ def resolve_project(api: TodoistAPI, name_or_id: str) -> Project:
     )
 
 
+def create_project(
+    api: TodoistAPI,
+    name: str,
+    *,
+    parent_id: str | None = None,
+    is_favorite: bool = False,
+) -> Project:
+    """Create a new project."""
+    kwargs: dict[str, object] = {}
+    if parent_id:
+        kwargs["parent_id"] = parent_id
+    if is_favorite:
+        kwargs["is_favorite"] = True
+    return api.add_project(name, **kwargs)  # type: ignore[arg-type]
+
+
 def get_inbox_project(api: TodoistAPI) -> Project:
     """Find the Inbox project."""
     projects = _collect_projects(api)
