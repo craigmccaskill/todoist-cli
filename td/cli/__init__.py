@@ -63,7 +63,20 @@ def _register_commands() -> None:
     from td.cli.projects import project_add, projects
     from td.cli.schema_cmd import schema
     from td.cli.sections import sections
-    from td.cli.tasks import add, delete, done, edit, inbox, ls, quick, undo
+    from td.cli.tasks import (
+        add,
+        delete,
+        done,
+        edit,
+        focus,
+        inbox,
+        log,
+        ls,
+        next_task,
+        quick,
+        today,
+        undo,
+    )
 
     cli.add_command(init)
     cli.add_command(completions)
@@ -71,6 +84,10 @@ def _register_commands() -> None:
     cli.add_command(add)
     cli.add_command(ls)
     cli.add_command(inbox)
+    cli.add_command(today)
+    cli.add_command(next_task)
+    cli.add_command(log)
+    cli.add_command(focus)
     cli.add_command(done)
     cli.add_command(edit)
     cli.add_command(delete)
