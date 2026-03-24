@@ -19,7 +19,8 @@
 - **Idempotent operations** — `--idempotent` flag prevents duplicate task creation, solving the #1 agent failure mode.
 - **Natural language input** — `td quick "Buy milk tomorrow p1 #Errands"` parsed by Todoist's engine.
 - **Three output modes** — Rich (terminal), JSON (agents/pipes), Plain (cut/awk).
-- **Library-first architecture** — CLI and future MCP server are thin frontends over the same tested core.
+- **Library-first architecture** — CLI and [planned MCP server](https://github.com/craigmccaskill/todoist-cli/issues/27) are thin frontends over the same tested core.
+- **MCP alternative** — same task management capabilities without the auth flakiness and token overhead of existing MCP integrations.
 
 ## Install
 
@@ -61,7 +62,13 @@ td delete <task-id>
 
 ## AI / Agent Usage
 
-td is built for AI agents as a first-class use case.
+td is built for AI agents as a first-class use case — and a lightweight alternative to MCP for Todoist integration.
+
+### Why not MCP?
+
+MCP servers for Todoist exist, but they suffer from auth flakiness, excessive token consumption, and opaque error handling. td gives agents the same capabilities through a simpler interface: structured JSON over stdout/stderr, a self-describing schema, and idempotent operations. No persistent connection, no protocol overhead.
+
+An [MCP server mode](https://github.com/craigmccaskill/todoist-cli/issues/27) is planned as a thin frontend over the same core — giving you both options from one tool.
 
 ### Automatic JSON output
 
