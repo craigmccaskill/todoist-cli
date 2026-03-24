@@ -17,6 +17,7 @@ from td.core.tasks import (
     list_tasks,
     quick_add,
     remove_task,
+    uncomplete_task,
 )
 
 
@@ -30,7 +31,7 @@ def _get_formatter(ctx: click.Context) -> OutputFormatter:
 @click.option(
     "--priority",
     type=click.IntRange(1, 4),
-    help="Priority 1-4 (1=urgent).",
+    help="Priority: 1=urgent, 2=high, 3=medium, 4=low.",
 )
 @click.option("-d", "--due", help="Due date (e.g., 'tomorrow', '2026-04-01').")
 @click.option("-l", "--label", "labels", multiple=True, help="Label (repeatable).")
@@ -131,11 +132,23 @@ def done(ctx: click.Context, task_id: str) -> None:
 
 @click.command()
 @click.argument("task_id")
+@click.pass_context
+def undo(ctx: click.Context, task_id: str) -> None:
+    """Reopen a completed task."""
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    uncomplete_task(api, task_id)
+    fmt.success(f"Reopened task {task_id}", {"task_id": task_id})
+
+
+@click.command()
+@click.argument("task_id")
 @click.option("--content", help="New content.")
 @click.option(
     "--priority",
     type=click.IntRange(1, 4),
-    help="Priority 1-4 (1=urgent).",
+    help="Priority: 1=urgent, 2=high, 3=medium, 4=low.",
 )
 @click.option("-d", "--due", help="New due date.")
 @click.option("-l", "--label", "labels", multiple=True, help="Labels (repeatable).")

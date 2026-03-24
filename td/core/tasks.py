@@ -126,6 +126,12 @@ def remove_task(api: TodoistAPI, task_id: str) -> bool:
     return True
 
 
+def uncomplete_task(api: TodoistAPI, task_id: str) -> bool:
+    """Reopen a completed task."""
+    api.uncomplete_task(task_id)
+    return True
+
+
 def quick_add(api: TodoistAPI, text: str) -> Task:
     """Natural language task creation via Todoist's quick-add."""
     return api.add_task_quick(text)

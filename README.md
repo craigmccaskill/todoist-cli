@@ -36,7 +36,7 @@ Requires Python 3.10+.
 # Set up authentication
 td init
 
-# Add a task
+# Add a task (priority: 1=urgent, 2=high, 3=medium, 4=low)
 td add "Review PR for auth module" -p Work --priority 1 -d tomorrow
 
 # Natural language quick add
@@ -52,6 +52,9 @@ td inbox
 
 # Complete a task
 td done <task-id>
+
+# Reopen a completed task
+td undo <task-id>
 
 # Edit a task
 td edit <task-id> --due "next monday"
@@ -137,11 +140,12 @@ The core is a library. The CLI is one frontend. An MCP server ([planned](https:/
 
 | Command | Description |
 |---------|-------------|
-| `td add` | Create a task (with project, priority, due date, labels) |
+| `td add` | Create a task (with project, priority 1-4, due date, labels) |
 | `td quick` | Natural language task creation |
 | `td ls` | List and filter tasks |
 | `td inbox` | Show unprocessed inbox tasks |
 | `td done` | Complete a task |
+| `td undo` | Reopen a completed task |
 | `td edit` | Update a task |
 | `td delete` | Delete a task |
 | `td projects` | List projects |

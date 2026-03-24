@@ -20,11 +20,34 @@ class OutputMode(Enum):
     PLAIN = "plain"
 
 
-def resolve_output_mode(output_json: bool, plain: bool, color: bool = True) -> OutputMode:
-    """Determine output mode from flags and TTY detection."""
+_FORMAT_MAP = {
+    "json": OutputMode.JSON,
+    "plain": OutputMode.PLAIN,
+    "rich": OutputMode.RICH,
+}
+
+
+def resolve_output_mode(
+    output_json: bool,
+    plain: bool,
+    color: bool = True,
+    default_format: str | None = None,
+) -> OutputMode:
+    """Determine output mode from flags, config, and TTY detection.
+
+    Resolution order (most specific wins):
+    1. --json / --plain flags
+    2. default_format (from TD_FORMAT env or config.toml)
+    3. NO_COLOR / color setting
+    4. TTY detection
+    """
     if output_json:
         return OutputMode.JSON
-    if plain or not color:
+    if plain:
+        return OutputMode.PLAIN
+    if default_format and default_format.lower() in _FORMAT_MAP:
+        return _FORMAT_MAP[default_format.lower()]
+    if not color:
         return OutputMode.PLAIN
     if not sys.stdout.isatty():
         return OutputMode.JSON
