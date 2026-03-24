@@ -229,9 +229,7 @@ def log(ctx: click.Context, week: bool) -> None:
 
     completed = [
         t
-        for page in api.get_completed_tasks_by_completion_date(
-            since=since, until=now
-        )
+        for page in api.get_completed_tasks_by_completion_date(since=since, until=now)
         for t in page
     ]
     fmt.task_list(completed, title=title)
