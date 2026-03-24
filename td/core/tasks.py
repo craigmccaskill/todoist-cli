@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from typing import Any
 
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Task
@@ -15,23 +16,30 @@ def _collect(iterator: Iterator[list[Task]]) -> list[Task]:
     return [item for page in iterator for item in page]
 
 
-def _key_priority(t: Task) -> tuple[int, tuple[int, str]]:
-    return (-t.priority, _due_sort_key(t))
+def _due_sort_value(task: Task) -> tuple[int, str]:
+    """Sort key for due dates. No date sorts last."""
+    if task.due is None:
+        return (1, "9999-99-99")
+    return (0, str(task.due.date) if task.due.date else "9999-99-99")
 
 
-def _key_due(t: Task) -> tuple[tuple[int, str], int]:
-    return (_due_sort_key(t), -t.priority)
+def _key_priority(t: Task) -> Any:
+    return (-t.priority, _due_sort_value(t))
 
 
-def _key_project(t: Task) -> tuple[str, int]:
+def _key_due(t: Task) -> Any:
+    return (_due_sort_value(t), -t.priority)
+
+
+def _key_project(t: Task) -> Any:
     return (t.project_id or "", -t.priority)
 
 
-def _key_created(t: Task) -> str:
+def _key_created(t: Task) -> Any:
     return t.id
 
 
-_SORT_KEYS = {
+_SORT_KEYS: dict[str, Callable[[Task], Any]] = {
     "priority": _key_priority,
     "due": _key_due,
     "project": _key_project,
@@ -53,13 +61,6 @@ def sort_tasks(
     """
     key = _SORT_KEYS.get(sort_by, _key_priority)
     return sorted(tasks, key=key, reverse=reverse)
-
-
-def _due_sort_key(task: Task) -> tuple[int, str]:
-    """Sort key for due dates. No date sorts last."""
-    if task.due is None:
-        return (1, "9999-99-99")
-    return (0, task.due.date or "9999-99-99")
 
 
 def create_task(
