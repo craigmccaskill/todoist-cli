@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 
 import click
@@ -44,9 +45,10 @@ class TdGroup(click.Group):
 @click.group(cls=TdGroup, context_settings={"help_option_names": ["-h", "--help"]})
 @click.option("--json", "output_json", is_flag=True, help="Force JSON output.")
 @click.option("--plain", is_flag=True, help="Force plain text output (no color).")
+@click.option("--debug", is_flag=True, help="Show API request details on stderr.")
 @click.version_option(version=__version__, prog_name="td")
 @click.pass_context
-def cli(ctx: click.Context, output_json: bool, plain: bool) -> None:
+def cli(ctx: click.Context, output_json: bool, plain: bool, debug: bool) -> None:
     """td — AI-native Todoist CLI."""
     ctx.ensure_object(dict)
     config = load_config()
@@ -54,6 +56,16 @@ def cli(ctx: click.Context, output_json: bool, plain: bool) -> None:
         output_json, plain, color=config.color, default_format=config.default_format
     )
     ctx.obj["formatter"] = OutputFormatter(mode)
+
+    if debug or os.environ.get("TD_DEBUG"):
+        import logging
+
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="%(levelname)s: %(message)s",
+            stream=sys.stderr,
+        )
+        logging.getLogger("urllib3").setLevel(logging.DEBUG)
 
 
 # Register subcommands (imported here to avoid circular imports)
@@ -65,6 +77,7 @@ def _register_commands() -> None:
     from td.cli.sections import sections
     from td.cli.tasks import (
         add,
+        capture,
         delete,
         done,
         edit,
@@ -92,6 +105,7 @@ def _register_commands() -> None:
     cli.add_command(edit)
     cli.add_command(delete)
     cli.add_command(quick)
+    cli.add_command(capture)
     cli.add_command(undo)
     cli.add_command(projects)
     cli.add_command(project_add)
