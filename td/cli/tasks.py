@@ -320,33 +320,39 @@ def focus(
 
 
 @click.command()
-@click.argument("task_id")
+@click.argument("task_ref", nargs=-1, required=True)
 @click.pass_context
-def done(ctx: click.Context, task_id: str) -> None:
-    """Complete a task. Accepts row number, content match, or task ID."""
+def done(ctx: click.Context, task_ref: tuple[str, ...]) -> None:
+    """Complete a task. Accepts row number, content match, or task ID.
+
+    Examples: td done 1 | td done buy milk | td done 8bx9a0c2
+    """
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = _resolve_task(task_id, api)
+    task_id = _resolve_task(" ".join(task_ref), api)
 
     complete_task(api, task_id)
     fmt.success(f"Completed task {task_id}", {"task_id": task_id})
 
 
 @click.command()
-@click.argument("task_id")
+@click.argument("task_ref", nargs=-1, required=True)
 @click.pass_context
-def undo(ctx: click.Context, task_id: str) -> None:
-    """Reopen a completed task. Accepts row number, content match, or task ID."""
+def undo(ctx: click.Context, task_ref: tuple[str, ...]) -> None:
+    """Reopen a completed task. Accepts row number, content match, or task ID.
+
+    Examples: td undo 1 | td undo buy milk | td undo 8bx9a0c2
+    """
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = _resolve_task(task_id, api)
+    task_id = _resolve_task(" ".join(task_ref), api)
 
     uncomplete_task(api, task_id)
     fmt.success(f"Reopened task {task_id}", {"task_id": task_id})
 
 
 @click.command()
-@click.argument("task_id")
+@click.argument("task_ref", nargs=-1, required=True)
 @click.option("--content", help="New content.")
 @click.option(
     "--priority",
@@ -359,17 +365,20 @@ def undo(ctx: click.Context, task_id: str) -> None:
 @click.pass_context
 def edit(
     ctx: click.Context,
-    task_id: str,
+    task_ref: tuple[str, ...],
     content: str | None,
     priority: int | None,
     due: str | None,
     labels: tuple[str, ...],
     description: str | None,
 ) -> None:
-    """Update a task. Accepts row number, content match, or task ID."""
+    """Update a task. Accepts row number, content match, or task ID.
+
+    Examples: td edit 1 --due friday | td edit buy milk --priority 1
+    """
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = _resolve_task(task_id, api)
+    task_id = _resolve_task(" ".join(task_ref), api)
 
     api_priority = (5 - priority) if priority else None
 
@@ -386,14 +395,17 @@ def edit(
 
 
 @click.command()
-@click.argument("task_id")
+@click.argument("task_ref", nargs=-1, required=True)
 @click.option("-y", "--yes", is_flag=True, help="Skip confirmation.")
 @click.pass_context
-def delete(ctx: click.Context, task_id: str, yes: bool) -> None:
-    """Delete a task. Accepts row number, content match, or task ID."""
+def delete(ctx: click.Context, task_ref: tuple[str, ...], yes: bool) -> None:
+    """Delete a task. Accepts row number, content match, or task ID.
+
+    Examples: td delete 1 -y | td delete buy milk -y
+    """
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = _resolve_task(task_id, api)
+    task_id = _resolve_task(" ".join(task_ref), api)
     if not yes:
         if not sys.stdout.isatty():
             raise TdValidationError(
