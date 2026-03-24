@@ -75,4 +75,4 @@ class TestSchemaCommand:
 
         done_cmd = data["commands"]["done"]
         arg_names = [a["name"] for a in done_cmd["arguments"]]
-        assert "task_id" in arg_names
+        assert "task_ref" in arg_names
