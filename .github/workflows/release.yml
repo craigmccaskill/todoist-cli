@@ -23,16 +23,17 @@ jobs:
           name: dist
           path: dist/
 
-  publish-pypi:
-    needs: build
-    runs-on: ubuntu-latest
-    environment: pypi
-    steps:
-      - uses: actions/download-artifact@v8
-        with:
-          name: dist
-          path: dist/
-      - uses: pypa/gh-action-pypi-publish@release/v1
+  # TODO: Enable once PyPI name is claimed (PEP 541 pending, ETA ~2026-05-05)
+  # publish-pypi:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   environment: pypi
+  #   steps:
+  #     - uses: actions/download-artifact@v8
+  #       with:
+  #         name: dist
+  #         path: dist/
+  #     - uses: pypa/gh-action-pypi-publish@release/v1
 
   github-release:
     needs: build
