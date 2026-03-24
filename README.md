@@ -42,16 +42,21 @@ td add "Review PR for auth module" -p Work --priority 1 -d tomorrow
 # Natural language quick add
 td quick "Buy milk tomorrow p2 #Errands"
 
-# List tasks
+# List tasks (defaults to today + overdue)
 td ls
-td ls -p Work
+td ls --all                  # everything
+td ls -p Work --sort due     # sorted by due date
 td ls -f "today & #Work"
 
-# View your inbox
-td inbox
+# Morning dashboard / what to work on next
+td today
+td next
 
-# Complete a task
-td done <task-id>
+# Quick capture to inbox — no parsing, no flags
+td capture call dentist about appointment
+
+# Complete a task (use row number from td ls)
+td done 1
 
 # Reopen a completed task
 td undo <task-id>
@@ -140,19 +145,25 @@ The core is a library. The CLI is one frontend. An MCP server ([planned](https:/
 
 | Command | Description |
 |---------|-------------|
-| `td add` | Create a task (with project, priority 1-4, due date, labels) |
+| `td add` | Create a task (with project, priority, due date, labels) |
 | `td quick` | Natural language task creation |
-| `td ls` | List and filter tasks |
+| `td capture` | Quick-capture to inbox — no parsing, no flags |
+| `td ls` | List tasks (defaults to today + overdue, sortable) |
+| `td today` | Morning dashboard: overdue + due today |
+| `td next` | Show your highest priority task |
 | `td inbox` | Show unprocessed inbox tasks |
-| `td done` | Complete a task |
+| `td focus` | Single-project deep work view |
+| `td log` | Completed tasks today or this week |
+| `td done` | Complete a task (accepts row number or ID) |
 | `td undo` | Reopen a completed task |
 | `td edit` | Update a task |
 | `td delete` | Delete a task |
 | `td projects` | List projects |
+| `td project-add` | Create a new project |
 | `td sections` | List sections in a project |
 | `td labels` | List labels |
 | `td schema` | Output capability manifest (JSON) |
-| `td init` | Set up authentication |
+| `td init` | Set up authentication (config file or env var) |
 | `td completions` | Generate shell completions (bash/zsh/fish) |
 
 See [docs/examples.md](docs/examples.md) for full output examples of every command.
