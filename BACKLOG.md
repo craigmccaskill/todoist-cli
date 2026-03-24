@@ -16,6 +16,8 @@ Prioritized list of features and improvements beyond the Tier 1 MVP.
 - [ ] Change `td ls` default to show today + overdue only (add `--all` for everything)
 - [ ] Document priority mapping clearly (user-facing: 1=urgent, API: 4=urgent) in help text and README
 - [ ] Reconsider priority display in plain mode — `p1`/`p4` is confusing vs Todoist's native numbering
+- [ ] `td init` should be interactive: ask whether to store token in `~/.config/td/config.toml` or suggest adding to shell env file (`.env`, `.bashrc`, etc.)
+- [ ] Configurable default output mode — `default_format` in config.toml (`rich`, `plain`, `json`). Lets users/agents set their preferred default without flags on every command. Also respect `TD_FORMAT` env var for per-session override
 
 ### Power Features (from original brief)
 - [ ] `td quick` improvements — already in Tier 1, but could add `td quick` with stdin pipe support
