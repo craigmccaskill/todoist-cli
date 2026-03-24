@@ -27,6 +27,7 @@ class TestSchemaCommand:
 
         expected = {
             "add",
+            "capture",
             "ls",
             "done",
             "edit",

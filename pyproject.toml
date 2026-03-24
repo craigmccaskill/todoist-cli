@@ -35,13 +35,18 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = [
+test = [
     "pytest>=8",
     "pytest-cov",
     "pytest-mock",
+]
+lint = [
     "ruff",
     "mypy",
     "types-requests",
+]
+dev = [
+    "todoist-cli[test,lint]",
     "pre-commit",
 ]
 
