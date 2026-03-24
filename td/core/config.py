@@ -3,18 +3,14 @@
 from __future__ import annotations
 
 import os
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-if sys.version_info >= (3, 11):
+try:
     import tomllib
-else:
-    try:
-        import tomllib  # type: ignore[no-redef,import-not-found]
-    except ModuleNotFoundError:
-        import tomli as tomllib  # type: ignore[no-redef,import-not-found]
+except ModuleNotFoundError:
+    import tomli as tomllib  # type: ignore[no-redef]
 
 import tomli_w
 
