@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import click
 from todoist_api_python.api import TodoistAPI
 
@@ -16,7 +18,8 @@ def init() -> None:
 
     if existing.api_token and config_path.exists():
         overwrite = click.confirm(
-            f"Config already exists at {config_path}. Overwrite?", default=False
+            f"Config already exists at {config_path}. Overwrite?",
+            default=False,
         )
         if not overwrite:
             click.echo("Aborted.")
@@ -39,10 +42,32 @@ def init() -> None:
         click.echo(f"Error: Could not authenticate — {e}", err=True)
         raise SystemExit(1) from None
 
-    config = TdConfig(api_token=token)
-    path = save_config(config)
+    # Ask where to store the token
     click.echo()
-    click.echo(f"Config saved to {path}")
+    click.echo("How would you like to store your token?")
+    click.echo("  1. Config file (recommended for personal machines)")
+    click.echo("  2. Environment variable (recommended for CI/agents)")
+    choice = click.prompt("Choice", type=click.IntRange(1, 2), default=1)
+
+    if choice == 1:
+        config = TdConfig(api_token=token)
+        path = save_config(config)
+        click.echo()
+        click.echo(f"Config saved to {path}")
+    else:
+        shell = os.environ.get("SHELL", "/bin/bash")
+        click.echo()
+        if "fish" in shell:
+            click.echo("Add to ~/.config/fish/config.fish:")
+            click.echo(f'  set -x TD_API_TOKEN "{token}"')
+        else:
+            click.echo("Add to your shell profile (~/.bashrc, ~/.zshrc):")
+            click.echo(f'  export TD_API_TOKEN="{token}"')
+        click.echo()
+        click.echo("Or for a .env file:")
+        click.echo(f"  TD_API_TOKEN={token}")
+
+    click.echo()
     click.echo("Try `td ls` to see your tasks.")
 
 

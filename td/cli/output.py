@@ -13,6 +13,8 @@ from rich.table import Table
 from rich.text import Text
 from todoist_api_python.models import Label, Project, Section, Task
 
+from td.core.cache import save_result_cache
+
 
 class OutputMode(Enum):
     RICH = "rich"
@@ -106,13 +108,16 @@ class OutputFormatter:
             self._rich_task(task)
 
     def task_list(self, tasks: list[Task], title: str | None = None) -> None:
-        """Render a list of tasks."""
+        """Render a list of tasks and cache IDs for numbered references."""
+        # Cache task IDs for numbered references (td done 1, etc.)
+        save_result_cache([t.id for t in tasks])
+
         if self.mode == OutputMode.JSON:
             self._json_out([_task_to_dict(t) for t in tasks], "task_list")
         elif self.mode == OutputMode.PLAIN:
-            click.echo("ID\tCONTENT\tDUE\tPRIORITY\tLABELS")
-            for t in tasks:
-                click.echo(_task_plain_row(t))
+            click.echo("#\tID\tCONTENT\tDUE\tPRIORITY\tLABELS")
+            for i, t in enumerate(tasks, 1):
+                click.echo(f"{i}\t{_task_plain_row(t)}")
         else:
             self._rich_task_table(tasks, title)
 
@@ -133,17 +138,19 @@ class OutputFormatter:
     def _rich_task_table(self, tasks: list[Task], title: str | None = None) -> None:
         assert self._console is not None
         table = Table(title=title or "Tasks", show_lines=False)
+        table.add_column("#", style="dim", width=3)
         table.add_column("Pri", style="dim", width=3)
         table.add_column("Content", style="bold")
         table.add_column("Due", style="yellow")
         table.add_column("Labels", style="cyan")
         table.add_column("ID", style="dim")
 
-        for task in tasks:
+        for i, task in enumerate(tasks, 1):
             p_label, p_style = _PRIORITY_STYLES.get(task.priority, ("p4", "dim"))
             due = task.due.string if task.due else ""
             labels = ", ".join(f"@{lbl}" for lbl in task.labels) if task.labels else ""
             table.add_row(
+                str(i),
                 Text(p_label, style=p_style),
                 task.content,
                 due,

@@ -1,16 +1,30 @@
-"""Project resolution — name to ID mapping."""
+"""Project resolution — name to ID mapping with caching."""
 
 from __future__ import annotations
+
+import contextlib
 
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Project
 
 from td.cli.errors import TdProjectNotFoundError
+from td.core.cache import load_name_cache, save_name_cache
 
 
-def _collect_projects(api: TodoistAPI) -> list[Project]:
-    """Fetch all projects."""
-    return [p for page in api.get_projects() for p in page]
+def _collect_projects(api: TodoistAPI, use_cache: bool = True) -> list[Project]:
+    """Fetch all projects, using cache if available."""
+    if use_cache:
+        try:
+            cached = load_name_cache()
+            if cached.get("projects"):
+                return [Project.from_dict(p) for p in cached["projects"]]
+        except Exception:
+            pass
+
+    projects = [p for page in api.get_projects() for p in page]
+    with contextlib.suppress(Exception):
+        save_name_cache(projects=[p.to_dict() for p in projects])
+    return projects
 
 
 def resolve_project(api: TodoistAPI, name_or_id: str) -> Project:

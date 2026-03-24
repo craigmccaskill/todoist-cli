@@ -8,6 +8,7 @@ import click
 
 from td.cli.errors import TdValidationError
 from td.cli.output import OutputFormatter
+from td.core.cache import resolve_task_ref
 from td.core.client import get_client
 from td.core.config import load_config
 from td.core.projects import get_inbox_project, resolve_project
@@ -278,9 +279,10 @@ def focus(
 @click.argument("task_id")
 @click.pass_context
 def done(ctx: click.Context, task_id: str) -> None:
-    """Complete a task."""
+    """Complete a task. Accepts row number from last listing or task ID."""
     api = get_client()
     fmt = _get_formatter(ctx)
+    task_id = resolve_task_ref(task_id)
 
     complete_task(api, task_id)
     fmt.success(f"Completed task {task_id}", {"task_id": task_id})
@@ -290,9 +292,10 @@ def done(ctx: click.Context, task_id: str) -> None:
 @click.argument("task_id")
 @click.pass_context
 def undo(ctx: click.Context, task_id: str) -> None:
-    """Reopen a completed task."""
+    """Reopen a completed task. Accepts row number or task ID."""
     api = get_client()
     fmt = _get_formatter(ctx)
+    task_id = resolve_task_ref(task_id)
 
     uncomplete_task(api, task_id)
     fmt.success(f"Reopened task {task_id}", {"task_id": task_id})
@@ -319,9 +322,10 @@ def edit(
     labels: tuple[str, ...],
     description: str | None,
 ) -> None:
-    """Update a task."""
+    """Update a task. Accepts row number or task ID."""
     api = get_client()
     fmt = _get_formatter(ctx)
+    task_id = resolve_task_ref(task_id)
 
     api_priority = (5 - priority) if priority else None
 
@@ -342,7 +346,8 @@ def edit(
 @click.option("-y", "--yes", is_flag=True, help="Skip confirmation.")
 @click.pass_context
 def delete(ctx: click.Context, task_id: str, yes: bool) -> None:
-    """Delete a task."""
+    """Delete a task. Accepts row number or task ID."""
+    task_id = resolve_task_ref(task_id)
     if not yes:
         if not sys.stdout.isatty():
             raise TdValidationError(
