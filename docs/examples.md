@@ -615,10 +615,10 @@ $ td schema
       "options": []
     },
     "delete": {
-      "description": "Delete a task. Accepts row number or task ID.",
+      "description": "Delete a task. Accepts row number, content match, or task ID.\n\n    Examples: td delete 1 -y | td delete buy milk -y\n    ",
       "arguments": [
         {
-          "name": "task_id",
+          "name": "task_ref",
           "type": "text",
           "required": true
         }
@@ -639,10 +639,10 @@ $ td schema
       ]
     },
     "done": {
-      "description": "Complete a task. Accepts row number from last listing or task ID.",
+      "description": "Complete a task. Accepts row number, content match, or task ID.\n\n    Examples: td done 1 | td done buy milk | td done 8bx9a0c2\n    ",
       "arguments": [
         {
-          "name": "task_id",
+          "name": "task_ref",
           "type": "text",
           "required": true
         }
@@ -650,10 +650,10 @@ $ td schema
       "options": []
     },
     "edit": {
-      "description": "Update a task. Accepts row number or task ID.",
+      "description": "Update a task. Accepts row number, content match, or task ID.\n\n    Examples: td edit 1 --due friday | td edit buy milk --priority 1\n    ",
       "arguments": [
         {
-          "name": "task_id",
+          "name": "task_ref",
           "type": "text",
           "required": true
         }
@@ -1003,10 +1003,10 @@ $ td schema
       ]
     },
     "undo": {
-      "description": "Reopen a completed task. Accepts row number or task ID.",
+      "description": "Reopen a completed task. Accepts row number, content match, or task ID.\n\n    Examples: td undo 1 | td undo buy milk | td undo 8bx9a0c2\n    ",
       "arguments": [
         {
-          "name": "task_id",
+          "name": "task_ref",
           "type": "text",
           "required": true
         }
@@ -1116,9 +1116,11 @@ Options:
 
 ```
 $ td done --help
-Usage: td done [OPTIONS] TASK_ID
+Usage: td done [OPTIONS] TASK_REF...
 
-  Complete a task. Accepts row number from last listing or task ID.
+  Complete a task. Accepts row number, content match, or task ID.
+
+  Examples: td done 1 | td done buy milk | td done 8bx9a0c2
 
 Options:
   -h, --help  Show this message and exit.
@@ -1137,9 +1139,11 @@ Options:
 
 ```
 $ td edit --help
-Usage: td edit [OPTIONS] TASK_ID
+Usage: td edit [OPTIONS] TASK_REF...
 
-  Update a task. Accepts row number or task ID.
+  Update a task. Accepts row number, content match, or task ID.
+
+  Examples: td edit 1 --due friday | td edit buy milk --priority 1
 
 Options:
   --content TEXT            New content.
@@ -1164,9 +1168,11 @@ Options:
 
 ```
 $ td delete --help
-Usage: td delete [OPTIONS] TASK_ID
+Usage: td delete [OPTIONS] TASK_REF...
 
-  Delete a task. Accepts row number or task ID.
+  Delete a task. Accepts row number, content match, or task ID.
+
+  Examples: td delete 1 -y | td delete buy milk -y
 
 Options:
   -y, --yes   Skip confirmation.

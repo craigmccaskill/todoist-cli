@@ -55,8 +55,10 @@ td next
 # Quick capture to inbox — no parsing, no flags
 td capture call dentist about appointment
 
-# Complete a task (use row number from td ls)
+# Complete a task (row number, content match, or ID — no quotes needed)
 td done 1
+td done buy milk
+td done 8bx9a0c2
 
 # Reopen a completed task
 td undo <task-id>
@@ -154,10 +156,10 @@ The core is a library. The CLI is one frontend. An MCP server ([planned](https:/
 | `td inbox` | Show unprocessed inbox tasks |
 | `td focus` | Single-project deep work view |
 | `td log` | Completed tasks today or this week |
-| `td done` | Complete a task (accepts row number or ID) |
+| `td done` | Complete a task (row number, content match, or ID) |
 | `td undo` | Reopen a completed task |
-| `td edit` | Update a task |
-| `td delete` | Delete a task |
+| `td edit` | Update a task (same flexible ref) |
+| `td delete` | Delete a task (same flexible ref) |
 | `td projects` | List projects |
 | `td project-add` | Create a new project |
 | `td sections` | List sections in a project |
