@@ -43,9 +43,7 @@ class TdGroup(click.Group):
 
 @click.group(cls=TdGroup)
 @click.option("--json", "output_json", is_flag=True, help="Force JSON output.")
-@click.option(
-    "--plain", is_flag=True, help="Force plain text output (no color)."
-)
+@click.option("--plain", is_flag=True, help="Force plain text output (no color).")
 @click.version_option(version=__version__, prog_name="td")
 @click.pass_context
 def cli(ctx: click.Context, output_json: bool, plain: bool) -> None:

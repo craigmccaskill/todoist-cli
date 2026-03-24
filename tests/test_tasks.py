@@ -91,41 +91,31 @@ class TestCreateTask:
         existing = _mock_task(content="Buy milk")
         api.get_tasks.return_value = iter([[existing]])
 
-        task, created = create_task(
-            api, "Buy milk", idempotent=True
-        )
+        task, created = create_task(api, "Buy milk", idempotent=True)
         assert created is False
         assert task == existing
         api.add_task.assert_not_called()
 
     def test_idempotent_creates_when_no_match(self) -> None:
         api = MagicMock()
-        api.get_tasks.return_value = iter([
-            [_mock_task(content="Something else")]
-        ])
+        api.get_tasks.return_value = iter([[_mock_task(content="Something else")]])
         new_task = _mock_task(content="Buy milk")
         api.add_task.return_value = new_task
 
-        _, created = create_task(
-            api, "Buy milk", idempotent=True
-        )
+        _, created = create_task(api, "Buy milk", idempotent=True)
         assert created is True
 
 
 class TestListTasks:
     def test_list_all(self) -> None:
         api = MagicMock()
-        api.get_tasks.return_value = iter([
-            [_mock_task(), _mock_task()]
-        ])
+        api.get_tasks.return_value = iter([[_mock_task(), _mock_task()]])
         result = list_tasks(api)
         assert len(result) == 2
 
     def test_filter_query(self) -> None:
         api = MagicMock()
-        api.filter_tasks.return_value = iter([
-            [_mock_task()]
-        ])
+        api.filter_tasks.return_value = iter([[_mock_task()]])
         result = list_tasks(api, filter_query="today & #Work")
         assert len(result) == 1
         api.filter_tasks.assert_called_once_with(query="today & #Work")
@@ -161,9 +151,7 @@ class TestQuickAdd:
         api = MagicMock()
         api.add_task_quick.return_value = _mock_task()
         quick_add(api, "Buy milk tomorrow p1 #Errands")
-        api.add_task_quick.assert_called_once_with(
-            "Buy milk tomorrow p1 #Errands"
-        )
+        api.add_task_quick.assert_called_once_with("Buy milk tomorrow p1 #Errands")
 
 
 class TestCliCommands:
@@ -188,9 +176,7 @@ class TestCliCommands:
     def test_ls_command(self, mock_gc: MagicMock) -> None:
         api = MagicMock()
         mock_gc.return_value = api
-        api.get_tasks.return_value = iter([
-            [_mock_task(), _mock_task()]
-        ])
+        api.get_tasks.return_value = iter([[_mock_task(), _mock_task()]])
 
         runner = CliRunner()
         result = runner.invoke(cli, ["--json", "ls"])
@@ -202,9 +188,7 @@ class TestCliCommands:
 
     @patch("td.cli.tasks.get_client")
     @patch("td.cli.tasks.get_inbox_project")
-    def test_inbox_command(
-        self, mock_inbox: MagicMock, mock_gc: MagicMock
-    ) -> None:
+    def test_inbox_command(self, mock_inbox: MagicMock, mock_gc: MagicMock) -> None:
         api = MagicMock()
         mock_gc.return_value = api
         mock_inbox.return_value = _mock_project()
@@ -248,14 +232,10 @@ class TestCliCommands:
         api.add_task_quick.return_value = _mock_task()
 
         runner = CliRunner()
-        result = runner.invoke(
-            cli, ["--json", "quick", "Buy", "milk", "tomorrow"]
-        )
+        result = runner.invoke(cli, ["--json", "quick", "Buy", "milk", "tomorrow"])
 
         assert result.exit_code == 0
-        api.add_task_quick.assert_called_once_with(
-            "Buy milk tomorrow"
-        )
+        api.add_task_quick.assert_called_once_with("Buy milk tomorrow")
 
     @patch("td.cli.tasks.get_client")
     def test_add_idempotent(self, mock_gc: MagicMock) -> None:
@@ -265,9 +245,7 @@ class TestCliCommands:
         api.get_tasks.return_value = iter([[existing]])
 
         runner = CliRunner()
-        result = runner.invoke(
-            cli, ["--json", "add", "Buy", "milk", "--idempotent"]
-        )
+        result = runner.invoke(cli, ["--json", "add", "Buy", "milk", "--idempotent"])
 
         assert result.exit_code == 0
         data = json.loads(result.output)

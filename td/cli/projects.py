@@ -22,12 +22,7 @@ def projects(ctx: click.Context, search: str | None) -> None:
     fmt = _get_formatter(ctx)
 
     if search:
-
-        all_projects = [
-            p
-            for page in api.search_projects(query=search)
-            for p in page
-        ]
+        all_projects = [p for page in api.search_projects(query=search) for p in page]
     else:
         all_projects = _collect_projects(api)
 

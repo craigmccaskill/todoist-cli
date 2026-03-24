@@ -65,9 +65,7 @@ class TdError(click.ClickException):
             for key, val in self.details.items():
                 console.print(f"  [dim]{key}:[/dim] {val}")
         if self.suggestion:
-            console.print(
-                f"  [yellow]Suggestion:[/yellow] {self.suggestion}"
-            )
+            console.print(f"  [yellow]Suggestion:[/yellow] {self.suggestion}")
 
     def format_plain(self) -> str:
         """Format as plain text for stderr."""

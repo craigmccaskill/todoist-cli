@@ -33,9 +33,7 @@ def _get_formatter(ctx: click.Context) -> OutputFormatter:
     help="Priority 1-4 (1=urgent).",
 )
 @click.option("-d", "--due", help="Due date (e.g., 'tomorrow', '2026-04-01').")
-@click.option(
-    "-l", "--label", "labels", multiple=True, help="Label (repeatable)."
-)
+@click.option("-l", "--label", "labels", multiple=True, help="Label (repeatable).")
 @click.option("--desc", "description", help="Task description.")
 @click.option(
     "--idempotent",
@@ -82,9 +80,7 @@ def add(
 @click.command(name="ls")
 @click.option("-p", "--project", "project_name", help="Filter by project.")
 @click.option("-l", "--label", help="Filter by label.")
-@click.option(
-    "-f", "--filter", "query", help="Todoist filter query."
-)
+@click.option("-f", "--filter", "query", help="Todoist filter query.")
 @click.pass_context
 def ls(
     ctx: click.Context,
@@ -142,9 +138,7 @@ def done(ctx: click.Context, task_id: str) -> None:
     help="Priority 1-4 (1=urgent).",
 )
 @click.option("-d", "--due", help="New due date.")
-@click.option(
-    "-l", "--label", "labels", multiple=True, help="Labels (repeatable)."
-)
+@click.option("-l", "--label", "labels", multiple=True, help="Labels (repeatable).")
 @click.option("--desc", "description", help="New description.")
 @click.pass_context
 def edit(
@@ -176,9 +170,7 @@ def edit(
 
 @click.command()
 @click.argument("task_id")
-@click.option(
-    "-y", "--yes", is_flag=True, help="Skip confirmation."
-)
+@click.option("-y", "--yes", is_flag=True, help="Skip confirmation.")
 @click.pass_context
 def delete(ctx: click.Context, task_id: str, yes: bool) -> None:
     """Delete a task."""

@@ -8,9 +8,7 @@ from todoist_api_python.models import Section
 from td.cli.errors import SECTION_NOT_FOUND, TdError
 
 
-def _collect_sections(
-    api: TodoistAPI, project_id: str | None = None
-) -> list[Section]:
+def _collect_sections(api: TodoistAPI, project_id: str | None = None) -> list[Section]:
     """Fetch sections, optionally filtered by project."""
     kwargs: dict[str, str] = {}
     if project_id:
@@ -18,9 +16,7 @@ def _collect_sections(
     return [s for page in api.get_sections(**kwargs) for s in page]
 
 
-def resolve_section(
-    api: TodoistAPI, name_or_id: str, *, project_id: str | None = None
-) -> Section:
+def resolve_section(api: TodoistAPI, name_or_id: str, *, project_id: str | None = None) -> Section:
     """Resolve a section by name (case-insensitive) or ID."""
     sections = _collect_sections(api, project_id=project_id)
 

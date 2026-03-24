@@ -16,7 +16,10 @@ def _get_formatter(ctx: click.Context) -> OutputFormatter:
 
 @click.command()
 @click.option(
-    "-p", "--project", "project_name", required=True,
+    "-p",
+    "--project",
+    "project_name",
+    required=True,
     help="Project name or ID.",
 )
 @click.pass_context

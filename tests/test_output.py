@@ -200,9 +200,7 @@ class TestRichOutput:
 
     def test_single_task_renders(self) -> None:
         fmt = OutputFormatter(OutputMode.RICH)
-        task = _make_task(
-            content="Review PR", priority=3, due="tomorrow", labels=["work"]
-        )
+        task = _make_task(content="Review PR", priority=3, due="tomorrow", labels=["work"])
         # Should not raise
         fmt.task(task)
 

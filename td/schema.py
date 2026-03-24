@@ -46,16 +46,11 @@ def _command_schema(cmd: click.Command) -> dict[str, Any]:
     """Extract schema for a single command."""
     return {
         "description": cmd.help or "",
-        "arguments": [
-            _param_schema(p)
-            for p in cmd.params
-            if isinstance(p, click.Argument)
-        ],
+        "arguments": [_param_schema(p) for p in cmd.params if isinstance(p, click.Argument)],
         "options": [
             _param_schema(p)
             for p in cmd.params
-            if isinstance(p, click.Option)
-            and p.name not in ("help",)
+            if isinstance(p, click.Option) and p.name not in ("help",)
         ],
     }
 

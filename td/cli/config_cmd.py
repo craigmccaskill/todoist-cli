@@ -22,7 +22,9 @@ def init() -> None:
             click.echo("Aborted.")
             return
 
-    click.echo("Get your API token from: https://app.todoist.com/app/settings/integrations/developer")
+    click.echo(
+        "Get your API token from: https://app.todoist.com/app/settings/integrations/developer"
+    )
     click.echo()
 
     token = click.prompt("API token", hide_input=True)

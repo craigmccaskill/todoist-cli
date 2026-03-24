@@ -26,9 +26,19 @@ class TestSchemaCommand:
         data = json.loads(result.output)
 
         expected = {
-            "add", "ls", "done", "edit", "delete", "inbox",
-            "quick", "projects", "sections", "labels",
-            "init", "completions", "schema",
+            "add",
+            "ls",
+            "done",
+            "edit",
+            "delete",
+            "inbox",
+            "quick",
+            "projects",
+            "sections",
+            "labels",
+            "init",
+            "completions",
+            "schema",
         }
         assert set(data["commands"].keys()) == expected
 

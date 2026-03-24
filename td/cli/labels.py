@@ -22,11 +22,7 @@ def labels(ctx: click.Context, search: str | None) -> None:
     fmt = _get_formatter(ctx)
 
     if search:
-        all_labels = [
-            lbl
-            for page in api.search_labels(query=search)
-            for lbl in page
-        ]
+        all_labels = [lbl for page in api.search_labels(query=search) for lbl in page]
     else:
         all_labels = _collect_labels(api)
 

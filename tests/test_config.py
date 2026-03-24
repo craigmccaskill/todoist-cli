@@ -49,9 +49,7 @@ class TestSaveAndLoadConfig:
         assert loaded.default_project == "Work"
         assert loaded.color is True
 
-    def test_creates_parent_dirs(
-        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-    ) -> None:
+    def test_creates_parent_dirs(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         deep_path = tmp_path / "a" / "b" / "c"
         monkeypatch.setenv("TD_CONFIG_DIR", str(deep_path))
 
@@ -69,9 +67,7 @@ class TestSaveAndLoadConfig:
 
 
 class TestResolveToken:
-    def test_env_var_precedence(
-        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-    ) -> None:
+    def test_env_var_precedence(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
         monkeypatch.setenv("TD_API_TOKEN", "env-token")
 
@@ -85,9 +81,7 @@ class TestResolveToken:
         save_config(TdConfig(api_token="file-token"))
         assert resolve_token() == "file-token"
 
-    def test_none_when_missing(
-        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-    ) -> None:
+    def test_none_when_missing(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
         monkeypatch.delenv("TD_API_TOKEN", raising=False)
         assert resolve_token() is None

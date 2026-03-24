@@ -12,20 +12,18 @@ from td.cli import cli
 
 
 class TestInit:
-    def test_init_saves_token(
-        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-    ) -> None:
+    def test_init_saves_token(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
         monkeypatch.delenv("TD_API_TOKEN", raising=False)
 
         mock_api = MagicMock()
-        mock_api.get_projects.return_value = iter([
-            [MagicMock(), MagicMock()],
-        ])
-
-        monkeypatch.setattr(
-            "td.cli.config_cmd.TodoistAPI", lambda token: mock_api
+        mock_api.get_projects.return_value = iter(
+            [
+                [MagicMock(), MagicMock()],
+            ]
         )
+
+        monkeypatch.setattr("td.cli.config_cmd.TodoistAPI", lambda token: mock_api)
 
         runner = CliRunner()
         result = runner.invoke(cli, ["init"], input="test-token-123\n")

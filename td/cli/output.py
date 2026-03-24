@@ -20,9 +20,7 @@ class OutputMode(Enum):
     PLAIN = "plain"
 
 
-def resolve_output_mode(
-    output_json: bool, plain: bool, color: bool = True
-) -> OutputMode:
+def resolve_output_mode(output_json: bool, plain: bool, color: bool = True) -> OutputMode:
     """Determine output mode from flags and TTY detection."""
     if output_json:
         return OutputMode.JSON
@@ -98,9 +96,7 @@ class OutputFormatter:
     def _rich_task(self, task: Task) -> None:
         assert self._console is not None
         text = Text()
-        p_label, p_style = _PRIORITY_STYLES.get(
-            task.priority, ("p4", "dim")
-        )
+        p_label, p_style = _PRIORITY_STYLES.get(task.priority, ("p4", "dim"))
         text.append(f"[{p_label}] ", style=p_style)
         text.append(task.content, style="bold")
         if task.due:
@@ -111,9 +107,7 @@ class OutputFormatter:
         text.append(f"  ({task.id})", style="dim")
         self._console.print(text)
 
-    def _rich_task_table(
-        self, tasks: list[Task], title: str | None = None
-    ) -> None:
+    def _rich_task_table(self, tasks: list[Task], title: str | None = None) -> None:
         assert self._console is not None
         table = Table(title=title or "Tasks", show_lines=False)
         table.add_column("Pri", style="dim", width=3)
@@ -123,13 +117,9 @@ class OutputFormatter:
         table.add_column("ID", style="dim")
 
         for task in tasks:
-            p_label, p_style = _PRIORITY_STYLES.get(
-                task.priority, ("p4", "dim")
-            )
+            p_label, p_style = _PRIORITY_STYLES.get(task.priority, ("p4", "dim"))
             due = task.due.string if task.due else ""
-            labels = ", ".join(
-                f"@{lbl}" for lbl in task.labels
-            ) if task.labels else ""
+            labels = ", ".join(f"@{lbl}" for lbl in task.labels) if task.labels else ""
             table.add_row(
                 Text(p_label, style=p_style),
                 task.content,
@@ -145,9 +135,7 @@ class OutputFormatter:
     def project_list(self, projects: list[Project]) -> None:
         """Render a list of projects."""
         if self.mode == OutputMode.JSON:
-            self._json_out(
-                [p.to_dict() for p in projects], "project_list"
-            )
+            self._json_out([p.to_dict() for p in projects], "project_list")
         elif self.mode == OutputMode.PLAIN:
             click.echo("ID\tNAME")
             for p in projects:
@@ -173,9 +161,7 @@ class OutputFormatter:
     def section_list(self, sections: list[Section]) -> None:
         """Render a list of sections."""
         if self.mode == OutputMode.JSON:
-            self._json_out(
-                [s.to_dict() for s in sections], "section_list"
-            )
+            self._json_out([s.to_dict() for s in sections], "section_list")
         elif self.mode == OutputMode.PLAIN:
             click.echo("ID\tNAME")
             for s in sections:
@@ -199,9 +185,7 @@ class OutputFormatter:
     def label_list(self, labels: list[Label]) -> None:
         """Render a list of labels."""
         if self.mode == OutputMode.JSON:
-            self._json_out(
-                [lbl.to_dict() for lbl in labels], "label_list"
-            )
+            self._json_out([lbl.to_dict() for lbl in labels], "label_list")
         elif self.mode == OutputMode.PLAIN:
             click.echo("ID\tNAME")
             for lbl in labels:
@@ -254,11 +238,9 @@ class OutputFormatter:
             item_id = item_dict.get("id", "")
             if created:
                 self._console.print(
-                    f"[green]Created {item_type}:[/green]"
-                    f" {name} [dim]({item_id})[/dim]"
+                    f"[green]Created {item_type}:[/green] {name} [dim]({item_id})[/dim]"
                 )
             else:
                 self._console.print(
-                    f"[yellow]Already exists:[/yellow]"
-                    f" {name} [dim]({item_id})[/dim]"
+                    f"[yellow]Already exists:[/yellow] {name} [dim]({item_id})[/dim]"
                 )

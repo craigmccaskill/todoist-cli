@@ -45,9 +45,9 @@ class TestProjectsCommand:
     def test_lists_projects(self, mock_gc: MagicMock) -> None:
         api = MagicMock()
         mock_gc.return_value = api
-        api.get_projects.return_value = iter([
-            [_mock_project(name="Work"), _mock_project(name="Personal")]
-        ])
+        api.get_projects.return_value = iter(
+            [[_mock_project(name="Work"), _mock_project(name="Personal")]]
+        )
 
         runner = CliRunner()
         result = runner.invoke(cli, ["--json", "projects"])
@@ -61,14 +61,10 @@ class TestProjectsCommand:
     def test_search_projects(self, mock_gc: MagicMock) -> None:
         api = MagicMock()
         mock_gc.return_value = api
-        api.search_projects.return_value = iter([
-            [_mock_project(name="Work")]
-        ])
+        api.search_projects.return_value = iter([[_mock_project(name="Work")]])
 
         runner = CliRunner()
-        result = runner.invoke(
-            cli, ["--json", "projects", "-s", "Work"]
-        )
+        result = runner.invoke(cli, ["--json", "projects", "-s", "Work"])
 
         assert result.exit_code == 0
         data = json.loads(result.output)
@@ -81,17 +77,13 @@ class TestSectionsCommand:
         api = MagicMock()
         mock_gc.return_value = api
         # resolve_project needs projects
-        api.get_projects.return_value = iter([
-            [_mock_project(name="Work", id="p1")]
-        ])
-        api.get_sections.return_value = iter([
-            [_mock_section(name="Backlog"), _mock_section(name="Done")]
-        ])
+        api.get_projects.return_value = iter([[_mock_project(name="Work", id="p1")]])
+        api.get_sections.return_value = iter(
+            [[_mock_section(name="Backlog"), _mock_section(name="Done")]]
+        )
 
         runner = CliRunner()
-        result = runner.invoke(
-            cli, ["--json", "sections", "-p", "Work"]
-        )
+        result = runner.invoke(cli, ["--json", "sections", "-p", "Work"])
 
         assert result.exit_code == 0
         data = json.loads(result.output)
@@ -104,9 +96,7 @@ class TestLabelsCommand:
     def test_lists_labels(self, mock_gc: MagicMock) -> None:
         api = MagicMock()
         mock_gc.return_value = api
-        api.get_labels.return_value = iter([
-            [_mock_label(name="urgent"), _mock_label(name="low")]
-        ])
+        api.get_labels.return_value = iter([[_mock_label(name="urgent"), _mock_label(name="low")]])
 
         runner = CliRunner()
         result = runner.invoke(cli, ["--json", "labels"])
@@ -120,14 +110,10 @@ class TestLabelsCommand:
     def test_search_labels(self, mock_gc: MagicMock) -> None:
         api = MagicMock()
         mock_gc.return_value = api
-        api.search_labels.return_value = iter([
-            [_mock_label(name="urgent")]
-        ])
+        api.search_labels.return_value = iter([[_mock_label(name="urgent")]])
 
         runner = CliRunner()
-        result = runner.invoke(
-            cli, ["--json", "labels", "-s", "urgent"]
-        )
+        result = runner.invoke(cli, ["--json", "labels", "-s", "urgent"])
 
         assert result.exit_code == 0
         data = json.loads(result.output)

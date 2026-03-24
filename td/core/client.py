@@ -11,9 +11,7 @@ class TdAuthError(Exception):
     """Raised when no API token is available."""
 
     def __init__(self) -> None:
-        super().__init__(
-            "No API token configured. Run `td init` or set TD_API_TOKEN."
-        )
+        super().__init__("No API token configured. Run `td init` or set TD_API_TOKEN.")
 
 
 def get_client() -> TodoistAPI:
