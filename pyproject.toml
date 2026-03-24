@@ -29,7 +29,7 @@ classifiers = [
 dependencies = [
     "click>=8.1,<9",
     "todoist-api-python>=3.2,<4",
-    "rich>=13.0,<14",
+    "rich>=13.0,<15",
     "tomli>=2.0; python_version < '3.11'",
     "tomli-w>=1.0,<2",
 ]
