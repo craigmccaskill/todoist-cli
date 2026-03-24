@@ -63,6 +63,29 @@ def sort_tasks(
     return sorted(tasks, key=key, reverse=reverse)
 
 
+def find_task_by_content(
+    api: TodoistAPI,
+    query: str,
+) -> list[Task]:
+    """Find tasks whose content matches a query (case-insensitive substring).
+
+    Returns all matching tasks, sorted by relevance (exact > starts-with > contains).
+    """
+    tasks = _collect(api.get_tasks())
+    lower = query.lower()
+
+    exact = [t for t in tasks if t.content.lower() == lower]
+    if exact:
+        return exact
+
+    starts = [t for t in tasks if t.content.lower().startswith(lower)]
+    if starts:
+        return starts
+
+    contains = [t for t in tasks if lower in t.content.lower()]
+    return contains
+
+
 def create_task(
     api: TodoistAPI,
     content: str,

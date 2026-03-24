@@ -17,6 +17,7 @@ from td.core.tasks import (
     complete_task,
     create_task,
     edit_task,
+    find_task_by_content,
     list_tasks,
     quick_add,
     remove_task,
@@ -27,6 +28,47 @@ from td.core.tasks import (
 
 def _get_formatter(ctx: click.Context) -> OutputFormatter:
     return ctx.obj["formatter"]  # type: ignore[no-any-return]
+
+
+def _resolve_task(ref: str, api: object | None = None) -> str:
+    """Resolve a task reference: row number → content match → task ID.
+
+    1. If ref is a digit, try cached row number
+    2. If api is provided and ref looks like text, try content matching
+    3. Fall through to raw ref (assumed task ID)
+    """
+    # Step 1: row number from cache
+    resolved = resolve_task_ref(ref)
+    if resolved != ref:
+        return resolved
+
+    # Step 2: content match (if ref doesn't look like a typical ID)
+    if api and not ref.isdigit() and len(ref) > 2:
+        matches = find_task_by_content(api, ref)
+        if len(matches) == 1:
+            return matches[0].id
+        if len(matches) > 1 and sys.stdout.isatty():
+            click.echo(f"Multiple matches for '{ref}':")
+            for i, t in enumerate(matches[:10], 1):
+                due = f"  {t.due.string}" if t.due else ""
+                click.echo(f"  {i}  {t.content}{due}")
+            choice = click.prompt(
+                "Which task?",
+                type=click.IntRange(1, min(len(matches), 10)),
+            )
+            return matches[choice - 1].id
+        if len(matches) > 1:
+            # Non-interactive: return error-like info
+            from td.cli.errors import TdValidationError
+
+            task_list = ", ".join(f"'{t.content}'" for t in matches[:5])
+            raise TdValidationError(
+                f"Multiple tasks match '{ref}': {task_list}",
+                suggestion="Be more specific or use a task ID.",
+            )
+
+    # Step 3: pass through as task ID
+    return ref
 
 
 def _read_stdin() -> str | None:
@@ -279,10 +321,10 @@ def focus(
 @click.argument("task_id")
 @click.pass_context
 def done(ctx: click.Context, task_id: str) -> None:
-    """Complete a task. Accepts row number from last listing or task ID."""
+    """Complete a task. Accepts row number, content match, or task ID."""
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = resolve_task_ref(task_id)
+    task_id = _resolve_task(task_id, api)
 
     complete_task(api, task_id)
     fmt.success(f"Completed task {task_id}", {"task_id": task_id})
@@ -292,10 +334,10 @@ def done(ctx: click.Context, task_id: str) -> None:
 @click.argument("task_id")
 @click.pass_context
 def undo(ctx: click.Context, task_id: str) -> None:
-    """Reopen a completed task. Accepts row number or task ID."""
+    """Reopen a completed task. Accepts row number, content match, or task ID."""
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = resolve_task_ref(task_id)
+    task_id = _resolve_task(task_id, api)
 
     uncomplete_task(api, task_id)
     fmt.success(f"Reopened task {task_id}", {"task_id": task_id})
@@ -322,10 +364,10 @@ def edit(
     labels: tuple[str, ...],
     description: str | None,
 ) -> None:
-    """Update a task. Accepts row number or task ID."""
+    """Update a task. Accepts row number, content match, or task ID."""
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = resolve_task_ref(task_id)
+    task_id = _resolve_task(task_id, api)
 
     api_priority = (5 - priority) if priority else None
 
@@ -346,8 +388,10 @@ def edit(
 @click.option("-y", "--yes", is_flag=True, help="Skip confirmation.")
 @click.pass_context
 def delete(ctx: click.Context, task_id: str, yes: bool) -> None:
-    """Delete a task. Accepts row number or task ID."""
-    task_id = resolve_task_ref(task_id)
+    """Delete a task. Accepts row number, content match, or task ID."""
+    api = get_client()
+    fmt = _get_formatter(ctx)
+    task_id = _resolve_task(task_id, api)
     if not yes:
         if not sys.stdout.isatty():
             raise TdValidationError(
@@ -357,9 +401,6 @@ def delete(ctx: click.Context, task_id: str, yes: bool) -> None:
         if not click.confirm(f"Delete task {task_id}?"):
             click.echo("Aborted.")
             return
-
-    api = get_client()
-    fmt = _get_formatter(ctx)
     remove_task(api, task_id)
     fmt.success(f"Deleted task {task_id}", {"task_id": task_id})
 
