@@ -11,6 +11,12 @@ Prioritized list of features and improvements beyond the Tier 1 MVP.
 - [ ] `td log` — End-of-day review: show tasks completed today/this week
 - [ ] `td focus <project>` — Show only tasks for one project, sorted by priority
 
+### Human-Friendly Interaction
+- [ ] Numbered results — `td ls` shows row numbers (#1, #2...), `td done 1` uses row number from last listing. Store mapping in `~/.cache/td/last_results.json`
+- [ ] Fuzzy content matching — `td done "buy milk"` matches against task content. One match → act. Multiple → show and ask. None → error with suggestions
+- [ ] Interactive pickers — `td done` with no arg shows arrow-key picker. Same for `td edit`, `td add -p` (project picker). Use `questionary` or `rich`
+- [ ] Natural language actions (Tier 3) — `td "finish buy milk"`, `td "move blog post to Work"`, `td "postpone dentist to friday"`
+
 ### UX Improvements
 - [ ] `td undo <id>` — Uncomplete a task (SDK has `uncomplete_task()`)
 - [ ] Change `td ls` default to show today + overdue only (add `--all` for everything)
