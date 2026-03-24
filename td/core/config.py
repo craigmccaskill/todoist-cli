@@ -36,6 +36,7 @@ class TdConfig:
     api_token: str | None = None
     default_project: str | None = None
     default_format: str | None = None  # "rich", "plain", or "json"
+    default_sort: str = "priority"  # "priority", "due", "project", "created"
     color: bool = True
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -55,6 +56,7 @@ def load_config() -> TdConfig:
         settings = data.get("settings", {})
         config.default_project = settings.get("default_project")
         config.default_format = settings.get("default_format")
+        config.default_sort = settings.get("default_sort", "priority")
         config.color = settings.get("color", True)
 
     # Env var overrides
@@ -63,6 +65,9 @@ def load_config() -> TdConfig:
 
     if fmt := os.environ.get("TD_FORMAT"):
         config.default_format = fmt
+
+    if sort := os.environ.get("TD_SORT"):
+        config.default_sort = sort
 
     # Respect NO_COLOR (https://no-color.org/)
     if os.environ.get("NO_COLOR") is not None:

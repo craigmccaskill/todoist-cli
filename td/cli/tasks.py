@@ -9,14 +9,17 @@ import click
 from td.cli.errors import TdValidationError
 from td.cli.output import OutputFormatter
 from td.core.client import get_client
+from td.core.config import load_config
 from td.core.projects import get_inbox_project, resolve_project
 from td.core.tasks import (
+    SORT_OPTIONS,
     complete_task,
     create_task,
     edit_task,
     list_tasks,
     quick_add,
     remove_task,
+    sort_tasks,
     uncomplete_task,
 )
 
@@ -78,12 +81,33 @@ def add(
     fmt.item_created("task", task, created=created)
 
 
+def _resolve_sort(sort: str | None) -> str:
+    """Resolve sort order from flag, env, or config."""
+    if sort:
+        return sort
+    config = load_config()
+    return config.default_sort
+
+
 @click.command(name="ls")
 @click.option("-p", "--project", "project_name", help="Filter by project.")
 @click.option("-l", "--label", help="Filter by label.")
 @click.option("-f", "--filter", "query", help="Todoist filter query.")
-@click.option("--all", "show_all", is_flag=True, help="Show all tasks (default: today + overdue).")
-@click.option("--ids", is_flag=True, help="Output only task IDs, one per line. For piping.")
+@click.option(
+    "--all",
+    "show_all",
+    is_flag=True,
+    help="Show all tasks (default: today + overdue).",
+)
+@click.option("--ids", is_flag=True, help="Output only task IDs, one per line.")
+@click.option(
+    "-s",
+    "--sort",
+    "sort_by",
+    type=click.Choice(SORT_OPTIONS),
+    help="Sort order (default: priority).",
+)
+@click.option("--reverse", "reverse_sort", is_flag=True, help="Reverse sort order.")
 @click.pass_context
 def ls(
     ctx: click.Context,
@@ -92,6 +116,8 @@ def ls(
     query: str | None,
     show_all: bool,
     ids: bool,
+    sort_by: str | None,
+    reverse_sort: bool,
 ) -> None:
     """List tasks. Defaults to today + overdue unless filtered."""
     api = get_client()
@@ -111,6 +137,7 @@ def ls(
         label=label,
         filter_query=query,
     )
+    tasks = sort_tasks(tasks, _resolve_sort(sort_by), reverse=reverse_sort)
 
     if ids:
         for task in tasks:
@@ -128,7 +155,111 @@ def inbox(ctx: click.Context) -> None:
 
     project = get_inbox_project(api)
     tasks = list_tasks(api, project_id=project.id)
+    tasks = sort_tasks(tasks, _resolve_sort(None))
     fmt.task_list(tasks, title="Inbox")
+
+
+@click.command()
+@click.option(
+    "-s",
+    "--sort",
+    "sort_by",
+    type=click.Choice(SORT_OPTIONS),
+    help="Sort order (default: priority).",
+)
+@click.option("--reverse", "reverse_sort", is_flag=True, help="Reverse sort order.")
+@click.pass_context
+def today(ctx: click.Context, sort_by: str | None, reverse_sort: bool) -> None:
+    """Show tasks due today and overdue — your morning dashboard."""
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    tasks = list_tasks(api, filter_query="overdue | today")
+    tasks = sort_tasks(tasks, _resolve_sort(sort_by), reverse=reverse_sort)
+    fmt.task_list(tasks, title="Today")
+
+
+@click.command(name="next")
+@click.option("-p", "--project", "project_name", help="Scope to a project.")
+@click.pass_context
+def next_task(ctx: click.Context, project_name: str | None) -> None:
+    """Show your highest priority task — what to work on now."""
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    project_id = None
+    if project_name:
+        project_id = resolve_project(api, project_name).id
+
+    tasks = list_tasks(api, filter_query="overdue | today")
+    if project_id:
+        tasks = [t for t in tasks if t.project_id == project_id]
+    tasks = sort_tasks(tasks, "priority")
+
+    if tasks:
+        fmt.task(tasks[0])
+    else:
+        fmt.success("Nothing to do right now.")
+
+
+@click.command()
+@click.option(
+    "--week",
+    is_flag=True,
+    help="Show completed this week (default: today).",
+)
+@click.pass_context
+def log(ctx: click.Context, week: bool) -> None:
+    """Show completed tasks — your end-of-day review."""
+    from datetime import datetime, timedelta
+
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    now = datetime.now().astimezone()
+    if week:
+        # Monday of this week
+        since = (now - timedelta(days=now.weekday())).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        title = "Completed this week"
+    else:
+        since = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        title = "Completed today"
+
+    completed = [
+        t
+        for page in api.get_completed_tasks_by_completion_date(since=since, until=now)
+        for t in page
+    ]
+    fmt.task_list(completed, title=title)
+
+
+@click.command()
+@click.argument("project_name")
+@click.option(
+    "-s",
+    "--sort",
+    "sort_by",
+    type=click.Choice(SORT_OPTIONS),
+    help="Sort order (default: priority).",
+)
+@click.option("--reverse", "reverse_sort", is_flag=True, help="Reverse sort order.")
+@click.pass_context
+def focus(
+    ctx: click.Context,
+    project_name: str,
+    sort_by: str | None,
+    reverse_sort: bool,
+) -> None:
+    """Focus on a single project — deep work mode."""
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    project = resolve_project(api, project_name)
+    tasks = list_tasks(api, project_id=project.id)
+    tasks = sort_tasks(tasks, _resolve_sort(sort_by), reverse=reverse_sort)
+    fmt.task_list(tasks, title=project.name)
 
 
 @click.command()
