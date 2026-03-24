@@ -16,6 +16,7 @@ from td.core.tasks import (
     list_tasks,
     quick_add,
     remove_task,
+    uncomplete_task,
 )
 
 
@@ -126,6 +127,13 @@ class TestCompleteTask:
         api = MagicMock()
         assert complete_task(api, "t1") is True
         api.complete_task.assert_called_once_with("t1")
+
+
+class TestUncompleteTask:
+    def test_uncompletes(self) -> None:
+        api = MagicMock()
+        assert uncomplete_task(api, "t1") is True
+        api.uncomplete_task.assert_called_once_with("t1")
 
 
 class TestEditTask:

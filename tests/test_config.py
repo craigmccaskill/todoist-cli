@@ -65,6 +65,26 @@ class TestSaveAndLoadConfig:
         loaded = load_config()
         assert loaded.color is False
 
+    def test_td_format_env(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
+        monkeypatch.delenv("TD_API_TOKEN", raising=False)
+        monkeypatch.setenv("TD_FORMAT", "json")
+
+        save_config(TdConfig(api_token="tok"))
+        loaded = load_config()
+        assert loaded.default_format == "json"
+
+    def test_td_format_env_overrides_config(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
+        monkeypatch.delenv("TD_API_TOKEN", raising=False)
+        monkeypatch.setenv("TD_FORMAT", "json")
+
+        save_config(TdConfig(api_token="tok", default_format="plain"))
+        loaded = load_config()
+        assert loaded.default_format == "json"
+
 
 class TestResolveToken:
     def test_env_var_precedence(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

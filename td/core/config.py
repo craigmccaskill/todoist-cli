@@ -39,6 +39,7 @@ class TdConfig:
 
     api_token: str | None = None
     default_project: str | None = None
+    default_format: str | None = None  # "rich", "plain", or "json"
     color: bool = True
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -57,11 +58,15 @@ def load_config() -> TdConfig:
 
         settings = data.get("settings", {})
         config.default_project = settings.get("default_project")
+        config.default_format = settings.get("default_format")
         config.color = settings.get("color", True)
 
     # Env var overrides
     if token := os.environ.get("TD_API_TOKEN"):
         config.api_token = token
+
+    if fmt := os.environ.get("TD_FORMAT"):
+        config.default_format = fmt
 
     # Respect NO_COLOR (https://no-color.org/)
     if os.environ.get("NO_COLOR") is not None:

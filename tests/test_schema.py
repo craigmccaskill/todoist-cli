@@ -33,6 +33,7 @@ class TestSchemaCommand:
             "delete",
             "inbox",
             "quick",
+            "undo",
             "projects",
             "sections",
             "labels",

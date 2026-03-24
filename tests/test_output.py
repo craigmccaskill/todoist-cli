@@ -81,6 +81,31 @@ class TestResolveOutputMode:
         mode = resolve_output_mode(False, False, color=True)
         assert mode in (OutputMode.RICH, OutputMode.JSON)
 
+    def test_default_format_json(self) -> None:
+        mode = resolve_output_mode(False, False, default_format="json")
+        assert mode == OutputMode.JSON
+
+    def test_default_format_plain(self) -> None:
+        mode = resolve_output_mode(False, False, default_format="plain")
+        assert mode == OutputMode.PLAIN
+
+    def test_default_format_rich(self) -> None:
+        mode = resolve_output_mode(False, False, default_format="rich")
+        assert mode == OutputMode.RICH
+
+    def test_flag_overrides_default_format(self) -> None:
+        mode = resolve_output_mode(True, False, default_format="plain")
+        assert mode == OutputMode.JSON
+
+    def test_default_format_case_insensitive(self) -> None:
+        mode = resolve_output_mode(False, False, default_format="JSON")
+        assert mode == OutputMode.JSON
+
+    def test_invalid_default_format_ignored(self) -> None:
+        # Falls through to TTY detection
+        mode = resolve_output_mode(False, False, default_format="invalid")
+        assert mode in (OutputMode.RICH, OutputMode.JSON)
+
 
 class TestJsonOutput:
     def test_task_list_json(self, capsys: object) -> None:

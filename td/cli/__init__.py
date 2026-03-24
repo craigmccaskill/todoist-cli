@@ -50,7 +50,9 @@ def cli(ctx: click.Context, output_json: bool, plain: bool) -> None:
     """td — AI-native Todoist CLI."""
     ctx.ensure_object(dict)
     config = load_config()
-    mode = resolve_output_mode(output_json, plain, color=config.color)
+    mode = resolve_output_mode(
+        output_json, plain, color=config.color, default_format=config.default_format
+    )
     ctx.obj["formatter"] = OutputFormatter(mode)
 
 
@@ -61,7 +63,7 @@ def _register_commands() -> None:
     from td.cli.projects import projects
     from td.cli.schema_cmd import schema
     from td.cli.sections import sections
-    from td.cli.tasks import add, delete, done, edit, inbox, ls, quick
+    from td.cli.tasks import add, delete, done, edit, inbox, ls, quick, undo
 
     cli.add_command(init)
     cli.add_command(completions)
@@ -73,6 +75,7 @@ def _register_commands() -> None:
     cli.add_command(edit)
     cli.add_command(delete)
     cli.add_command(quick)
+    cli.add_command(undo)
     cli.add_command(projects)
     cli.add_command(sections)
     cli.add_command(labels)

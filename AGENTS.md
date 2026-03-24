@@ -22,6 +22,7 @@ Set `TD_API_TOKEN` env var (preferred for agents), or run `td init` interactivel
 - `td ls` — list tasks (`-p` project, `-l` label, `-f` filter query)
 - `td inbox` — show unprocessed inbox tasks
 - `td done <id>` — complete task
+- `td undo <id>` — reopen a completed task
 - `td edit <id>` — update task fields
 - `td delete <id> --yes` — delete task (use `--yes` to skip confirmation)
 - `td projects` — list all projects

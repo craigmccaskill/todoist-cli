@@ -57,6 +57,21 @@ class TestEditCommand:
         assert kwargs["priority"] == 4
 
 
+class TestUndoCommand:
+    @patch("td.cli.tasks.get_client")
+    def test_undo_task(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "undo", "t1"])
+
+        assert result.exit_code == 0
+        api.uncomplete_task.assert_called_once_with("t1")
+        data = json.loads(result.output)
+        assert data["ok"] is True
+
+
 class TestDeleteCommand:
     @patch("td.cli.tasks.get_client")
     def test_delete_with_yes_flag(self, mock_gc: MagicMock) -> None:
