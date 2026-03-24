@@ -28,8 +28,15 @@ def _get_formatter(ctx: click.Context) -> OutputFormatter:
     return ctx.obj["formatter"]  # type: ignore[no-any-return]
 
 
+def _read_stdin() -> str | None:
+    """Read from stdin if not a TTY (piped input)."""
+    if not sys.stdin.isatty():
+        return sys.stdin.read().strip() or None
+    return None
+
+
 @click.command()
-@click.argument("content", nargs=-1, required=True)
+@click.argument("content", nargs=-1)
 @click.option("-p", "--project", "project_name", help="Project name or ID.")
 @click.option(
     "--priority",
@@ -55,10 +62,15 @@ def add(
     description: str | None,
     idempotent: bool,
 ) -> None:
-    """Create a new task."""
+    """Create a new task. Reads from stdin if no content argument."""
     api = get_client()
     fmt = _get_formatter(ctx)
-    text = " ".join(content)
+    text = " ".join(content) if content else (_read_stdin() or "")
+    if not text:
+        raise TdValidationError(
+            "No task content provided.",
+            suggestion="Provide content as an argument or pipe via stdin.",
+        )
 
     project_id = None
     if project_name:
@@ -348,15 +360,37 @@ def delete(ctx: click.Context, task_id: str, yes: bool) -> None:
 
 
 @click.command()
-@click.argument("text", nargs=-1, required=True)
+@click.argument("text", nargs=-1)
 @click.pass_context
 def quick(ctx: click.Context, text: tuple[str, ...]) -> None:
-    """Natural language task creation.
+    """Natural language task creation. Reads from stdin if no args.
 
     Example: td quick "Buy milk tomorrow p1 #Errands"
     """
     api = get_client()
     fmt = _get_formatter(ctx)
 
-    task = quick_add(api, " ".join(text))
+    content = " ".join(text) if text else (_read_stdin() or "")
+    if not content:
+        raise TdValidationError(
+            "No task text provided.",
+            suggestion="Provide text as an argument or pipe via stdin.",
+        )
+
+    task = quick_add(api, content)
     fmt.item_created("task", task)
+
+
+@click.command()
+@click.argument("text", nargs=-1, required=True)
+@click.pass_context
+def capture(ctx: click.Context, text: tuple[str, ...]) -> None:
+    """Quick-capture to inbox — no parsing, no flags, minimal output.
+
+    Example: td capture call dentist about appointment
+    """
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    task, _ = create_task(api, " ".join(text))
+    fmt.success(f"Captured: {task.content}", {"task_id": task.id})
