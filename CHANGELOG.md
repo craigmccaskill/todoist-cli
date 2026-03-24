@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0-alpha] - 2026-03-24
+
+### Added
+- Fuzzy content matching — `td done milk` finds and completes matching task (#13)
+- Natural language refs without quotes — `td done buy milk`, `td edit blog post --due friday`
+- Resolution chain: row number → content match → task ID on all task commands
+- Interactive picker when multiple tasks match (TTY), structured error (non-TTY)
+
+### Changed
+- `task_id` argument replaced with `task_ref` (nargs=-1) on done, undo, edit, delete
+
 ## [0.2.0-alpha] - 2026-03-24
 
 ### Added
