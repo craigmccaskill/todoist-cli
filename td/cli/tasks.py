@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from typing import Any
 
 import click
 
@@ -30,7 +31,7 @@ def _get_formatter(ctx: click.Context) -> OutputFormatter:
     return ctx.obj["formatter"]  # type: ignore[no-any-return]
 
 
-def _resolve_task(ref: str, api: object | None = None) -> str:
+def _resolve_task(ref: str, api: Any = None) -> str:
     """Resolve a task reference: row number → content match → task ID.
 
     1. If ref is a digit, try cached row number
@@ -56,7 +57,8 @@ def _resolve_task(ref: str, api: object | None = None) -> str:
                 "Which task?",
                 type=click.IntRange(1, min(len(matches), 10)),
             )
-            return matches[choice - 1].id
+            task_id: str = matches[choice - 1].id
+            return task_id
         if len(matches) > 1:
             # Non-interactive: return error-like info
             from td.cli.errors import TdValidationError
