@@ -1,0 +1,78 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "todoist-cli"
+dynamic = ["version"]
+description = "AI-native Todoist CLI — built for humans and their AI agents"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [{ name = "Craig McCaskill" }]
+keywords = ["todoist", "cli", "ai-native", "productivity", "todo"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Scheduling",
+    "Topic :: Utilities",
+    "Typing :: Typed",
+]
+dependencies = [
+    "click>=8.1,<9",
+    "todoist-api-python>=3.2,<4",
+    "rich>=13.0,<14",
+    "tomli>=2.0; python_version < '3.11'",
+    "tomli-w>=1.0,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-cov",
+    "pytest-mock",
+    "ruff",
+    "mypy",
+    "pre-commit",
+]
+
+[project.scripts]
+td = "td.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/craigmccaskill/todoist-cli"
+Repository = "https://github.com/craigmccaskill/todoist-cli"
+"Bug Tracker" = "https://github.com/craigmccaskill/todoist-cli/issues"
+Changelog = "https://github.com/craigmccaskill/todoist-cli/blob/main/CHANGELOG.md"
+
+[tool.setuptools.dynamic]
+version = { attr = "td.__version__" }
+
+[tool.ruff]
+target-version = "py310"
+line-length = 99
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=td --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["td"]
+omit = ["tests/*"]
