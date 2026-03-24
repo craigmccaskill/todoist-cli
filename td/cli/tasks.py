@@ -230,7 +230,7 @@ def log(ctx: click.Context, week: bool) -> None:
     completed = [
         t
         for page in api.get_completed_tasks_by_completion_date(
-            since=since.isoformat(), until=now.isoformat()
+            since=since, until=now
         )
         for t in page
     ]
