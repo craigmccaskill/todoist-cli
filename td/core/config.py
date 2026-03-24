@@ -12,9 +12,9 @@ if sys.version_info >= (3, 11):
     import tomllib
 else:
     try:
-        import tomllib  # type: ignore[no-redef]
+        import tomllib  # type: ignore[no-redef,import-not-found]
     except ModuleNotFoundError:
-        import tomli as tomllib  # type: ignore[no-redef]
+        import tomli as tomllib  # type: ignore[no-redef,import-not-found]
 
 import tomli_w
 
