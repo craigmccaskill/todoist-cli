@@ -14,25 +14,33 @@ Usage: td [OPTIONS] COMMAND [ARGS]...
   td — AI-native Todoist CLI.
 
 Options:
-  --json     Force JSON output.
-  --plain    Force plain text output (no color).
-  --version  Show the version and exit.
-  --help     Show this message and exit.
+  --json      Force JSON output.
+  --plain     Force plain text output (no color).
+  --debug     Show API request details on stderr.
+  --version   Show the version and exit.
+  -h, --help  Show this message and exit.
 
 Commands:
   add          Create a new task.
+  capture      Quick-capture to inbox — no parsing, no flags, minimal output.
   completions  Generate shell completion script.
   delete       Delete a task.
   done         Complete a task.
   edit         Update a task.
+  focus        Focus on a single project — deep work mode.
   inbox        Show unprocessed inbox tasks.
   init         Set up authentication and configuration.
   labels       List all labels.
+  log          Show completed tasks — your end-of-day review.
   ls           List tasks.
+  next         Show your highest priority task — what to work on now.
+  project-add  Create a new project.
   projects     List all projects.
   quick        Natural language task creation.
   schema       Output full capability manifest as JSON.
   sections     List sections in a project.
+  today        Show tasks due today and overdue — your morning dashboard.
+  undo         Reopen a completed task.
 ```
 
 
@@ -42,7 +50,7 @@ Commands:
 
 ```
 $ td --version
-td, version 0.1.0
+td, version 0.2.0-alpha
 ```
 
 
@@ -86,29 +94,6 @@ $ td --json ls
         "string": "Mar 26",
         "date": "2026-03-26"
       }
-    },
-    {
-      "id": "4np6r2d5",
-      "content": "Write blog post draft",
-      "priority": 3,
-      "labels": [
-        "writing"
-      ],
-      "project_id": "220474322",
-      "description": "",
-      "due": {
-        "string": "Mar 28",
-        "date": "2026-03-28"
-      }
-    },
-    {
-      "id": "1aq8s4g7",
-      "content": "Schedule dentist appointment",
-      "priority": 2,
-      "labels": [],
-      "project_id": "220474322",
-      "description": "",
-      "due": null
     }
   ]
 }
@@ -120,11 +105,9 @@ List all tasks (plain mode).
 
 ```
 $ td --plain ls
-ID	CONTENT	DUE	PRIORITY	LABELS
-8bx9a0c2	Review PR for auth module	2026-03-25	p1	work,code-review
-7ky3m1f9	Buy groceries	2026-03-26	p4	errands
-4np6r2d5	Write blog post draft	2026-03-28	p2	writing
-1aq8s4g7	Schedule dentist appointment		p3
+#	ID	CONTENT	DUE	PRIORITY	LABELS
+1	8bx9a0c2	Review PR for auth module	2026-03-25	p1	work,code-review
+2	7ky3m1f9	Buy groceries	2026-03-26	p4	errands
 ```
 
 ### `td --json ls -f "today & #Work"`
@@ -196,20 +179,6 @@ $ td --json inbox
       }
     },
     {
-      "id": "7ky3m1f9",
-      "content": "Buy groceries",
-      "priority": 1,
-      "labels": [
-        "errands"
-      ],
-      "project_id": "220474322",
-      "description": "",
-      "due": {
-        "string": "Mar 26",
-        "date": "2026-03-26"
-      }
-    },
-    {
       "id": "4np6r2d5",
       "content": "Write blog post draft",
       "priority": 3,
@@ -231,6 +200,20 @@ $ td --json inbox
       "project_id": "220474322",
       "description": "",
       "due": null
+    },
+    {
+      "id": "7ky3m1f9",
+      "content": "Buy groceries",
+      "priority": 1,
+      "labels": [
+        "errands"
+      ],
+      "project_id": "220474322",
+      "description": "",
+      "due": {
+        "string": "Mar 26",
+        "date": "2026-03-26"
+      }
     }
   ]
 }
@@ -530,16 +513,16 @@ Output the full capability manifest. Agents call this once to learn everything.
 $ td schema
 {
   "name": "td",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha",
   "description": "AI-native Todoist CLI",
   "commands": {
     "add": {
-      "description": "Create a new task.",
+      "description": "Create a new task. Reads from stdin if no content argument.",
       "arguments": [
         {
           "name": "content",
           "type": "text",
-          "required": true
+          "required": false
         }
       ],
       "options": [
@@ -561,7 +544,7 @@ $ td schema
           "flags": [
             "--priority"
           ],
-          "help": "Priority 1-4 (1=urgent).",
+          "help": "Priority: 1=urgent, 2=high, 3=medium, 4=low.",
           "is_flag": false
         },
         {
@@ -609,6 +592,17 @@ $ td schema
         }
       ]
     },
+    "capture": {
+      "description": "Quick-capture to inbox \u2014 no parsing, no flags, minimal output.\n\n    Example: td capture call dentist about appointment\n    ",
+      "arguments": [
+        {
+          "name": "text",
+          "type": "text",
+          "required": true
+        }
+      ],
+      "options": []
+    },
     "completions": {
       "description": "Generate shell completion script.\n\n    Add the output of this command to your shell profile.\n    ",
       "arguments": [
@@ -621,7 +615,7 @@ $ td schema
       "options": []
     },
     "delete": {
-      "description": "Delete a task.",
+      "description": "Delete a task. Accepts row number or task ID.",
       "arguments": [
         {
           "name": "task_id",
@@ -645,7 +639,7 @@ $ td schema
       ]
     },
     "done": {
-      "description": "Complete a task.",
+      "description": "Complete a task. Accepts row number from last listing or task ID.",
       "arguments": [
         {
           "name": "task_id",
@@ -656,7 +650,7 @@ $ td schema
       "options": []
     },
     "edit": {
-      "description": "Update a task.",
+      "description": "Update a task. Accepts row number or task ID.",
       "arguments": [
         {
           "name": "task_id",
@@ -682,7 +676,7 @@ $ td schema
           "flags": [
             "--priority"
           ],
-          "help": "Priority 1-4 (1=urgent).",
+          "help": "Priority: 1=urgent, 2=high, 3=medium, 4=low.",
           "is_flag": false
         },
         {
@@ -719,6 +713,40 @@ $ td schema
         }
       ]
     },
+    "focus": {
+      "description": "Focus on a single project \u2014 deep work mode.",
+      "arguments": [
+        {
+          "name": "project_name",
+          "type": "text",
+          "required": true
+        }
+      ],
+      "options": [
+        {
+          "name": "sort_by",
+          "type": "choice(priority,due,project,created)",
+          "required": false,
+          "flags": [
+            "-s",
+            "--sort"
+          ],
+          "help": "Sort order (default: priority).",
+          "is_flag": false
+        },
+        {
+          "name": "reverse_sort",
+          "type": "boolean",
+          "required": false,
+          "flags": [
+            "--reverse"
+          ],
+          "help": "Reverse sort order.",
+          "is_flag": true,
+          "default": false
+        }
+      ]
+    },
     "inbox": {
       "description": "Show unprocessed inbox tasks.",
       "arguments": [],
@@ -746,8 +774,25 @@ $ td schema
         }
       ]
     },
+    "log": {
+      "description": "Show completed tasks \u2014 your end-of-day review.",
+      "arguments": [],
+      "options": [
+        {
+          "name": "week",
+          "type": "boolean",
+          "required": false,
+          "flags": [
+            "--week"
+          ],
+          "help": "Show completed this week (default: today).",
+          "is_flag": true,
+          "default": false
+        }
+      ]
+    },
     "ls": {
-      "description": "List tasks.",
+      "description": "List tasks. Defaults to today + overdue unless filtered.",
       "arguments": [],
       "options": [
         {
@@ -782,6 +827,100 @@ $ td schema
           ],
           "help": "Todoist filter query.",
           "is_flag": false
+        },
+        {
+          "name": "show_all",
+          "type": "boolean",
+          "required": false,
+          "flags": [
+            "--all"
+          ],
+          "help": "Show all tasks (default: today + overdue).",
+          "is_flag": true,
+          "default": false
+        },
+        {
+          "name": "ids",
+          "type": "boolean",
+          "required": false,
+          "flags": [
+            "--ids"
+          ],
+          "help": "Output only task IDs, one per line.",
+          "is_flag": true,
+          "default": false
+        },
+        {
+          "name": "sort_by",
+          "type": "choice(priority,due,project,created)",
+          "required": false,
+          "flags": [
+            "-s",
+            "--sort"
+          ],
+          "help": "Sort order (default: priority).",
+          "is_flag": false
+        },
+        {
+          "name": "reverse_sort",
+          "type": "boolean",
+          "required": false,
+          "flags": [
+            "--reverse"
+          ],
+          "help": "Reverse sort order.",
+          "is_flag": true,
+          "default": false
+        }
+      ]
+    },
+    "next": {
+      "description": "Show your highest priority task \u2014 what to work on now.",
+      "arguments": [],
+      "options": [
+        {
+          "name": "project_name",
+          "type": "text",
+          "required": false,
+          "flags": [
+            "-p",
+            "--project"
+          ],
+          "help": "Scope to a project.",
+          "is_flag": false
+        }
+      ]
+    },
+    "project-add": {
+      "description": "Create a new project.",
+      "arguments": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true
+        }
+      ],
+      "options": [
+        {
+          "name": "parent_name",
+          "type": "text",
+          "required": false,
+          "flags": [
+            "--parent"
+          ],
+          "help": "Parent project name or ID (for sub-projects).",
+          "is_flag": false
+        },
+        {
+          "name": "favorite",
+          "type": "boolean",
+          "required": false,
+          "flags": [
+            "--favorite"
+          ],
+          "help": "Mark as favorite.",
+          "is_flag": true,
+          "default": false
         }
       ]
     },
@@ -803,12 +942,12 @@ $ td schema
       ]
     },
     "quick": {
-      "description": "Natural language task creation.\n\n    Example: td quick \"Buy milk tomorrow p1 #Errands\"\n    ",
+      "description": "Natural language task creation. Reads from stdin if no args.\n\n    Example: td quick \"Buy milk tomorrow p1 #Errands\"\n    ",
       "arguments": [
         {
           "name": "text",
           "type": "text",
-          "required": true
+          "required": false
         }
       ],
       "options": []
@@ -834,6 +973,45 @@ $ td schema
           "is_flag": false
         }
       ]
+    },
+    "today": {
+      "description": "Show tasks due today and overdue \u2014 your morning dashboard.",
+      "arguments": [],
+      "options": [
+        {
+          "name": "sort_by",
+          "type": "choice(priority,due,project,created)",
+          "required": false,
+          "flags": [
+            "-s",
+            "--sort"
+          ],
+          "help": "Sort order (default: priority).",
+          "is_flag": false
+        },
+        {
+          "name": "reverse_sort",
+          "type": "boolean",
+          "required": false,
+          "flags": [
+            "--reverse"
+          ],
+          "help": "Reverse sort order.",
+          "is_flag": true,
+          "default": false
+        }
+      ]
+    },
+    "undo": {
+      "description": "Reopen a completed task. Accepts row number or task ID.",
+      "arguments": [
+        {
+          "name": "task_id",
+          "type": "text",
+          "required": true
+        }
+      ],
+      "options": []
     }
   }
 }
@@ -881,18 +1059,19 @@ Try `td ls` to see your tasks.
 
 ```
 $ td add --help
-Usage: td add [OPTIONS] CONTENT...
+Usage: td add [OPTIONS] [CONTENT]...
 
-  Create a new task.
+  Create a new task. Reads from stdin if no content argument.
 
 Options:
   -p, --project TEXT        Project name or ID.
-  --priority INTEGER RANGE  Priority 1-4 (1=urgent).  [1<=x<=4]
+  --priority INTEGER RANGE  Priority: 1=urgent, 2=high, 3=medium, 4=low.
+                            [1<=x<=4]
   -d, --due TEXT            Due date (e.g., 'tomorrow', '2026-04-01').
   -l, --label TEXT          Label (repeatable).
   --desc TEXT               Task description.
   --idempotent              Skip if identical task already exists.
-  --help                    Show this message and exit.
+  -h, --help                Show this message and exit.
 {
   "ok": false,
   "error": {
@@ -910,13 +1089,18 @@ Options:
 $ td ls --help
 Usage: td ls [OPTIONS]
 
-  List tasks.
+  List tasks. Defaults to today + overdue unless filtered.
 
 Options:
-  -p, --project TEXT  Filter by project.
-  -l, --label TEXT    Filter by label.
-  -f, --filter TEXT   Todoist filter query.
-  --help              Show this message and exit.
+  -p, --project TEXT              Filter by project.
+  -l, --label TEXT                Filter by label.
+  -f, --filter TEXT               Todoist filter query.
+  --all                           Show all tasks (default: today + overdue).
+  --ids                           Output only task IDs, one per line.
+  -s, --sort [priority|due|project|created]
+                                  Sort order (default: priority).
+  --reverse                       Reverse sort order.
+  -h, --help                      Show this message and exit.
 {
   "ok": false,
   "error": {
@@ -934,10 +1118,10 @@ Options:
 $ td done --help
 Usage: td done [OPTIONS] TASK_ID
 
-  Complete a task.
+  Complete a task. Accepts row number from last listing or task ID.
 
 Options:
-  --help  Show this message and exit.
+  -h, --help  Show this message and exit.
 {
   "ok": false,
   "error": {
@@ -955,15 +1139,16 @@ Options:
 $ td edit --help
 Usage: td edit [OPTIONS] TASK_ID
 
-  Update a task.
+  Update a task. Accepts row number or task ID.
 
 Options:
   --content TEXT            New content.
-  --priority INTEGER RANGE  Priority 1-4 (1=urgent).  [1<=x<=4]
+  --priority INTEGER RANGE  Priority: 1=urgent, 2=high, 3=medium, 4=low.
+                            [1<=x<=4]
   -d, --due TEXT            New due date.
   -l, --label TEXT          Labels (repeatable).
   --desc TEXT               New description.
-  --help                    Show this message and exit.
+  -h, --help                Show this message and exit.
 {
   "ok": false,
   "error": {
@@ -981,11 +1166,11 @@ Options:
 $ td delete --help
 Usage: td delete [OPTIONS] TASK_ID
 
-  Delete a task.
+  Delete a task. Accepts row number or task ID.
 
 Options:
-  -y, --yes  Skip confirmation.
-  --help     Show this message and exit.
+  -y, --yes   Skip confirmation.
+  -h, --help  Show this message and exit.
 {
   "ok": false,
   "error": {
@@ -1001,14 +1186,14 @@ Options:
 
 ```
 $ td quick --help
-Usage: td quick [OPTIONS] TEXT...
+Usage: td quick [OPTIONS] [TEXT]...
 
-  Natural language task creation.
+  Natural language task creation. Reads from stdin if no args.
 
   Example: td quick "Buy milk tomorrow p1 #Errands"
 
 Options:
-  --help  Show this message and exit.
+  -h, --help  Show this message and exit.
 {
   "ok": false,
   "error": {
@@ -1029,7 +1214,7 @@ Usage: td inbox [OPTIONS]
   Show unprocessed inbox tasks.
 
 Options:
-  --help  Show this message and exit.
+  -h, --help  Show this message and exit.
 {
   "ok": false,
   "error": {
@@ -1051,7 +1236,7 @@ Usage: td projects [OPTIONS]
 
 Options:
   -s, --search TEXT  Search projects by name.
-  --help             Show this message and exit.
+  -h, --help         Show this message and exit.
 {
   "ok": false,
   "error": {
@@ -1073,7 +1258,7 @@ Usage: td sections [OPTIONS]
 
 Options:
   -p, --project TEXT  Project name or ID.  [required]
-  --help              Show this message and exit.
+  -h, --help          Show this message and exit.
 {
   "ok": false,
   "error": {
@@ -1095,7 +1280,7 @@ Usage: td labels [OPTIONS]
 
 Options:
   -s, --search TEXT  Search labels by name.
-  --help             Show this message and exit.
+  -h, --help         Show this message and exit.
 {
   "ok": false,
   "error": {
@@ -1116,7 +1301,7 @@ Usage: td schema [OPTIONS]
   Output full capability manifest as JSON.
 
 Options:
-  --help  Show this message and exit.
+  -h, --help  Show this message and exit.
 {
   "ok": false,
   "error": {

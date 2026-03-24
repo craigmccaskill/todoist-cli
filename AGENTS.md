@@ -17,15 +17,21 @@ Set `TD_API_TOKEN` env var (preferred for agents), or run `td init` interactivel
 
 ## Commands
 
-- `td add <content>` — create task (`-p` project, `--priority` 1-4, `-d` due date, `-l` label, `--idempotent`)
-- `td quick <text>` — natural language task creation (e.g., "Buy milk tomorrow p1 #Errands")
-- `td ls` — list tasks (`-p` project, `-l` label, `-f` filter query)
-- `td inbox` — show unprocessed inbox tasks
-- `td done <id>` — complete task
-- `td undo <id>` — reopen a completed task
-- `td edit <id>` — update task fields
-- `td delete <id> --yes` — delete task (use `--yes` to skip confirmation)
+- `td add <content>` — create task (`-p` project, `--priority` 1-4, `-d` due, `-l` label, `--idempotent`). Reads from stdin if no args
+- `td quick <text>` — natural language task creation. Reads from stdin if no args
+- `td capture <text>` — quick-capture to inbox, no parsing or flags
+- `td ls` — list tasks (defaults to today + overdue). `--all`, `-p`, `-l`, `-f`, `--sort`, `--ids`
+- `td today` — overdue + due today, sorted by priority
+- `td next` — single highest priority task. `--project` to scope
+- `td inbox` — unprocessed inbox tasks
+- `td focus <project>` — single-project view, sorted by priority
+- `td log` — completed tasks today. `--week` for this week
+- `td done <ref>` — complete task (accepts row number from last `td ls` or task ID)
+- `td undo <ref>` — reopen a completed task
+- `td edit <ref>` — update task fields
+- `td delete <ref> --yes` — delete task (use `--yes` to skip confirmation)
 - `td projects` — list all projects
+- `td project-add <name>` — create a project (`--parent`, `--favorite`)
 - `td sections -p <project>` — list sections in a project
 - `td labels` — list all labels
 - `td schema` — full capability manifest as JSON
