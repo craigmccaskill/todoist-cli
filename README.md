@@ -8,8 +8,7 @@
 
 **Status:** Alpha — feature-complete for core task management. [See the roadmap.](https://github.com/users/craigmccaskill/projects/1)
 
-<!-- TODO: Replace with terminal recording -->
-<!-- ![td demo](docs/demo.gif) -->
+![td demo](docs/demo/demo.gif)
 
 ## Features
 
