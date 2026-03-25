@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from td.tui import is_available
@@ -103,3 +105,35 @@ class TestPickerApp:
             await pilot.press("enter")
 
         assert app.return_value == "second"
+
+
+class TestSelectModeFallback:
+    """Test that commands error properly when no ref given in non-TTY."""
+
+    @patch("td.cli.tasks.get_client")
+    def test_done_no_ref_non_tty_errors(self, mock_gc: MagicMock) -> None:
+        from click.testing import CliRunner
+
+        from td.cli import cli
+
+        api = MagicMock()
+        mock_gc.return_value = api
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "done"])
+
+        assert result.exit_code == 1
+
+    @patch("td.cli.tasks.get_client")
+    def test_show_no_ref_non_tty_errors(self, mock_gc: MagicMock) -> None:
+        from click.testing import CliRunner
+
+        from td.cli import cli
+
+        api = MagicMock()
+        mock_gc.return_value = api
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "show"])
+
+        assert result.exit_code == 1
