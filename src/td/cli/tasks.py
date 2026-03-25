@@ -86,6 +86,42 @@ def _read_stdin() -> str | None:
     return None
 
 
+def _pick_task_interactive(api: Any) -> str | None:
+    """Launch task picker if textual is available, return task ID or None."""
+    from td.tui import is_available
+
+    if not is_available() or not sys.stdout.isatty():
+        return None
+
+    tasks = list_tasks(api, filter_query="overdue | today")
+    if not tasks:
+        tasks_all = list_tasks(api)
+        tasks = tasks_all
+
+    if not tasks:
+        return None
+
+    from td.tui.pickers import pick_task
+
+    return pick_task(tasks)
+
+
+def _require_task_ref(task_ref: tuple[str, ...], api: Any) -> str:
+    """Resolve task ref, launching picker if empty and TTY."""
+    ref = " ".join(task_ref)
+    if ref:
+        return _resolve_task(ref, api)
+
+    picked = _pick_task_interactive(api)
+    if picked:
+        return picked
+
+    raise TdValidationError(
+        "No task specified.",
+        suggestion="Provide a row number, content match, or task ID.",
+    )
+
+
 @click.command()
 @click.argument("content", nargs=-1)
 @click.option("-p", "--project", "project_name", help="Project name or ID.")
@@ -351,7 +387,7 @@ def _is_fuzzy_ref(ref: str) -> bool:
 
 
 @click.command()
-@click.argument("task_ref", nargs=-1, required=True)
+@click.argument("task_ref", nargs=-1)
 @click.option("-y", "--yes", is_flag=True, help="Skip confirmation on fuzzy match.")
 @click.pass_context
 def done(ctx: click.Context, task_ref: tuple[str, ...], yes: bool) -> None:
@@ -362,7 +398,7 @@ def done(ctx: click.Context, task_ref: tuple[str, ...], yes: bool) -> None:
     api = get_client()
     fmt = _get_formatter(ctx)
     ref = " ".join(task_ref)
-    task_id = _resolve_task(ref, api)
+    task_id = _require_task_ref(task_ref, api)
 
     # Confirm on fuzzy match in TTY mode
     if _is_fuzzy_ref(ref) and not yes and sys.stdout.isatty():
@@ -376,7 +412,7 @@ def done(ctx: click.Context, task_ref: tuple[str, ...], yes: bool) -> None:
 
 
 @click.command()
-@click.argument("task_ref", nargs=-1, required=True)
+@click.argument("task_ref", nargs=-1)
 @click.pass_context
 def undo(ctx: click.Context, task_ref: tuple[str, ...]) -> None:
     """Reopen a completed task. Accepts row number, content match, or task ID.
@@ -385,14 +421,14 @@ def undo(ctx: click.Context, task_ref: tuple[str, ...]) -> None:
     """
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = _resolve_task(" ".join(task_ref), api)
+    task_id = _require_task_ref(task_ref, api)
 
     uncomplete_task(api, task_id)
     fmt.success(f"Reopened task {task_id}", {"task_id": task_id})
 
 
 @click.command()
-@click.argument("task_ref", nargs=-1, required=True)
+@click.argument("task_ref", nargs=-1)
 @click.option("--content", help="New content.")
 @click.option(
     "--priority",
@@ -418,7 +454,7 @@ def edit(
     """
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = _resolve_task(" ".join(task_ref), api)
+    task_id = _require_task_ref(task_ref, api)
 
     # No flags provided — show current task values
     has_updates = content or priority or due or labels or description
@@ -442,7 +478,7 @@ def edit(
 
 
 @click.command()
-@click.argument("task_ref", nargs=-1, required=True)
+@click.argument("task_ref", nargs=-1)
 @click.option("-y", "--yes", is_flag=True, help="Skip confirmation.")
 @click.pass_context
 def delete(ctx: click.Context, task_ref: tuple[str, ...], yes: bool) -> None:
@@ -452,7 +488,7 @@ def delete(ctx: click.Context, task_ref: tuple[str, ...], yes: bool) -> None:
     """
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = _resolve_task(" ".join(task_ref), api)
+    task_id = _require_task_ref(task_ref, api)
     if not yes:
         if not sys.stdout.isatty():
             raise TdValidationError(
@@ -489,7 +525,7 @@ def quick(ctx: click.Context, text: tuple[str, ...]) -> None:
 
 
 @click.command()
-@click.argument("task_ref", nargs=-1, required=True)
+@click.argument("task_ref", nargs=-1)
 @click.pass_context
 def show(ctx: click.Context, task_ref: tuple[str, ...]) -> None:
     """View full task details. Accepts row number, content match, or task ID.
@@ -498,7 +534,7 @@ def show(ctx: click.Context, task_ref: tuple[str, ...]) -> None:
     """
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = _resolve_task(" ".join(task_ref), api)
+    task_id = _require_task_ref(task_ref, api)
 
     task = api.get_task(task_id)
     project_name: str | None = None
@@ -558,7 +594,7 @@ def search(ctx: click.Context, query: tuple[str, ...], project_name: str | None)
 
 
 @click.command()
-@click.argument("task_ref", nargs=-1, required=True)
+@click.argument("task_ref", nargs=-1)
 @click.option("-p", "--project", "project_name", required=True, help="Target project.")
 @click.pass_context
 def move(ctx: click.Context, task_ref: tuple[str, ...], project_name: str) -> None:
@@ -568,7 +604,7 @@ def move(ctx: click.Context, task_ref: tuple[str, ...], project_name: str) -> No
     """
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = _resolve_task(" ".join(task_ref), api)
+    task_id = _require_task_ref(task_ref, api)
 
     project = resolve_project(api, project_name)
     api.move_task(task_id, project_id=project.id)
