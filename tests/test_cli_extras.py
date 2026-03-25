@@ -72,6 +72,31 @@ class TestEditCommand:
         assert kwargs["priority"] == 4
 
 
+class TestDoneFuzzyConfirmation:
+    @patch("td.cli.tasks.get_client")
+    def test_done_fuzzy_with_yes_flag(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_tasks.return_value = iter([[_mock_task(content="Buy milk")]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "done", "buy milk", "-y"])
+
+        assert result.exit_code == 0
+        api.complete_task.assert_called_once()
+
+    @patch("td.cli.tasks.get_client")
+    def test_done_row_number_no_confirmation(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "done", "t1"])
+
+        assert result.exit_code == 0
+        api.complete_task.assert_called_once_with("t1")
+
+
 class TestUndoCommand:
     @patch("td.cli.tasks.get_client")
     def test_undo_task(self, mock_gc: MagicMock) -> None:

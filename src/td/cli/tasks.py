@@ -340,17 +340,31 @@ def focus(
     fmt.task_list(tasks, title=project.name)
 
 
+def _is_fuzzy_ref(ref: str) -> bool:
+    """Return True if ref looks like a content match (not row number or ID)."""
+    return not ref.isdigit() and len(ref) > 2
+
+
 @click.command()
 @click.argument("task_ref", nargs=-1, required=True)
+@click.option("-y", "--yes", is_flag=True, help="Skip confirmation on fuzzy match.")
 @click.pass_context
-def done(ctx: click.Context, task_ref: tuple[str, ...]) -> None:
+def done(ctx: click.Context, task_ref: tuple[str, ...], yes: bool) -> None:
     """Complete a task. Accepts row number, content match, or task ID.
 
     Examples: td done 1 | td done buy milk | td done 8bx9a0c2
     """
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = _resolve_task(" ".join(task_ref), api)
+    ref = " ".join(task_ref)
+    task_id = _resolve_task(ref, api)
+
+    # Confirm on fuzzy match in TTY mode
+    if _is_fuzzy_ref(ref) and not yes and sys.stdout.isatty():
+        task = api.get_task(task_id)
+        if not click.confirm(f'Complete "{task.content}"?', default=True):
+            click.echo("Aborted.")
+            return
 
     complete_task(api, task_id)
     fmt.success(f"Completed task {task_id}", {"task_id": task_id})
