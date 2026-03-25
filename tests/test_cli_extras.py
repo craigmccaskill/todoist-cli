@@ -43,6 +43,21 @@ class TestEditCommand:
         assert data["ok"] is True
 
     @patch("td.cli.tasks.get_client")
+    def test_edit_no_flags_shows_task(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_task.return_value = _mock_task(content="Buy milk")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "edit", "t1"])
+
+        assert result.exit_code == 0
+        api.get_task.assert_called_once_with("t1")
+        api.update_task.assert_not_called()
+        data = json.loads(result.output)
+        assert data["ok"] is True
+
+    @patch("td.cli.tasks.get_client")
     def test_edit_with_priority(self, mock_gc: MagicMock) -> None:
         api = MagicMock()
         mock_gc.return_value = api

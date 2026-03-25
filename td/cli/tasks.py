@@ -380,6 +380,13 @@ def edit(
     fmt = _get_formatter(ctx)
     task_id = _resolve_task(" ".join(task_ref), api)
 
+    # No flags provided — show current task values
+    has_updates = content or priority or due or labels or description
+    if not has_updates:
+        task = api.get_task(task_id)
+        fmt.task(task)
+        return
+
     api_priority = (5 - priority) if priority else None
 
     task = edit_task(
