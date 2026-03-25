@@ -196,7 +196,7 @@ class TestPlainOutput:
 
         captured = capsys.readouterr()  # type: ignore[union-attr]
         lines = captured.out.strip().split("\n")
-        assert lines[0] == "#\tID\tCONTENT\tPROJECT\tDUE\tPRIORITY\tLABELS"
+        assert lines[0] == "#\tCONTENT\tPROJECT\tDUE\tPRIORITY\tLABELS"
         assert "Buy milk" in lines[1]
         assert "\t" in lines[1]
 

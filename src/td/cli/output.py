@@ -79,7 +79,7 @@ def _task_plain_row(task: Task, project_names: dict[str, str] | None = None) -> 
     priority = f"p{5 - task.priority}" if task.priority else ""
     labels = ",".join(task.labels) if task.labels else ""
     project = project_names.get(task.project_id, "") if project_names else ""
-    return f"{task.id}\t{task.content}\t{project}\t{due}\t{priority}\t{labels}"
+    return f"{task.content}\t{project}\t{due}\t{priority}\t{labels}"
 
 
 class OutputFormatter:
@@ -164,6 +164,8 @@ class OutputFormatter:
         tasks: list[Task],
         title: str | None = None,
         project_names: dict[str, str] | None = None,
+        show_project: bool | None = None,
+        show_labels: bool | None = None,
     ) -> None:
         """Render a list of tasks and cache IDs for numbered references."""
         # Cache task IDs for numbered references (td done 1, etc.)
@@ -172,24 +174,30 @@ class OutputFormatter:
         if self.mode == OutputMode.JSON:
             self._json_out([_task_to_dict(t, project_names) for t in tasks], "task_list")
         elif self.mode == OutputMode.PLAIN:
-            click.echo("#\tID\tCONTENT\tPROJECT\tDUE\tPRIORITY\tLABELS")
+            click.echo("#\tCONTENT\tPROJECT\tDUE\tPRIORITY\tLABELS")
             for i, t in enumerate(tasks, 1):
                 click.echo(f"{i}\t{_task_plain_row(t, project_names)}")
         else:
-            self._rich_task_table(tasks, title, project_names)
+            self._rich_task_table(
+                tasks,
+                title,
+                project_names,
+                show_labels=show_labels,
+                show_project=show_project,
+            )
 
     def _rich_task(self, task: Task) -> None:
         assert self._console is not None
         text = Text()
         p_label, p_style = _PRIORITY_STYLES.get(task.priority, ("p4", "dim"))
-        text.append(f"[{p_label}] ", style=p_style)
-        text.append(task.content, style="bold")
+        text.append("▎ ", style=p_style)
+        text.append(p_label, style=p_style)
+        text.append(f"  {task.content}")
         if task.due:
             text.append(f"  {task.due.string}", style="yellow")
         if task.labels:
             for label in task.labels:
                 text.append(f" @{label}", style="cyan")
-        text.append(f"  ({task.id})", style="dim")
         self._console.print(text)
 
     def _rich_task_table(
@@ -197,31 +205,43 @@ class OutputFormatter:
         tasks: list[Task],
         title: str | None = None,
         project_names: dict[str, str] | None = None,
+        show_labels: bool | None = None,
+        show_project: bool | None = None,
     ) -> None:
         assert self._console is not None
+
+        # Smart column visibility
+        has_labels = any(t.labels for t in tasks) if show_labels is None else show_labels
+        has_project = project_names is not None if show_project is None else show_project
+
         table = Table(title=title or "Tasks", show_lines=False)
         table.add_column("#", style="dim", width=3)
-        table.add_column("Pri", style="dim", width=3)
-        table.add_column("Content", style="bold")
-        table.add_column("Project", style="dim")
+        table.add_column("", width=2)  # priority bar
+        table.add_column("Pri", width=3)
+        table.add_column("Content")
+        if has_project:
+            table.add_column("Project", style="dim")
         table.add_column("Due", style="yellow")
-        table.add_column("Labels", style="cyan")
-        table.add_column("ID", style="dim")
+        if has_labels:
+            table.add_column("Labels", style="cyan")
 
         for i, task in enumerate(tasks, 1):
             p_label, p_style = _PRIORITY_STYLES.get(task.priority, ("p4", "dim"))
             due = task.due.string if task.due else ""
-            labels = ", ".join(f"@{lbl}" for lbl in task.labels) if task.labels else ""
-            project = project_names.get(task.project_id, "") if project_names else ""
-            table.add_row(
+            row: list[str | Text] = [
                 str(i),
+                Text("▎", style=p_style),
                 Text(p_label, style=p_style),
                 task.content,
-                project,
-                due,
-                labels,
-                task.id,
-            )
+            ]
+            if has_project:
+                project = project_names.get(task.project_id, "") if project_names else ""
+                row.append(project)
+            row.append(due)
+            if has_labels:
+                labels = ", ".join(f"@{lbl}" for lbl in task.labels) if task.labels else ""
+                row.append(labels)
+            table.add_row(*row)
 
         self._console.print(table)
 

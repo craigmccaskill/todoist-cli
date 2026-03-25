@@ -300,7 +300,7 @@ def inbox(ctx: click.Context) -> None:
     project = get_inbox_project(api)
     tasks = list_tasks(api, project_id=project.id)
     tasks = sort_tasks(tasks, _resolve_sort(None))
-    fmt.task_list(tasks, title="Inbox")
+    fmt.task_list(tasks, title="Inbox", show_project=False)
 
 
 @click.command()
@@ -410,7 +410,7 @@ def focus(
     project = resolve_project(api, project_name)
     tasks = list_tasks(api, project_id=project.id)
     tasks = sort_tasks(tasks, _resolve_sort(sort_by), reverse=reverse_sort)
-    fmt.task_list(tasks, title=project.name)
+    fmt.task_list(tasks, title=project.name, show_project=False)
 
 
 def _is_fuzzy_ref(ref: str) -> bool:
@@ -431,16 +431,23 @@ def done(ctx: click.Context, task_ref: tuple[str, ...], yes: bool) -> None:
     fmt = _get_formatter(ctx)
     ref = " ".join(task_ref)
     task_id = _require_task_ref(task_ref, api)
+    task = api.get_task(task_id)
 
     # Confirm on fuzzy match in TTY mode
-    if _is_fuzzy_ref(ref) and not yes and sys.stdout.isatty():
-        task = api.get_task(task_id)
-        if not click.confirm(f'Complete "{task.content}"?', default=True):
-            click.echo("Aborted.")
-            return
+    if (
+        _is_fuzzy_ref(ref)
+        and not yes
+        and sys.stdout.isatty()
+        and not click.confirm(f'Complete "{task.content}"?', default=True)
+    ):
+        click.echo("Aborted.")
+        return
 
     complete_task(api, task_id)
-    fmt.success(f"Completed task {task_id}", {"task_id": task_id})
+    fmt.success(
+        f"Completed: {task.content}",
+        {"task_id": task_id, "content": task.content},
+    )
 
 
 @click.command()
@@ -454,9 +461,13 @@ def undo(ctx: click.Context, task_ref: tuple[str, ...]) -> None:
     api = get_client()
     fmt = _get_formatter(ctx)
     task_id = _require_task_ref(task_ref, api)
+    task = api.get_task(task_id)
 
     uncomplete_task(api, task_id)
-    fmt.success(f"Reopened task {task_id}", {"task_id": task_id})
+    fmt.success(
+        f"Reopened: {task.content}",
+        {"task_id": task_id, "content": task.content},
+    )
 
 
 @click.command()
@@ -528,17 +539,21 @@ def delete(ctx: click.Context, task_ref: tuple[str, ...], yes: bool) -> None:
     api = get_client()
     fmt = _get_formatter(ctx)
     task_id = _require_task_ref(task_ref, api)
+    task = api.get_task(task_id)
     if not yes:
         if not sys.stdout.isatty():
             raise TdValidationError(
                 "Cannot confirm deletion in non-interactive mode.",
                 suggestion="Use --yes flag to skip confirmation.",
             )
-        if not click.confirm(f"Delete task {task_id}?"):
+        if not click.confirm(f'Delete "{task.content}"?'):
             click.echo("Aborted.")
             return
     remove_task(api, task_id)
-    fmt.success(f"Deleted task {task_id}", {"task_id": task_id})
+    fmt.success(
+        f"Deleted: {task.content}",
+        {"task_id": task_id, "content": task.content},
+    )
 
 
 @click.command()
@@ -657,10 +672,16 @@ def move(ctx: click.Context, task_ref: tuple[str, ...], project_name: str) -> No
     api = get_client()
     fmt = _get_formatter(ctx)
     task_id = _require_task_ref(task_ref, api)
+    task = api.get_task(task_id)
 
     project = resolve_project(api, project_name)
     api.move_task(task_id, project_id=project.id)
     fmt.success(
-        f"Moved task to {project.name}",
-        {"task_id": task_id, "project_id": project.id, "project_name": project.name},
+        f"Moved: {task.content} → {project.name}",
+        {
+            "task_id": task_id,
+            "content": task.content,
+            "project_id": project.id,
+            "project_name": project.name,
+        },
     )
