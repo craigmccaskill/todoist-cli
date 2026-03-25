@@ -140,6 +140,32 @@ class TestSectionsCommand:
         assert len(data["data"]) == 2
 
 
+class TestSectionAddCommand:
+    @patch("td.cli.sections.get_client")
+    def test_creates_section(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_projects.return_value = iter([[_mock_project(name="Work", id="p1")]])
+        api.add_section.return_value = _mock_section(name="In Progress")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "section-add", "In", "Progress", "-p", "Work"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["ok"] is True
+        assert data["data"]["name"] == "In Progress"
+        api.add_section.assert_called_once_with(name="In Progress", project_id="p1")
+
+    @patch("td.cli.sections.get_client")
+    def test_section_add_requires_project(self, mock_gc: MagicMock) -> None:
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "section-add", "Test"])
+
+        assert result.exit_code != 0
+        assert "project" in result.output.lower() or "required" in result.output.lower()
+
+
 class TestLabelsCommand:
     @patch("td.cli.labels.get_client")
     def test_lists_labels(self, mock_gc: MagicMock) -> None:
@@ -154,6 +180,21 @@ class TestLabelsCommand:
         data = json.loads(result.output)
         assert data["type"] == "label_list"
         assert len(data["data"]) == 2
+
+    @patch("td.cli.labels.get_client")
+    def test_creates_label(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.add_label.return_value = _mock_label(name="important")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "label-add", "important"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["ok"] is True
+        assert data["data"]["name"] == "important"
+        api.add_label.assert_called_once_with(name="important")
 
     @patch("td.cli.labels.get_client")
     def test_search_labels(self, mock_gc: MagicMock) -> None:

@@ -1,4 +1,4 @@
-"""Labels CLI command."""
+"""Labels CLI commands."""
 
 from __future__ import annotations
 
@@ -27,3 +27,15 @@ def labels(ctx: click.Context, search: str | None) -> None:
         all_labels = _collect_labels(api)
 
     fmt.label_list(all_labels)
+
+
+@click.command(name="label-add")
+@click.argument("name", nargs=-1, required=True)
+@click.pass_context
+def label_add(ctx: click.Context, name: tuple[str, ...]) -> None:
+    """Create a new label."""
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    label = api.add_label(name=" ".join(name))
+    fmt.item_created("label", label)
