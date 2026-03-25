@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0-alpha] - 2026-03-25
+
+### Added
+- `td section-add <name> -p <project>` — create sections from the CLI (#77)
+- `td label-add <name>` — create labels from the CLI (#77)
+- `td edit <ref>` with no flags now shows current task values (#67)
+- Example generator covers all 22 commands (#69)
+
+### Changed
+- Migrated to `src/` layout for proper test isolation (#37)
+- CI lint job uses `make lint` instead of separate tool installs (#71)
+- `make release` creates a branch + PR instead of pushing directly to main (#68)
+- Auto-delete head branches on merge enabled (#70)
+
 ## [0.3.0-alpha] - 2026-03-24
 
 ### Added

@@ -28,12 +28,14 @@ Set `TD_API_TOKEN` env var (preferred for agents), or run `td init` interactivel
 - `td log` — completed tasks today. `--week` for this week
 - `td done <ref>` — complete task (row number, content match, or task ID — no quotes needed)
 - `td undo <ref>` — reopen a completed task (same ref formats as done)
-- `td edit <ref>` — update task fields (same ref formats as done)
+- `td edit <ref>` — update task fields (same ref formats as done). No flags = show current values
 - `td delete <ref> --yes` — delete task (same ref formats, `--yes` to skip confirmation)
 - `td projects` — list all projects
 - `td project-add <name>` — create a project (`--parent`, `--favorite`)
 - `td sections -p <project>` — list sections in a project
+- `td section-add <name> -p <project>` — create a section in a project
 - `td labels` — list all labels
+- `td label-add <name>` — create a label
 - `td schema` — full capability manifest as JSON
 
 ## Piping Behavior
@@ -89,11 +91,11 @@ JSON output includes `"created": true` or `"created": false`.
 pip install -e ".[dev]"
 pytest
 ruff check .
-mypy td/
+mypy src/td/
 ```
 
 ## Architecture
 
-- `td/core/` — pure business logic, no CLI dependency
-- `td/cli/` — Click commands and output formatting
-- `td/schema.py` — capability manifest generator
+- `src/td/core/` — pure business logic, no CLI dependency
+- `src/td/cli/` — Click commands and output formatting
+- `src/td/schema.py` — capability manifest generator
