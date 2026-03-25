@@ -7,6 +7,7 @@ from typing import Any
 
 import click
 
+from td.cli.completions import _complete_labels, _complete_projects, _complete_sections
 from td.cli.errors import TdValidationError
 from td.cli.output import OutputFormatter
 from td.core.cache import resolve_task_ref
@@ -124,20 +125,34 @@ def _require_task_ref(task_ref: tuple[str, ...], api: Any) -> str:
 
 @click.command()
 @click.argument("content", nargs=-1)
-@click.option("-p", "--project", "project_name", help="Project name or ID.")
+@click.option(
+    "-p",
+    "--project",
+    "project_name",
+    help="Project name or ID.",
+    shell_complete=_complete_projects,
+)
 @click.option(
     "--priority",
     type=click.IntRange(1, 4),
     help="Priority: 1=urgent, 2=high, 3=medium, 4=low.",
 )
 @click.option("-d", "--due", help="Due date (e.g., 'tomorrow', '2026-04-01').")
-@click.option("-l", "--label", "labels", multiple=True, help="Label (repeatable).")
+@click.option(
+    "-l",
+    "--label",
+    "labels",
+    multiple=True,
+    help="Label (repeatable).",
+    shell_complete=_complete_labels,
+)
 @click.option("--desc", "description", help="Task description.")
 @click.option(
     "-s",
     "--section",
     "section_name",
     help="Section name (requires --project).",
+    shell_complete=_complete_sections,
 )
 @click.option(
     "--idempotent",
@@ -207,8 +222,19 @@ def _resolve_sort(sort: str | None) -> str:
 
 
 @click.command(name="ls")
-@click.option("-p", "--project", "project_name", help="Filter by project.")
-@click.option("-l", "--label", help="Filter by label.")
+@click.option(
+    "-p",
+    "--project",
+    "project_name",
+    help="Filter by project.",
+    shell_complete=_complete_projects,
+)
+@click.option(
+    "-l",
+    "--label",
+    help="Filter by label.",
+    shell_complete=_complete_labels,
+)
 @click.option("-f", "--filter", "query", help="Todoist filter query.")
 @click.option(
     "--all",
@@ -299,7 +325,13 @@ def today(ctx: click.Context, sort_by: str | None, reverse_sort: bool) -> None:
 
 
 @click.command(name="next")
-@click.option("-p", "--project", "project_name", help="Scope to a project.")
+@click.option(
+    "-p",
+    "--project",
+    "project_name",
+    help="Scope to a project.",
+    shell_complete=_complete_projects,
+)
 @click.pass_context
 def next_task(ctx: click.Context, project_name: str | None) -> None:
     """Show your highest priority task — what to work on now."""
@@ -436,7 +468,14 @@ def undo(ctx: click.Context, task_ref: tuple[str, ...]) -> None:
     help="Priority: 1=urgent, 2=high, 3=medium, 4=low.",
 )
 @click.option("-d", "--due", help="New due date.")
-@click.option("-l", "--label", "labels", multiple=True, help="Labels (repeatable).")
+@click.option(
+    "-l",
+    "--label",
+    "labels",
+    multiple=True,
+    help="Labels (repeatable).",
+    shell_complete=_complete_labels,
+)
 @click.option("--desc", "description", help="New description.")
 @click.pass_context
 def edit(
@@ -561,7 +600,13 @@ def capture(ctx: click.Context, text: tuple[str, ...]) -> None:
 
 @click.command()
 @click.argument("query", nargs=-1, required=True)
-@click.option("-p", "--project", "project_name", help="Scope to a project.")
+@click.option(
+    "-p",
+    "--project",
+    "project_name",
+    help="Scope to a project.",
+    shell_complete=_complete_projects,
+)
 @click.pass_context
 def search(ctx: click.Context, query: tuple[str, ...], project_name: str | None) -> None:
     """Search tasks by keyword across all projects.
@@ -595,7 +640,14 @@ def search(ctx: click.Context, query: tuple[str, ...], project_name: str | None)
 
 @click.command()
 @click.argument("task_ref", nargs=-1)
-@click.option("-p", "--project", "project_name", required=True, help="Target project.")
+@click.option(
+    "-p",
+    "--project",
+    "project_name",
+    required=True,
+    help="Target project.",
+    shell_complete=_complete_projects,
+)
 @click.pass_context
 def move(ctx: click.Context, task_ref: tuple[str, ...], project_name: str) -> None:
     """Move a task to a different project.
