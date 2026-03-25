@@ -49,8 +49,12 @@ lint = [
 interactive = [
     "textual>=0.50",
 ]
+docs = [
+    "mkdocs-material",
+    "mkdocs-click",
+]
 dev = [
-    "todoist-cli[test,lint,interactive]",
+    "todoist-cli[test,lint,interactive,docs]",
     "pre-commit",
 ]
 

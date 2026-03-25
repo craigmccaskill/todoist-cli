@@ -1,0 +1,61 @@
+site_name: td — AI-Native Todoist CLI
+site_description: A modern Todoist CLI built for both humans and AI agents
+site_url: https://craigmccaskill.github.io/todoist-cli/
+repo_url: https://github.com/craigmccaskill/todoist-cli
+repo_name: craigmccaskill/todoist-cli
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+    - search.suggest
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/install.md
+    - Quick Start: getting-started/quickstart.md
+    - Configuration: getting-started/config.md
+  - Commands:
+    - Overview: commands/index.md
+    - Task Management: commands/tasks.md
+    - Organization: commands/organization.md
+    - Workflow: commands/workflow.md
+    - Utilities: commands/utilities.md
+  - AI & Agent Integration:
+    - Overview: ai/index.md
+    - Structured Output: ai/output.md
+    - Error Handling: ai/errors.md
+    - Idempotency: ai/idempotency.md
+  - Contributing: contributing.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
