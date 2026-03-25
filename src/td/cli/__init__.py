@@ -85,6 +85,7 @@ def _register_commands() -> None:
     from td.cli.config_cmd import completions, init
     from td.cli.labels import label_add, labels
     from td.cli.projects import project_add, projects
+    from td.cli.rate_limit import rate_limit
     from td.cli.schema_cmd import schema
     from td.cli.sections import section_add, sections
     from td.cli.tasks import (
@@ -133,6 +134,7 @@ def _register_commands() -> None:
     cli.add_command(section_add)
     cli.add_command(labels)
     cli.add_command(label_add)
+    cli.add_command(rate_limit)
 
 
 _register_commands()
