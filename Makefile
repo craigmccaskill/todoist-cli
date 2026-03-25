@@ -1,4 +1,4 @@
-.PHONY: help install test lint fmt check clean examples release
+.PHONY: help install test lint fmt check clean examples docs release
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -23,6 +23,9 @@ check: lint test ## Run all checks (lint + test)
 
 examples: ## Regenerate command examples doc
 	python scripts/generate_examples.py > docs/examples.md
+
+docs: ## Serve docs locally
+	mkdocs serve
 
 clean: ## Remove build artifacts
 	rm -rf dist/ build/ *.egg-info .coverage coverage.xml htmlcov/ .mypy_cache/ .ruff_cache/ .pytest_cache/
