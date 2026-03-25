@@ -50,6 +50,7 @@ class TestSchemaCommand:
             "section-add",
             "labels",
             "label-add",
+            "rate-limit",
             "init",
             "completions",
             "schema",

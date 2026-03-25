@@ -91,6 +91,44 @@ class TestCommentCommand:
         assert len(data["data"]) == 1
 
 
+class TestRateLimitMonitor:
+    def test_hook_captures_headers(self) -> None:
+        from td.core.rate_limit import RateLimitMonitor
+
+        monitor = RateLimitMonitor()
+        response = MagicMock()
+        response.headers = {"X-Ratelimit-Remaining": "400", "X-Ratelimit-Limit": "450"}
+        response.status_code = 200
+
+        monitor.hook(response)
+
+        assert monitor.remaining == 400
+        assert monitor.limit == 450
+
+    @patch("td.cli.rate_limit.load_rate_limit_cache")
+    def test_rate_limit_command(self, mock_cache: MagicMock) -> None:
+        mock_cache.return_value = {"remaining": 380, "limit": 450}
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "rate-limit"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["data"]["remaining"] == 380
+        assert data["data"]["limit"] == 450
+
+    @patch("td.cli.rate_limit.load_rate_limit_cache")
+    def test_rate_limit_no_data(self, mock_cache: MagicMock) -> None:
+        mock_cache.return_value = {"remaining": None, "limit": None}
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "rate-limit"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["type"] == "success"
+
+
 class TestEditCommand:
     @patch("td.cli.tasks.get_client")
     def test_edit_task(self, mock_gc: MagicMock) -> None:
