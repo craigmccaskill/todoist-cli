@@ -23,6 +23,8 @@ Options:
 Commands:
   add          Create a new task.
   capture      Quick-capture to inbox — no parsing, no flags, minimal output.
+  comment      Add a comment to a task.
+  comments     List comments on a task.
   completions  Generate shell completion script.
   delete       Delete a task.
   done         Complete a task.
@@ -34,13 +36,17 @@ Commands:
   labels       List all labels.
   log          Show completed tasks — your end-of-day review.
   ls           List tasks.
+  move         Move a task to a different project.
   next         Show your highest priority task — what to work on now.
   project-add  Create a new project.
   projects     List all projects.
   quick        Natural language task creation.
+  rate-limit   Show current API rate limit status from cached response...
   schema       Output full capability manifest as JSON.
+  search       Search tasks by keyword across all projects.
   section-add  Create a new section in a project.
   sections     List sections in a project.
+  show         View full task details.
   today        Show tasks due today and overdue — your morning dashboard.
   undo         Reopen a completed task.
 ```
@@ -52,7 +58,7 @@ Commands:
 
 ```
 $ td --version
-td, version 0.4.0-alpha
+td, version 0.5.0-alpha
 ```
 
 
@@ -81,7 +87,8 @@ $ td --json ls
       "due": {
         "string": "Mar 25",
         "date": "2026-03-25"
-      }
+      },
+      "project_name": "Inbox"
     },
     {
       "id": "7ky3m1f9",
@@ -95,7 +102,8 @@ $ td --json ls
       "due": {
         "string": "Mar 26",
         "date": "2026-03-26"
-      }
+      },
+      "project_name": "Inbox"
     }
   ]
 }
@@ -107,9 +115,9 @@ List all tasks (plain mode).
 
 ```
 $ td --plain ls
-#	ID	CONTENT	DUE	PRIORITY	LABELS
-1	8bx9a0c2	Review PR for auth module	2026-03-25	p1	work,code-review
-2	7ky3m1f9	Buy groceries	2026-03-26	p4	errands
+#	ID	CONTENT	PROJECT	DUE	PRIORITY	LABELS
+1	8bx9a0c2	Review PR for auth module	Inbox	2026-03-25	p1	work,code-review
+2	7ky3m1f9	Buy groceries	Inbox	2026-03-26	p4	errands
 ```
 
 ### `td --json ls -f "today & #Work"`
@@ -135,7 +143,8 @@ $ td --json ls -f "today & #Work"
       "due": {
         "string": "Mar 25",
         "date": "2026-03-25"
-      }
+      },
+      "project_name": "Inbox"
     },
     {
       "id": "7ky3m1f9",
@@ -149,7 +158,8 @@ $ td --json ls -f "today & #Work"
       "due": {
         "string": "Mar 26",
         "date": "2026-03-26"
-      }
+      },
+      "project_name": "Inbox"
     }
   ]
 }
@@ -178,7 +188,8 @@ $ td --json inbox
       "due": {
         "string": "Mar 25",
         "date": "2026-03-25"
-      }
+      },
+      "project_name": "Inbox"
     },
     {
       "id": "4np6r2d5",
@@ -215,7 +226,8 @@ $ td --json inbox
       "due": {
         "string": "Mar 26",
         "date": "2026-03-26"
-      }
+      },
+      "project_name": "Inbox"
     }
   ]
 }
@@ -244,6 +256,7 @@ $ td --json add "Review PR for auth module" -p Work --priority 1 -d tomorrow -l 
       "string": "Mar 25",
       "date": "2026-03-25"
     },
+    "project_name": "Inbox",
     "created": true
   }
 }
@@ -272,6 +285,7 @@ $ td --json add "Review PR for auth module" --idempotent
       "string": "Mar 25",
       "date": "2026-03-25"
     },
+    "project_name": "Inbox",
     "created": false
   }
 }
@@ -299,6 +313,7 @@ $ td --json quick "Buy groceries tomorrow p2 #errands"
       "string": "Mar 26",
       "date": "2026-03-26"
     },
+    "project_name": "Inbox",
     "created": true
   }
 }
@@ -371,8 +386,99 @@ $ td --json edit 8bx9a0c2 --content "Review PR for auth module (updated)" --prio
     "due": {
       "string": "Mar 25",
       "date": "2026-03-25"
-    }
+    },
+    "project_name": "Inbox"
   }
+}
+```
+
+### `td --json show 8bx9a0c2`
+
+View full task details.
+
+```
+$ td --json show 8bx9a0c2
+{
+  "ok": true,
+  "type": "task",
+  "data": {
+    "id": "8bx9a0c2",
+    "content": "Review PR for auth module",
+    "priority": 4,
+    "labels": [
+      "work",
+      "code-review"
+    ],
+    "project_id": "220474322",
+    "description": "",
+    "due": {
+      "string": "Mar 25",
+      "date": "2026-03-25"
+    },
+    "project_name": "Inbox"
+  }
+}
+```
+
+### `td --json move 8bx9a0c2 -p "Work"`
+
+Move a task to a different project.
+
+```
+$ td --json move 8bx9a0c2 -p "Work"
+{
+  "ok": true,
+  "type": "success",
+  "data": {
+    "task_id": "8bx9a0c2",
+    "project_id": "220474323",
+    "project_name": "Work"
+  }
+}
+```
+
+### `td --json search review`
+
+Search tasks by keyword.
+
+```
+$ td --json search review
+{
+  "ok": true,
+  "type": "task_list",
+  "data": [
+    {
+      "id": "8bx9a0c2",
+      "content": "Review PR for auth module",
+      "priority": 4,
+      "labels": [
+        "work",
+        "code-review"
+      ],
+      "project_id": "220474322",
+      "description": "",
+      "due": {
+        "string": "Mar 25",
+        "date": "2026-03-25"
+      },
+      "project_name": "Inbox"
+    },
+    {
+      "id": "7ky3m1f9",
+      "content": "Buy groceries",
+      "priority": 1,
+      "labels": [
+        "errands"
+      ],
+      "project_id": "220474322",
+      "description": "",
+      "due": {
+        "string": "Mar 26",
+        "date": "2026-03-26"
+      },
+      "project_name": "Inbox"
+    }
+  ]
 }
 ```
 
@@ -388,6 +494,42 @@ $ td --json delete 8bx9a0c2 --yes
   "data": {
     "task_id": "8bx9a0c2"
   }
+}
+```
+
+### `td --json comment 8bx9a0c2 "Picked up 2%, not whole"`
+
+Add a comment to a task.
+
+```
+$ td --json comment 8bx9a0c2 "Picked up 2%, not whole"
+{
+  "ok": true,
+  "type": "success",
+  "data": {
+    "comment_id": "c1",
+    "task_id": "8bx9a0c2",
+    "content": "Picked up 2%, not whole"
+  }
+}
+```
+
+### `td --json comments 8bx9a0c2`
+
+List comments on a task.
+
+```
+$ td --json comments 8bx9a0c2
+{
+  "ok": true,
+  "type": "comment_list",
+  "data": [
+    {
+      "id": "c1",
+      "content": "Picked up 2%, not whole",
+      "posted_at": "2026-03-25T10:30:00Z"
+    }
+  ]
 }
 ```
 
@@ -417,7 +559,8 @@ $ td --json today
       "due": {
         "string": "Mar 25",
         "date": "2026-03-25"
-      }
+      },
+      "project_name": "Inbox"
     },
     {
       "id": "7ky3m1f9",
@@ -431,7 +574,8 @@ $ td --json today
       "due": {
         "string": "Mar 26",
         "date": "2026-03-26"
-      }
+      },
+      "project_name": "Inbox"
     }
   ]
 }
@@ -459,7 +603,8 @@ $ td --json next
     "due": {
       "string": "Mar 25",
       "date": "2026-03-25"
-    }
+    },
+    "project_name": "Inbox"
   }
 }
 ```
@@ -487,7 +632,8 @@ $ td --json focus "Work"
       "due": {
         "string": "Mar 25",
         "date": "2026-03-25"
-      }
+      },
+      "project_name": "Inbox"
     },
     {
       "id": "4np6r2d5",
@@ -524,7 +670,8 @@ $ td --json focus "Work"
       "due": {
         "string": "Mar 26",
         "date": "2026-03-26"
-      }
+      },
+      "project_name": "Inbox"
     }
   ]
 }
@@ -736,7 +883,7 @@ Output the full capability manifest. Agents call this once to learn everything.
 $ td schema
 {
   "name": "td",
-  "version": "0.4.0-alpha",
+  "version": "0.5.0-alpha",
   "description": "AI-native Todoist CLI",
   "commands": {
     "add": {
@@ -803,6 +950,17 @@ $ td schema
           "is_flag": false
         },
         {
+          "name": "section_name",
+          "type": "text",
+          "required": false,
+          "flags": [
+            "-s",
+            "--section"
+          ],
+          "help": "Section name (requires --project).",
+          "is_flag": false
+        },
+        {
           "name": "idempotent",
           "type": "boolean",
           "required": false,
@@ -820,6 +978,33 @@ $ td schema
       "arguments": [
         {
           "name": "text",
+          "type": "text",
+          "required": true
+        }
+      ],
+      "options": []
+    },
+    "comment": {
+      "description": "Add a comment to a task.\n\n    Examples: td comment 1 \"Picked up 2%, not whole\"\n    ",
+      "arguments": [
+        {
+          "name": "task_ref",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "text",
+          "type": "text",
+          "required": true
+        }
+      ],
+      "options": []
+    },
+    "comments": {
+      "description": "List comments on a task.\n\n    Examples: td comments 1 | td comments buy milk\n    ",
+      "arguments": [
+        {
+          "name": "task_ref",
           "type": "text",
           "required": true
         }
@@ -870,7 +1055,20 @@ $ td schema
           "required": true
         }
       ],
-      "options": []
+      "options": [
+        {
+          "name": "yes",
+          "type": "boolean",
+          "required": false,
+          "flags": [
+            "-y",
+            "--yes"
+          ],
+          "help": "Skip confirmation on fuzzy match.",
+          "is_flag": true,
+          "default": false
+        }
+      ]
     },
     "edit": {
       "description": "Update a task. Accepts row number, content match, or task ID.\n\n    Examples: td edit 1 --due friday | td edit buy milk --priority 1\n    ",
@@ -1108,6 +1306,29 @@ $ td schema
         }
       ]
     },
+    "move": {
+      "description": "Move a task to a different project.\n\n    Examples: td move 1 -p Personal | td move buy milk -p Work\n    ",
+      "arguments": [
+        {
+          "name": "task_ref",
+          "type": "text",
+          "required": true
+        }
+      ],
+      "options": [
+        {
+          "name": "project_name",
+          "type": "text",
+          "required": true,
+          "flags": [
+            "-p",
+            "--project"
+          ],
+          "help": "Target project.",
+          "is_flag": false
+        }
+      ]
+    },
     "next": {
       "description": "Show your highest priority task \u2014 what to work on now.",
       "arguments": [],
@@ -1186,10 +1407,38 @@ $ td schema
       ],
       "options": []
     },
+    "rate-limit": {
+      "description": "Show current API rate limit status from cached response headers.",
+      "arguments": [],
+      "options": []
+    },
     "schema": {
       "description": "Output full capability manifest as JSON.",
       "arguments": [],
       "options": []
+    },
+    "search": {
+      "description": "Search tasks by keyword across all projects.\n\n    Example: td search deploy | td search \"blog post\" -p Work\n    ",
+      "arguments": [
+        {
+          "name": "query",
+          "type": "text",
+          "required": true
+        }
+      ],
+      "options": [
+        {
+          "name": "project_name",
+          "type": "text",
+          "required": false,
+          "flags": [
+            "-p",
+            "--project"
+          ],
+          "help": "Scope to a project.",
+          "is_flag": false
+        }
+      ]
     },
     "section-add": {
       "description": "Create a new section in a project.",
@@ -1230,6 +1479,17 @@ $ td schema
           "is_flag": false
         }
       ]
+    },
+    "show": {
+      "description": "View full task details. Accepts row number, content match, or task ID.\n\n    Examples: td show 1 | td show buy milk | td show 8bx9a0c2\n    ",
+      "arguments": [
+        {
+          "name": "task_ref",
+          "type": "text",
+          "required": true
+        }
+      ],
+      "options": []
     },
     "today": {
       "description": "Show tasks due today and overdue \u2014 your morning dashboard.",
@@ -1327,6 +1587,7 @@ Options:
   -d, --due TEXT            Due date (e.g., 'tomorrow', '2026-04-01').
   -l, --label TEXT          Label (repeatable).
   --desc TEXT               Task description.
+  -s, --section TEXT        Section name (requires --project).
   --idempotent              Skip if identical task already exists.
   -h, --help                Show this message and exit.
 {
@@ -1505,6 +1766,53 @@ Options:
 }
 ```
 
+### `td show --help`
+
+```
+$ td show --help
+Usage: td show [OPTIONS] TASK_REF...
+
+  View full task details. Accepts row number, content match, or task ID.
+
+  Examples: td show 1 | td show buy milk | td show 8bx9a0c2
+
+Options:
+  -h, --help  Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
+```
+
+### `td search --help`
+
+```
+$ td search --help
+Usage: td search [OPTIONS] QUERY...
+
+  Search tasks by keyword across all projects.
+
+  Example: td search deploy | td search "blog post" -p Work
+
+Options:
+  -p, --project TEXT  Scope to a project.
+  -h, --help          Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
+```
+
 ### `td done --help`
 
 ```
@@ -1516,6 +1824,7 @@ Usage: td done [OPTIONS] TASK_REF...
   Examples: td done 1 | td done buy milk | td done 8bx9a0c2
 
 Options:
+  -y, --yes   Skip confirmation on fuzzy match.
   -h, --help  Show this message and exit.
 {
   "ok": false,
@@ -1580,6 +1889,30 @@ Options:
 }
 ```
 
+### `td move --help`
+
+```
+$ td move --help
+Usage: td move [OPTIONS] TASK_REF...
+
+  Move a task to a different project.
+
+  Examples: td move 1 -p Personal | td move buy milk -p Work
+
+Options:
+  -p, --project TEXT  Target project.  [required]
+  -h, --help          Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
+```
+
 ### `td delete --help`
 
 ```
@@ -1613,6 +1946,52 @@ Usage: td quick [OPTIONS] [TEXT]...
   Natural language task creation. Reads from stdin if no args.
 
   Example: td quick "Buy milk tomorrow p1 #Errands"
+
+Options:
+  -h, --help  Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
+```
+
+### `td comment --help`
+
+```
+$ td comment --help
+Usage: td comment [OPTIONS] TASK_REF TEXT...
+
+  Add a comment to a task.
+
+  Examples: td comment 1 "Picked up 2%, not whole"
+
+Options:
+  -h, --help  Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
+```
+
+### `td comments --help`
+
+```
+$ td comments --help
+Usage: td comments [OPTIONS] TASK_REF
+
+  List comments on a task.
+
+  Examples: td comments 1 | td comments buy milk
 
 Options:
   -h, --help  Show this message and exit.
@@ -1745,6 +2124,27 @@ $ td label-add --help
 Usage: td label-add [OPTIONS] NAME...
 
   Create a new label.
+
+Options:
+  -h, --help  Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
+```
+
+### `td rate-limit --help`
+
+```
+$ td rate-limit --help
+Usage: td rate-limit [OPTIONS]
+
+  Show current API rate limit status from cached response headers.
 
 Options:
   -h, --help  Show this message and exit.

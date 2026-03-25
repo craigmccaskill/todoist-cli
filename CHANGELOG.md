@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0-alpha] - 2026-03-25
+
+### Added
+- `td show <ref>` — view full task details with panel layout (#65)
+- `td search <query>` — full-text search across all tasks (#75)
+- `td move <ref> -p <project>` — move tasks between projects (#66)
+- `td comment <ref> <text>` — add comments to tasks (#72)
+- `td comments <ref>` — list comments on a task (#72)
+- `td rate-limit` — show API rate limit status from cached headers (#78)
+- `td add --section` flag to place tasks in a specific section (#76)
+- `td` with no subcommand runs default command (configurable, defaults to `today`) (#74)
+- Project name column in `td ls` and `td today` output (#64)
+- Confirmation prompt on fuzzy match `td done` in TTY mode (#73)
+- Rate limit monitoring via `requests.Session` response hooks — warns to stderr at 80% usage (#78)
+- `merge_group` CI trigger for future merge queue support (#87)
+
+### Changed
+- README install instructions updated to reflect current state (clone from source) (#94)
+
 ## [0.4.0-alpha] - 2026-03-25
 
 ### Added
