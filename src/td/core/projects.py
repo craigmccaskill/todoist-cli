@@ -74,6 +74,12 @@ def create_project(
     return api.add_project(name, **kwargs)  # type: ignore[arg-type]
 
 
+def get_project_name_map(api: TodoistAPI) -> dict[str, str]:
+    """Return {project_id: project_name} from cache or API."""
+    projects = _collect_projects(api)
+    return {p.id: p.name for p in projects}
+
+
 def get_inbox_project(api: TodoistAPI) -> Project:
     """Find the Inbox project."""
     projects = _collect_projects(api)
