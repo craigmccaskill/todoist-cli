@@ -6,6 +6,7 @@ import sys
 
 import click
 
+from td.cli.completions import _complete_projects
 from td.cli.errors import TdValidationError
 from td.cli.output import OutputFormatter
 from td.core.client import get_client
@@ -19,7 +20,13 @@ def _get_formatter(ctx: click.Context) -> OutputFormatter:
 
 
 @click.command()
-@click.option("-p", "--project", "project_name", help="Review a specific project.")
+@click.option(
+    "-p",
+    "--project",
+    "project_name",
+    help="Review a specific project.",
+    shell_complete=_complete_projects,
+)
 @click.option("-f", "--filter", "query", help="Review tasks matching a filter.")
 @click.pass_context
 def review(

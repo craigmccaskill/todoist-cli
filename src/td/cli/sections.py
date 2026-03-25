@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import click
 
+from td.cli.completions import _complete_projects
 from td.cli.output import OutputFormatter
 from td.core.client import get_client
 from td.core.projects import resolve_project
@@ -21,6 +22,7 @@ def _get_formatter(ctx: click.Context) -> OutputFormatter:
     "project_name",
     required=True,
     help="Project name or ID.",
+    shell_complete=_complete_projects,
 )
 @click.pass_context
 def sections(ctx: click.Context, project_name: str) -> None:
@@ -41,6 +43,7 @@ def sections(ctx: click.Context, project_name: str) -> None:
     "project_name",
     required=True,
     help="Project name or ID.",
+    shell_complete=_complete_projects,
 )
 @click.pass_context
 def section_add(ctx: click.Context, name: tuple[str, ...], project_name: str) -> None:
