@@ -35,7 +35,6 @@ class TestShowCommand:
         mock_gc.return_value = api
         task = _mock_task(content="Buy milk", description="Whole milk from store")
         api.get_task.return_value = task
-        # For project name resolution
         proj = MagicMock()
         proj.id = "p1"
         proj.name = "Personal"
@@ -51,6 +50,45 @@ class TestShowCommand:
         assert data["ok"] is True
         assert data["data"]["content"] == "Buy milk"
         api.get_task.assert_called_once_with("t1")
+
+
+class TestCommentCommand:
+    @patch("td.cli.comments.get_client")
+    def test_add_comment(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        comment_obj = MagicMock()
+        comment_obj.id = "c1"
+        comment_obj.content = "Test comment"
+        api.add_comment.return_value = comment_obj
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "comment", "t1", "Test", "comment"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["ok"] is True
+        assert data["data"]["comment_id"] == "c1"
+        api.add_comment.assert_called_once_with(content="Test comment", task_id="t1")
+
+    @patch("td.cli.comments.get_client")
+    def test_list_comments(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        c1 = MagicMock()
+        c1.id = "c1"
+        c1.content = "First"
+        c1.posted_at = "2026-03-25"
+        c1.to_dict.return_value = {"id": "c1", "content": "First", "posted_at": "2026-03-25"}
+        api.get_comments.return_value = iter([[c1]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "comments", "t1"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["type"] == "comment_list"
+        assert len(data["data"]) == 1
 
 
 class TestEditCommand:
