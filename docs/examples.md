@@ -30,6 +30,7 @@ Commands:
   focus        Focus on a single project — deep work mode.
   inbox        Show unprocessed inbox tasks.
   init         Set up authentication and configuration.
+  label-add    Create a new label.
   labels       List all labels.
   log          Show completed tasks — your end-of-day review.
   ls           List tasks.
@@ -38,6 +39,7 @@ Commands:
   projects     List all projects.
   quick        Natural language task creation.
   schema       Output full capability manifest as JSON.
+  section-add  Create a new section in a project.
   sections     List sections in a project.
   today        Show tasks due today and overdue — your morning dashboard.
   undo         Reopen a completed task.
@@ -50,7 +52,7 @@ Commands:
 
 ```
 $ td --version
-td, version 0.3.0-alpha
+td, version 0.4.0-alpha
 ```
 
 
@@ -647,10 +649,15 @@ Create a new section in a project.
 
 ```
 $ td --json section-add "In Progress" -p "Work"
-Usage: td [OPTIONS] COMMAND [ARGS]...
-Try 'td -h' for help.
-
-Error: No such command 'section-add'.
+{
+  "ok": true,
+  "type": "section_created",
+  "data": {
+    "id": "s2",
+    "name": "In Progress",
+    "created": true
+  }
+}
 ```
 
 ### `td --json labels`
@@ -707,10 +714,15 @@ Create a new label.
 
 ```
 $ td --json label-add urgent
-Usage: td [OPTIONS] COMMAND [ARGS]...
-Try 'td -h' for help.
-
-Error: No such command 'label-add'.
+{
+  "ok": true,
+  "type": "label_created",
+  "data": {
+    "id": "lbl1",
+    "name": "urgent",
+    "created": true
+  }
+}
 ```
 
 
@@ -724,7 +736,7 @@ Output the full capability manifest. Agents call this once to learn everything.
 $ td schema
 {
   "name": "td",
-  "version": "0.3.0-alpha",
+  "version": "0.4.0-alpha",
   "description": "AI-native Todoist CLI",
   "commands": {
     "add": {
@@ -968,6 +980,17 @@ $ td schema
       "arguments": [],
       "options": []
     },
+    "label-add": {
+      "description": "Create a new label.",
+      "arguments": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true
+        }
+      ],
+      "options": []
+    },
     "labels": {
       "description": "List all labels.",
       "arguments": [],
@@ -1167,6 +1190,29 @@ $ td schema
       "description": "Output full capability manifest as JSON.",
       "arguments": [],
       "options": []
+    },
+    "section-add": {
+      "description": "Create a new section in a project.",
+      "arguments": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true
+        }
+      ],
+      "options": [
+        {
+          "name": "project_name",
+          "type": "text",
+          "required": true,
+          "flags": [
+            "-p",
+            "--project"
+          ],
+          "help": "Project name or ID.",
+          "is_flag": false
+        }
+      ]
     },
     "sections": {
       "description": "List sections in a project.",
@@ -1652,10 +1698,22 @@ Options:
 
 ```
 $ td section-add --help
-Usage: td [OPTIONS] COMMAND [ARGS]...
-Try 'td -h' for help.
+Usage: td section-add [OPTIONS] NAME...
 
-Error: No such command 'section-add'.
+  Create a new section in a project.
+
+Options:
+  -p, --project TEXT  Project name or ID.  [required]
+  -h, --help          Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
 ```
 
 ### `td labels --help`
@@ -1684,10 +1742,21 @@ Options:
 
 ```
 $ td label-add --help
-Usage: td [OPTIONS] COMMAND [ARGS]...
-Try 'td -h' for help.
+Usage: td label-add [OPTIONS] NAME...
 
-Error: No such command 'label-add'.
+  Create a new label.
+
+Options:
+  -h, --help  Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
 ```
 
 ### `td schema --help`

@@ -133,7 +133,7 @@ Returns the existing task if identical content already exists. The JSON response
 ## Architecture
 
 ```
-td/
+src/td/
   core/       # Pure business logic — no CLI dependency
     tasks.py, projects.py, labels.py, sections.py, config.py, client.py
   cli/        # Thin Click frontend
@@ -163,7 +163,9 @@ The core is a library. The CLI is one frontend. An MCP server ([planned](https:/
 | `td projects` | List projects |
 | `td project-add` | Create a new project |
 | `td sections` | List sections in a project |
+| `td section-add` | Create a new section in a project |
 | `td labels` | List labels |
+| `td label-add` | Create a new label |
 | `td schema` | Output capability manifest (JSON) |
 | `td init` | Set up authentication (config file or env var) |
 | `td completions` | Generate shell completions (bash/zsh/fish) |
