@@ -32,10 +32,15 @@ ifndef VERSION
 	$(error VERSION is required. Usage: make release VERSION=0.2.0)
 endif
 	@echo "Releasing v$(VERSION)..."
+	git checkout -b release/v$(VERSION)
 	@sed -i 's/__version__ = ".*"/__version__ = "$(VERSION)"/' td/__init__.py
 	@sed -i 's/## \[Unreleased\]/## [Unreleased]\n\n## [$(VERSION)] - $(shell date +%Y-%m-%d)/' CHANGELOG.md
 	git add td/__init__.py CHANGELOG.md
 	git commit -m "chore(release): v$(VERSION)"
-	git tag -a "v$(VERSION)" -m "v$(VERSION)"
-	git push origin main --tags
-	@echo "Done. v$(VERSION) tagged and pushed."
+	git push -u origin release/v$(VERSION)
+	gh pr create --title "chore(release): v$(VERSION)" --body "Version bump and changelog for v$(VERSION)."
+	@echo ""
+	@echo "PR created. After CI passes and PR is merged, run:"
+	@echo "  git checkout main && git pull"
+	@echo "  git tag -a v$(VERSION) -m \"v$(VERSION)\""
+	@echo "  git push origin v$(VERSION)"
