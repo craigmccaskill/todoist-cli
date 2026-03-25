@@ -13,12 +13,14 @@
 
 ## Features
 
-- **TTY-aware output** — pretty tables for humans, structured JSON when piped. No flags needed.
+- **TTY-aware everything** — pretty Rich tables for humans, structured JSON when piped. Errors, output, and pickers all adapt automatically. No flags needed.
+- **Interactive TUI** — `td review` opens a full inbox-processing interface with keyboard navigation. Commands like `td done` launch a task picker when called with no args. Install `todoist-cli[interactive]` to enable.
+- **Fuzzy task matching** — `td done buy milk` finds and completes the right task. Confirms before acting on ambiguous matches.
 - **Capability manifest** — `td schema` dumps every command, argument, and option as JSON. An agent calls it once and knows everything.
-- **Structured errors** — machine-readable error codes and actionable suggestions on stderr.
+- **TTY-aware errors** — styled messages with actionable suggestions for humans, structured JSON with error codes for agents. Same error, two formats, zero config.
 - **Idempotent operations** — `--idempotent` flag prevents duplicate task creation, solving the #1 agent failure mode.
 - **Natural language input** — `td quick "Buy milk tomorrow p1 #Errands"` parsed by Todoist's engine.
-- **Three output modes** — Rich (terminal), JSON (agents/pipes), Plain (cut/awk).
+- **Rate limit awareness** — monitors API usage in the background, warns before you hit the limit, `td rate-limit` shows current status without an API call.
 - **Library-first architecture** — CLI and [planned MCP server](https://github.com/craigmccaskill/todoist-cli/issues/27) are thin frontends over the same tested core.
 - **MCP alternative** — same task management capabilities without the auth flakiness and token overhead of existing MCP integrations.
 
@@ -109,10 +111,17 @@ td schema
 
 Returns a full JSON manifest of all commands, arguments, options, and types. Call once, know everything.
 
-### Structured errors
+### TTY-aware errors
 
-Errors go to stderr as structured JSON with codes and actionable suggestions:
+Errors adapt to context — styled for humans in a terminal, structured for agents when piped:
 
+**Terminal (Rich mode):**
+```
+Error: Project 'Worx' not found
+  Suggestion: Run `td projects` to list available projects. Did you mean 'Work'?
+```
+
+**Piped / JSON mode:**
 ```json
 {
   "ok": false,
