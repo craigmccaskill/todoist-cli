@@ -111,6 +111,54 @@ class OutputFormatter:
         else:
             self._rich_task(task)
 
+    def task_detail(self, task: Task, project_name: str | None = None) -> None:
+        """Render full task details."""
+        if self.mode == OutputMode.JSON:
+            d = _task_to_dict(task)
+            if project_name:
+                d["project_name"] = project_name
+            self._json_out(d, "task")
+        elif self.mode == OutputMode.PLAIN:
+            click.echo(f"ID\t{task.id}")
+            click.echo(f"Content\t{task.content}")
+            if task.description:
+                click.echo(f"Description\t{task.description}")
+            if project_name:
+                click.echo(f"Project\t{project_name}")
+            p_label = f"p{5 - task.priority}" if task.priority else ""
+            click.echo(f"Priority\t{p_label}")
+            click.echo(f"Due\t{task.due.string if task.due else ''}")
+            if task.labels:
+                click.echo(f"Labels\t{', '.join(task.labels)}")
+        else:
+            self._rich_task_detail(task, project_name)
+
+    def _rich_task_detail(self, task: Task, project_name: str | None = None) -> None:
+        assert self._console is not None
+        from rich.panel import Panel
+
+        p_label, p_style = _PRIORITY_STYLES.get(task.priority, ("p4", "dim"))
+        lines: list[str] = []
+        if project_name:
+            lines.append(f"[dim]Project:[/dim]  {project_name}")
+        lines.append(f"[dim]Priority:[/dim] [{p_style}]{p_label}[/{p_style}]")
+        if task.due:
+            lines.append(f"[dim]Due:[/dim]      [yellow]{task.due.string}[/yellow]")
+        if task.labels:
+            lbl_str = ", ".join(f"[cyan]@{lbl}[/cyan]" for lbl in task.labels)
+            lines.append(f"[dim]Labels:[/dim]   {lbl_str}")
+        if task.description:
+            lines.append(f"\n{task.description}")
+        lines.append(f"\n[dim]ID: {task.id}[/dim]")
+
+        self._console.print(
+            Panel(
+                "\n".join(lines),
+                title=f"[bold]{task.content}[/bold]",
+                expand=False,
+            )
+        )
+
     def task_list(
         self,
         tasks: list[Task],

@@ -12,7 +12,12 @@ from td.cli.output import OutputFormatter
 from td.core.cache import resolve_task_ref
 from td.core.client import get_client
 from td.core.config import load_config
-from td.core.projects import get_inbox_project, get_project_name_map, resolve_project
+from td.core.projects import (
+    _collect_projects,
+    get_inbox_project,
+    get_project_name_map,
+    resolve_project,
+)
 from td.core.sections import resolve_section
 from td.core.tasks import (
     SORT_OPTIONS,
@@ -481,6 +486,26 @@ def quick(ctx: click.Context, text: tuple[str, ...]) -> None:
 
     task = quick_add(api, content)
     fmt.item_created("task", task)
+
+
+@click.command()
+@click.argument("task_ref", nargs=-1, required=True)
+@click.pass_context
+def show(ctx: click.Context, task_ref: tuple[str, ...]) -> None:
+    """View full task details. Accepts row number, content match, or task ID.
+
+    Examples: td show 1 | td show buy milk | td show 8bx9a0c2
+    """
+    api = get_client()
+    fmt = _get_formatter(ctx)
+    task_id = _resolve_task(" ".join(task_ref), api)
+
+    task = api.get_task(task_id)
+    project_name: str | None = None
+    if task.project_id:
+        projects = {p.id: p.name for p in _collect_projects(api)}
+        project_name = projects.get(task.project_id)
+    fmt.task_detail(task, project_name=project_name)
 
 
 @click.command()

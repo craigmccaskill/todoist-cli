@@ -28,6 +28,31 @@ def _mock_task(**overrides: object) -> MagicMock:
     return task
 
 
+class TestShowCommand:
+    @patch("td.cli.tasks.get_client")
+    def test_show_task(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        task = _mock_task(content="Buy milk", description="Whole milk from store")
+        api.get_task.return_value = task
+        # For project name resolution
+        proj = MagicMock()
+        proj.id = "p1"
+        proj.name = "Personal"
+        proj.is_inbox_project = False
+        proj.to_dict.return_value = {"id": "p1", "name": "Personal"}
+        api.get_projects.return_value = iter([[proj]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "show", "t1"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["ok"] is True
+        assert data["data"]["content"] == "Buy milk"
+        api.get_task.assert_called_once_with("t1")
+
+
 class TestEditCommand:
     @patch("td.cli.tasks.get_client")
     def test_edit_task(self, mock_gc: MagicMock) -> None:
