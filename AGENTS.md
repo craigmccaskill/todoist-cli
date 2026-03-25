@@ -17,25 +17,31 @@ Set `TD_API_TOKEN` env var (preferred for agents), or run `td init` interactivel
 
 ## Commands
 
-- `td add <content>` — create task (`-p` project, `--priority` 1-4, `-d` due, `-l` label, `--idempotent`). Reads from stdin if no args
+- `td add <content>` — create task (`-p` project, `-s` section, `--priority` 1-4, `-d` due, `-l` label, `--idempotent`). Reads from stdin if no args
 - `td quick <text>` — natural language task creation. Reads from stdin if no args
 - `td capture <text>` — quick-capture to inbox, no parsing or flags
-- `td ls` — list tasks (defaults to today + overdue). `--all`, `-p`, `-l`, `-f`, `--sort`, `--ids`
+- `td ls` — list tasks (defaults to today + overdue). `--all`, `-p`, `-l`, `-f`, `--sort`, `--ids`. Shows project column
 - `td today` — overdue + due today, sorted by priority
 - `td next` — single highest priority task. `--project` to scope
 - `td inbox` — unprocessed inbox tasks
 - `td focus <project>` — single-project view, sorted by priority
 - `td log` — completed tasks today. `--week` for this week
-- `td done <ref>` — complete task (row number, content match, or task ID — no quotes needed)
+- `td show <ref>` — view full task details (content, description, project, priority, due, labels)
+- `td search <query>` — full-text search across all tasks. `-p` to scope to a project
+- `td done <ref>` — complete task (row number, content match, or task ID). Confirms on fuzzy match in TTY, `-y` to skip
 - `td undo <ref>` — reopen a completed task (same ref formats as done)
 - `td edit <ref>` — update task fields (same ref formats as done). No flags = show current values
+- `td move <ref> -p <project>` — move a task to a different project
 - `td delete <ref> --yes` — delete task (same ref formats, `--yes` to skip confirmation)
+- `td comment <ref> <text>` — add a comment to a task
+- `td comments <ref>` — list comments on a task
 - `td projects` — list all projects
 - `td project-add <name>` — create a project (`--parent`, `--favorite`)
 - `td sections -p <project>` — list sections in a project
 - `td section-add <name> -p <project>` — create a section in a project
 - `td labels` — list all labels
 - `td label-add <name>` — create a label
+- `td rate-limit` — show API rate limit status from cached response headers (no API call)
 - `td schema` — full capability manifest as JSON
 
 ## Piping Behavior

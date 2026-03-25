@@ -163,6 +163,7 @@ def run_cmd(args: list[str], api: MagicMock | None = None) -> str:
             patch("td.cli.projects.get_client", return_value=api),
             patch("td.cli.sections.get_client", return_value=api),
             patch("td.cli.labels.get_client", return_value=api),
+            patch("td.cli.comments.get_client", return_value=api),
         ):
             result = runner.invoke(cli, **invoke_kwargs)
     else:
@@ -187,9 +188,21 @@ def make_api() -> MagicMock:
     api.complete_task.return_value = None
     api.uncomplete_task.return_value = None
     api.delete_task.return_value = None
+    api.move_task.return_value = True
     api.add_project.return_value = PROJECTS[1]
     api.add_section.return_value = SECTIONS[1]
     api.add_label.return_value = LABELS[0]
+    comment_mock = MagicMock()
+    comment_mock.id = "c1"
+    comment_mock.content = "Picked up 2%, not whole"
+    comment_mock.posted_at = "2026-03-25T10:30:00Z"
+    comment_mock.to_dict.return_value = {
+        "id": "c1",
+        "content": "Picked up 2%, not whole",
+        "posted_at": "2026-03-25T10:30:00Z",
+    }
+    api.add_comment.return_value = comment_mock
+    api.get_comments.return_value = iter([[comment_mock]])
     return api
 
 
@@ -325,6 +338,18 @@ def generate() -> str:
     )
     example("Update a task.", edit_cmd, output)
 
+    # --- td show ---
+    output = run_cmd(["--json", "show", "8bx9a0c2"], make_api())
+    example("View full task details.", "td --json show 8bx9a0c2", output)
+
+    # --- td move ---
+    output = run_cmd(["--json", "move", "8bx9a0c2", "-p", "Work"], make_api())
+    example("Move a task to a different project.", 'td --json move 8bx9a0c2 -p "Work"', output)
+
+    # --- td search ---
+    output = run_cmd(["--json", "search", "review"], make_api())
+    example("Search tasks by keyword.", "td --json search review", output)
+
     # --- td delete ---
     output = run_cmd(["--json", "delete", "8bx9a0c2", "--yes"], make_api())
     example(
@@ -332,6 +357,18 @@ def generate() -> str:
         "td --json delete 8bx9a0c2 --yes",
         output,
     )
+
+    # --- td comment ---
+    output = run_cmd(["--json", "comment", "8bx9a0c2", "Picked up 2%, not whole"], make_api())
+    example(
+        "Add a comment to a task.",
+        'td --json comment 8bx9a0c2 "Picked up 2%, not whole"',
+        output,
+    )
+
+    # --- td comments ---
+    output = run_cmd(["--json", "comments", "8bx9a0c2"], make_api())
+    example("List comments on a task.", "td --json comments 8bx9a0c2", output)
 
     # --- Workflow Commands ---
     heading("Workflow Commands")
@@ -438,17 +475,23 @@ def generate() -> str:
         "next",
         "log",
         "focus",
+        "show",
+        "search",
         "done",
         "undo",
         "edit",
+        "move",
         "delete",
         "quick",
+        "comment",
+        "comments",
         "projects",
         "project-add",
         "sections",
         "section-add",
         "labels",
         "label-add",
+        "rate-limit",
         "schema",
     ]
     for cmd in cmds:
