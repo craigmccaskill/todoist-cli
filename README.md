@@ -25,10 +25,12 @@
 ## Install
 
 ```bash
-pip install todoist-cli
+git clone https://github.com/craigmccaskill/todoist-cli.git
+cd todoist-cli
+pip install -e .
 ```
 
-Requires Python 3.10+.
+Requires Python 3.10+. PyPI package coming soon.
 
 ## Quick Start
 
