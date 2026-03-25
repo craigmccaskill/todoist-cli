@@ -96,6 +96,7 @@ def _register_commands() -> None:
         inbox,
         log,
         ls,
+        move,
         next_task,
         quick,
         search,
@@ -118,6 +119,7 @@ def _register_commands() -> None:
     cli.add_command(delete)
     cli.add_command(quick)
     cli.add_command(capture)
+    cli.add_command(move)
     cli.add_command(undo)
     cli.add_command(search)
     cli.add_command(projects)

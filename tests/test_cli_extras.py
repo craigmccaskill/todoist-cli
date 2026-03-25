@@ -131,6 +131,28 @@ class TestErrorBoundary:
         assert result.exit_code == 1
 
 
+class TestMoveCommand:
+    @patch("td.cli.tasks.get_client")
+    def test_move_task(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+
+        proj = MagicMock()
+        proj.id = "p2"
+        proj.name = "Personal"
+        proj.is_inbox_project = False
+        api.get_projects.return_value = iter([[proj]])
+        api.move_task.return_value = True
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "move", "t1", "-p", "Personal"])
+
+        assert result.exit_code == 0
+        api.move_task.assert_called_once_with("t1", project_id="p2")
+        data = json.loads(result.output)
+        assert data["ok"] is True
+
+
 class TestAddWithProject:
     @patch("td.cli.tasks.get_client")
     def test_add_with_project_resolution(self, mock_gc: MagicMock) -> None:

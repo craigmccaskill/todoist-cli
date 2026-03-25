@@ -516,3 +516,24 @@ def search(ctx: click.Context, query: tuple[str, ...], project_name: str | None)
 
     tasks.sort(key=relevance)
     fmt.task_list(tasks)
+
+
+@click.command()
+@click.argument("task_ref", nargs=-1, required=True)
+@click.option("-p", "--project", "project_name", required=True, help="Target project.")
+@click.pass_context
+def move(ctx: click.Context, task_ref: tuple[str, ...], project_name: str) -> None:
+    """Move a task to a different project.
+
+    Examples: td move 1 -p Personal | td move buy milk -p Work
+    """
+    api = get_client()
+    fmt = _get_formatter(ctx)
+    task_id = _resolve_task(" ".join(task_ref), api)
+
+    project = resolve_project(api, project_name)
+    api.move_task(task_id, project_id=project.id)
+    fmt.success(
+        f"Moved task to {project.name}",
+        {"task_id": task_id, "project_id": project.id, "project_name": project.name},
+    )
