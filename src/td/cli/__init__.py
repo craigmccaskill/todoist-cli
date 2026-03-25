@@ -14,7 +14,7 @@ from td.core.config import load_config
 
 
 class TdGroup(click.Group):
-    """Custom Click group with structured error handling."""
+    """Custom Click group with structured error handling and default command."""
 
     def invoke(self, ctx: click.Context) -> None:
         try:
@@ -42,7 +42,11 @@ class TdGroup(click.Group):
         return OutputMode.JSON
 
 
-@click.group(cls=TdGroup, context_settings={"help_option_names": ["-h", "--help"]})
+@click.group(
+    cls=TdGroup,
+    context_settings={"help_option_names": ["-h", "--help"]},
+    invoke_without_command=True,
+)
 @click.option("--json", "output_json", is_flag=True, help="Force JSON output.")
 @click.option("--plain", is_flag=True, help="Force plain text output (no color).")
 @click.option("--debug", is_flag=True, help="Show API request details on stderr.")
@@ -66,6 +70,13 @@ def cli(ctx: click.Context, output_json: bool, plain: bool, debug: bool) -> None
             stream=sys.stderr,
         )
         logging.getLogger("urllib3").setLevel(logging.DEBUG)
+
+    # If no subcommand was given, run the default command
+    if ctx.invoked_subcommand is None:
+        cmd_name = config.default_command
+        cmd = cli.get_command(ctx, cmd_name)
+        if cmd:
+            ctx.invoke(cmd)
 
 
 # Register subcommands (imported here to avoid circular imports)

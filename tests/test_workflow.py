@@ -183,6 +183,23 @@ class TestFocusCommand:
         assert data["type"] == "task_list"
 
 
+class TestDefaultCommand:
+    @patch("td.cli.tasks.get_client")
+    def test_no_subcommand_runs_today(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.filter_tasks.return_value = iter([[_mock_task()]])
+        api.get_projects.return_value = iter([[_mock_project()]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["type"] == "task_list"
+        api.filter_tasks.assert_called_once_with(query="overdue | today")
+
+
 class TestLsSortFlag:
     @patch("td.cli.tasks.get_client")
     def test_ls_with_sort(self, mock_gc: MagicMock) -> None:

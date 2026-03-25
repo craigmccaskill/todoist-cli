@@ -37,6 +37,7 @@ class TdConfig:
     default_project: str | None = None
     default_format: str | None = None  # "rich", "plain", or "json"
     default_sort: str = "priority"  # "priority", "due", "project", "created"
+    default_command: str = "today"  # "today", "ls", "inbox", "next"
     color: bool = True
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -57,6 +58,7 @@ def load_config() -> TdConfig:
         config.default_project = settings.get("default_project")
         config.default_format = settings.get("default_format")
         config.default_sort = settings.get("default_sort", "priority")
+        config.default_command = settings.get("default_command", "today")
         config.color = settings.get("color", True)
 
     # Env var overrides
@@ -68,6 +70,9 @@ def load_config() -> TdConfig:
 
     if sort := os.environ.get("TD_SORT"):
         config.default_sort = sort
+
+    if cmd := os.environ.get("TD_DEFAULT_CMD"):
+        config.default_command = cmd
 
     # Respect NO_COLOR (https://no-color.org/)
     if os.environ.get("NO_COLOR") is not None:
