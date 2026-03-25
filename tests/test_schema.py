@@ -37,6 +37,7 @@ class TestSchemaCommand:
             "next",
             "log",
             "focus",
+            "move",
             "quick",
             "search",
             "undo",
