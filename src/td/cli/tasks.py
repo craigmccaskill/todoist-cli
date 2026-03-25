@@ -13,6 +13,7 @@ from td.core.cache import resolve_task_ref
 from td.core.client import get_client
 from td.core.config import load_config
 from td.core.projects import get_inbox_project, get_project_name_map, resolve_project
+from td.core.sections import resolve_section
 from td.core.tasks import (
     SORT_OPTIONS,
     complete_task,
@@ -92,6 +93,12 @@ def _read_stdin() -> str | None:
 @click.option("-l", "--label", "labels", multiple=True, help="Label (repeatable).")
 @click.option("--desc", "description", help="Task description.")
 @click.option(
+    "-s",
+    "--section",
+    "section_name",
+    help="Section name (requires --project).",
+)
+@click.option(
     "--idempotent",
     is_flag=True,
     help="Skip if identical task already exists.",
@@ -105,6 +112,7 @@ def add(
     due: str | None,
     labels: tuple[str, ...],
     description: str | None,
+    section_name: str | None,
     idempotent: bool,
 ) -> None:
     """Create a new task. Reads from stdin if no content argument."""
@@ -117,9 +125,19 @@ def add(
             suggestion="Provide content as an argument or pipe via stdin.",
         )
 
+    if section_name and not project_name:
+        raise TdValidationError(
+            "--section requires --project.",
+            suggestion="Specify a project with -p to use --section.",
+        )
+
     project_id = None
     if project_name:
         project_id = resolve_project(api, project_name).id
+
+    section_id = None
+    if section_name and project_id:
+        section_id = resolve_section(api, section_name, project_id=project_id).id
 
     # Todoist uses inverted priority: 4=urgent, 1=normal
     # We expose 1=urgent to users, map to API values
@@ -129,6 +147,7 @@ def add(
         api,
         text,
         project_id=project_id,
+        section_id=section_id,
         priority=api_priority,
         due_string=due,
         labels=list(labels) if labels else None,

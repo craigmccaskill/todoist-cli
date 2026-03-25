@@ -150,3 +150,38 @@ class TestAddWithProject:
         assert result.exit_code == 0
         _, kwargs = api.add_task.call_args
         assert kwargs["project_id"] == "p1"
+
+    @patch("td.cli.tasks.get_client")
+    def test_add_with_section(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+
+        proj = MagicMock()
+        proj.id = "p1"
+        proj.name = "Work"
+        proj.is_inbox_project = False
+        api.get_projects.return_value = iter([[proj]])
+
+        sec = MagicMock()
+        sec.id = "s1"
+        sec.name = "In Progress"
+        api.get_sections.return_value = iter([[sec]])
+
+        api.add_task.return_value = _mock_task()
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "add", "Test", "-p", "Work", "-s", "In Progress"])
+
+        assert result.exit_code == 0
+        _, kwargs = api.add_task.call_args
+        assert kwargs["section_id"] == "s1"
+
+    @patch("td.cli.tasks.get_client")
+    def test_add_section_without_project_errors(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "add", "Test", "-s", "Backlog"])
+
+        assert result.exit_code == 1
