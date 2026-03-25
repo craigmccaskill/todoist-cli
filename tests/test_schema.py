@@ -40,6 +40,7 @@ class TestSchemaCommand:
             "move",
             "quick",
             "search",
+            "show",
             "undo",
             "project-add",
             "projects",
