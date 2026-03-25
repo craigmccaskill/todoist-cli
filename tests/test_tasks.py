@@ -272,6 +272,23 @@ class TestCliCommands:
         api.add_task_quick.assert_called_once_with("Buy milk tomorrow")
 
     @patch("td.cli.tasks.get_client")
+    def test_search_command(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.filter_tasks.return_value = iter(
+            [[_mock_task(content="Deploy v2"), _mock_task(content="Deploy v3")]]
+        )
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "search", "deploy"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["type"] == "task_list"
+        assert len(data["data"]) == 2
+        api.filter_tasks.assert_called_once_with(query="search: deploy")
+
+    @patch("td.cli.tasks.get_client")
     def test_add_idempotent(self, mock_gc: MagicMock) -> None:
         api = MagicMock()
         mock_gc.return_value = api

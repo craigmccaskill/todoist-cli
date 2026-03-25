@@ -98,6 +98,7 @@ def _register_commands() -> None:
         ls,
         next_task,
         quick,
+        search,
         today,
         undo,
     )
@@ -118,6 +119,7 @@ def _register_commands() -> None:
     cli.add_command(quick)
     cli.add_command(capture)
     cli.add_command(undo)
+    cli.add_command(search)
     cli.add_command(projects)
     cli.add_command(project_add)
     cli.add_command(sections)

@@ -38,6 +38,7 @@ class TestSchemaCommand:
             "log",
             "focus",
             "quick",
+            "search",
             "undo",
             "project-add",
             "projects",
