@@ -59,7 +59,7 @@ Commands:
 
 ```
 $ td --version
-td, version 0.6.0-alpha
+td, version 0.7.0-alpha
 ```
 
 
@@ -884,7 +884,7 @@ Output the full capability manifest. Agents call this once to learn everything.
 $ td schema
 {
   "name": "td",
-  "version": "0.6.0-alpha",
+  "version": "0.7.0-alpha",
   "description": "AI-native Todoist CLI",
   "commands": {
     "add": {
