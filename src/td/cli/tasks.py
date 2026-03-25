@@ -12,7 +12,7 @@ from td.cli.output import OutputFormatter
 from td.core.cache import resolve_task_ref
 from td.core.client import get_client
 from td.core.config import load_config
-from td.core.projects import get_inbox_project, resolve_project
+from td.core.projects import get_inbox_project, get_project_name_map, resolve_project
 from td.core.tasks import (
     SORT_OPTIONS,
     complete_task,
@@ -200,7 +200,8 @@ def ls(
         for task in tasks:
             click.echo(task.id)
     else:
-        fmt.task_list(tasks)
+        pnames = get_project_name_map(api)
+        fmt.task_list(tasks, project_names=pnames)
 
 
 @click.command()
@@ -233,7 +234,8 @@ def today(ctx: click.Context, sort_by: str | None, reverse_sort: bool) -> None:
 
     tasks = list_tasks(api, filter_query="overdue | today")
     tasks = sort_tasks(tasks, _resolve_sort(sort_by), reverse=reverse_sort)
-    fmt.task_list(tasks, title="Today")
+    pnames = get_project_name_map(api)
+    fmt.task_list(tasks, title="Today", project_names=pnames)
 
 
 @click.command(name="next")

@@ -65,17 +65,21 @@ _PRIORITY_STYLES = {
 }
 
 
-def _task_to_dict(task: Task) -> dict[str, Any]:
+def _task_to_dict(task: Task, project_names: dict[str, str] | None = None) -> dict[str, Any]:
     """Convert a Task to a plain dict for JSON output."""
-    return task.to_dict()
+    d = task.to_dict()
+    if project_names and task.project_id:
+        d["project_name"] = project_names.get(task.project_id, "")
+    return d
 
 
-def _task_plain_row(task: Task) -> str:
+def _task_plain_row(task: Task, project_names: dict[str, str] | None = None) -> str:
     """Format a task as a tab-separated plain row."""
     due = task.due.date if task.due else ""
     priority = f"p{5 - task.priority}" if task.priority else ""
     labels = ",".join(task.labels) if task.labels else ""
-    return f"{task.id}\t{task.content}\t{due}\t{priority}\t{labels}"
+    project = project_names.get(task.project_id, "") if project_names else ""
+    return f"{task.id}\t{task.content}\t{project}\t{due}\t{priority}\t{labels}"
 
 
 class OutputFormatter:
@@ -107,19 +111,24 @@ class OutputFormatter:
         else:
             self._rich_task(task)
 
-    def task_list(self, tasks: list[Task], title: str | None = None) -> None:
+    def task_list(
+        self,
+        tasks: list[Task],
+        title: str | None = None,
+        project_names: dict[str, str] | None = None,
+    ) -> None:
         """Render a list of tasks and cache IDs for numbered references."""
         # Cache task IDs for numbered references (td done 1, etc.)
         save_result_cache([t.id for t in tasks])
 
         if self.mode == OutputMode.JSON:
-            self._json_out([_task_to_dict(t) for t in tasks], "task_list")
+            self._json_out([_task_to_dict(t, project_names) for t in tasks], "task_list")
         elif self.mode == OutputMode.PLAIN:
-            click.echo("#\tID\tCONTENT\tDUE\tPRIORITY\tLABELS")
+            click.echo("#\tID\tCONTENT\tPROJECT\tDUE\tPRIORITY\tLABELS")
             for i, t in enumerate(tasks, 1):
-                click.echo(f"{i}\t{_task_plain_row(t)}")
+                click.echo(f"{i}\t{_task_plain_row(t, project_names)}")
         else:
-            self._rich_task_table(tasks, title)
+            self._rich_task_table(tasks, title, project_names)
 
     def _rich_task(self, task: Task) -> None:
         assert self._console is not None
@@ -135,12 +144,18 @@ class OutputFormatter:
         text.append(f"  ({task.id})", style="dim")
         self._console.print(text)
 
-    def _rich_task_table(self, tasks: list[Task], title: str | None = None) -> None:
+    def _rich_task_table(
+        self,
+        tasks: list[Task],
+        title: str | None = None,
+        project_names: dict[str, str] | None = None,
+    ) -> None:
         assert self._console is not None
         table = Table(title=title or "Tasks", show_lines=False)
         table.add_column("#", style="dim", width=3)
         table.add_column("Pri", style="dim", width=3)
         table.add_column("Content", style="bold")
+        table.add_column("Project", style="dim")
         table.add_column("Due", style="yellow")
         table.add_column("Labels", style="cyan")
         table.add_column("ID", style="dim")
@@ -149,10 +164,12 @@ class OutputFormatter:
             p_label, p_style = _PRIORITY_STYLES.get(task.priority, ("p4", "dim"))
             due = task.due.string if task.due else ""
             labels = ", ".join(f"@{lbl}" for lbl in task.labels) if task.labels else ""
+            project = project_names.get(task.project_id, "") if project_names else ""
             table.add_row(
                 str(i),
                 Text(p_label, style=p_style),
                 task.content,
+                project,
                 due,
                 labels,
                 task.id,
