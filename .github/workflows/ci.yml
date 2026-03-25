@@ -17,11 +17,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
-      - run: pip install ruff mypy
-      - run: ruff check .
-      - run: ruff format --check .
       - run: pip install -e ".[dev]"
-      - run: mypy td/
+      - run: make lint
 
   test:
     runs-on: ${{ matrix.os }}
