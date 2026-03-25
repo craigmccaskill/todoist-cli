@@ -51,6 +51,7 @@ class TestSchemaCommand:
             "labels",
             "label-add",
             "rate-limit",
+            "review",
             "init",
             "completions",
             "schema",

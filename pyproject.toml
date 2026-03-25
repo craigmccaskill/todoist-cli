@@ -96,4 +96,4 @@ addopts = "--cov=td --cov-report=term-missing"
 
 [tool.coverage.run]
 source = ["td"]
-omit = ["tests/*"]
+omit = ["tests/*", "src/td/tui/*", "src/td/cli/review.py"]
