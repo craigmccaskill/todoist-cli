@@ -59,6 +59,9 @@ Repository = "https://github.com/craigmccaskill/todoist-cli"
 "Bug Tracker" = "https://github.com/craigmccaskill/todoist-cli/issues"
 Changelog = "https://github.com/craigmccaskill/todoist-cli/blob/main/CHANGELOG.md"
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.setuptools.dynamic]
 version = { attr = "td.__version__" }
 

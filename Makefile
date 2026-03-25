@@ -13,7 +13,7 @@ test: ## Run tests with coverage
 lint: ## Run linter and type checker
 	ruff check .
 	ruff format --check .
-	mypy td/
+	mypy src/td/
 
 fmt: ## Auto-format code
 	ruff format .
@@ -33,9 +33,9 @@ ifndef VERSION
 endif
 	@echo "Releasing v$(VERSION)..."
 	git checkout -b release/v$(VERSION)
-	@sed -i 's/__version__ = ".*"/__version__ = "$(VERSION)"/' td/__init__.py
+	@sed -i 's/__version__ = ".*"/__version__ = "$(VERSION)"/' src/td/__init__.py
 	@sed -i 's/## \[Unreleased\]/## [Unreleased]\n\n## [$(VERSION)] - $(shell date +%Y-%m-%d)/' CHANGELOG.md
-	git add td/__init__.py CHANGELOG.md
+	git add src/td/__init__.py CHANGELOG.md
 	git commit -m "chore(release): v$(VERSION)"
 	git push -u origin release/v$(VERSION)
 	gh pr create --title "chore(release): v$(VERSION)" --body "Version bump and changelog for v$(VERSION)."
