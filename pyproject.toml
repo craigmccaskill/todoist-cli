@@ -37,6 +37,7 @@ dependencies = [
 [project.optional-dependencies]
 test = [
     "pytest>=8",
+    "pytest-asyncio",
     "pytest-cov",
     "pytest-mock",
 ]
@@ -45,8 +46,11 @@ lint = [
     "mypy",
     "types-requests",
 ]
+interactive = [
+    "textual>=0.50",
+]
 dev = [
-    "todoist-cli[test,lint]",
+    "todoist-cli[test,lint,interactive]",
     "pre-commit",
 ]
 
