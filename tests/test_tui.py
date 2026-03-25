@@ -107,6 +107,105 @@ class TestPickerApp:
         assert app.return_value == "second"
 
 
+class TestReviewCommand:
+    def test_review_non_tty_errors(self) -> None:
+        from click.testing import CliRunner
+
+        from td.cli import cli
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "review"])
+
+        assert result.exit_code == 1
+
+    def test_review_stats_dataclass(self) -> None:
+        from td.tui.review import ReviewStats
+
+        stats = ReviewStats()
+        assert stats.updated == []
+        assert stats.completed == []
+        assert stats.skipped == 0
+        assert stats.undo_stack == []
+
+    @pytest.mark.asyncio
+    async def test_review_app_creates(self) -> None:
+        from td.tui.review import ReviewApp
+
+        api = MagicMock()
+        task = MagicMock()
+        task.id = "t1"
+        task.content = "Test task"
+        task.priority = 1
+        task.labels = []
+        task.project_id = "p1"
+        task.due = None
+
+        app = ReviewApp(
+            api=api,
+            tasks=[task],
+            projects=[{"id": "p1", "name": "Work"}],
+            labels=["urgent"],
+            title="Test Review",
+        )
+        assert app is not None
+
+    @pytest.mark.asyncio
+    async def test_review_app_quit(self) -> None:
+        from td.tui.review import ReviewApp
+
+        api = MagicMock()
+        task = MagicMock()
+        task.id = "t1"
+        task.content = "Test task"
+        task.priority = 1
+        task.labels = []
+        task.project_id = "p1"
+        task.due = None
+
+        app = ReviewApp(
+            api=api,
+            tasks=[task],
+            projects=[{"id": "p1", "name": "Work"}],
+            labels=["urgent"],
+        )
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            await pilot.press("q")
+
+        assert app.return_value is not None
+        assert app.return_value.skipped == 1
+
+    @pytest.mark.asyncio
+    async def test_review_app_navigation(self) -> None:
+        from td.tui.review import ReviewApp
+
+        api = MagicMock()
+        tasks = []
+        for i, name in enumerate(["Task A", "Task B"]):
+            t = MagicMock()
+            t.id = f"t{i}"
+            t.content = name
+            t.priority = 1
+            t.labels = []
+            t.project_id = "p1"
+            t.due = None
+            tasks.append(t)
+
+        app = ReviewApp(
+            api=api,
+            tasks=tasks,
+            projects=[{"id": "p1", "name": "Work"}],
+            labels=["urgent"],
+        )
+        async with app.run_test() as pilot:
+            await pilot.pause()
+            await pilot.press("j")  # move down
+            await pilot.press("k")  # move up
+            await pilot.press("q")
+
+        assert app.return_value is not None
+
+
 class TestSelectModeFallback:
     """Test that commands error properly when no ref given in non-TTY."""
 
