@@ -42,6 +42,7 @@ Commands:
   projects     List all projects.
   quick        Natural language task creation.
   rate-limit   Show current API rate limit status from cached response...
+  review       Interactive inbox review — process tasks one by one.
   schema       Output full capability manifest as JSON.
   search       Search tasks by keyword across all projects.
   section-add  Create a new section in a project.
@@ -58,7 +59,7 @@ Commands:
 
 ```
 $ td --version
-td, version 0.5.0-alpha
+td, version 0.6.0-alpha
 ```
 
 
@@ -883,7 +884,7 @@ Output the full capability manifest. Agents call this once to learn everything.
 $ td schema
 {
   "name": "td",
-  "version": "0.5.0-alpha",
+  "version": "0.6.0-alpha",
   "description": "AI-native Todoist CLI",
   "commands": {
     "add": {
@@ -990,7 +991,7 @@ $ td schema
         {
           "name": "task_ref",
           "type": "text",
-          "required": true
+          "required": false
         },
         {
           "name": "text",
@@ -1006,7 +1007,7 @@ $ td schema
         {
           "name": "task_ref",
           "type": "text",
-          "required": true
+          "required": false
         }
       ],
       "options": []
@@ -1028,7 +1029,7 @@ $ td schema
         {
           "name": "task_ref",
           "type": "text",
-          "required": true
+          "required": false
         }
       ],
       "options": [
@@ -1052,7 +1053,7 @@ $ td schema
         {
           "name": "task_ref",
           "type": "text",
-          "required": true
+          "required": false
         }
       ],
       "options": [
@@ -1076,7 +1077,7 @@ $ td schema
         {
           "name": "task_ref",
           "type": "text",
-          "required": true
+          "required": false
         }
       ],
       "options": [
@@ -1312,7 +1313,7 @@ $ td schema
         {
           "name": "task_ref",
           "type": "text",
-          "required": true
+          "required": false
         }
       ],
       "options": [
@@ -1412,6 +1413,34 @@ $ td schema
       "arguments": [],
       "options": []
     },
+    "review": {
+      "description": "Interactive inbox review \u2014 process tasks one by one.\n\n    Defaults to inbox tasks. Use -p for a project or -f for a filter.\n    ",
+      "arguments": [],
+      "options": [
+        {
+          "name": "project_name",
+          "type": "text",
+          "required": false,
+          "flags": [
+            "-p",
+            "--project"
+          ],
+          "help": "Review a specific project.",
+          "is_flag": false
+        },
+        {
+          "name": "query",
+          "type": "text",
+          "required": false,
+          "flags": [
+            "-f",
+            "--filter"
+          ],
+          "help": "Review tasks matching a filter.",
+          "is_flag": false
+        }
+      ]
+    },
     "schema": {
       "description": "Output full capability manifest as JSON.",
       "arguments": [],
@@ -1486,7 +1515,7 @@ $ td schema
         {
           "name": "task_ref",
           "type": "text",
-          "required": true
+          "required": false
         }
       ],
       "options": []
@@ -1525,7 +1554,7 @@ $ td schema
         {
           "name": "task_ref",
           "type": "text",
-          "required": true
+          "required": false
         }
       ],
       "options": []
@@ -1770,7 +1799,7 @@ Options:
 
 ```
 $ td show --help
-Usage: td show [OPTIONS] TASK_REF...
+Usage: td show [OPTIONS] [TASK_REF]...
 
   View full task details. Accepts row number, content match, or task ID.
 
@@ -1817,7 +1846,7 @@ Options:
 
 ```
 $ td done --help
-Usage: td done [OPTIONS] TASK_REF...
+Usage: td done [OPTIONS] [TASK_REF]...
 
   Complete a task. Accepts row number, content match, or task ID.
 
@@ -1841,7 +1870,7 @@ Options:
 
 ```
 $ td undo --help
-Usage: td undo [OPTIONS] TASK_REF...
+Usage: td undo [OPTIONS] [TASK_REF]...
 
   Reopen a completed task. Accepts row number, content match, or task ID.
 
@@ -1864,7 +1893,7 @@ Options:
 
 ```
 $ td edit --help
-Usage: td edit [OPTIONS] TASK_REF...
+Usage: td edit [OPTIONS] [TASK_REF]...
 
   Update a task. Accepts row number, content match, or task ID.
 
@@ -1893,7 +1922,7 @@ Options:
 
 ```
 $ td move --help
-Usage: td move [OPTIONS] TASK_REF...
+Usage: td move [OPTIONS] [TASK_REF]...
 
   Move a task to a different project.
 
@@ -1917,7 +1946,7 @@ Options:
 
 ```
 $ td delete --help
-Usage: td delete [OPTIONS] TASK_REF...
+Usage: td delete [OPTIONS] [TASK_REF]...
 
   Delete a task. Accepts row number, content match, or task ID.
 
@@ -1964,7 +1993,7 @@ Options:
 
 ```
 $ td comment --help
-Usage: td comment [OPTIONS] TASK_REF TEXT...
+Usage: td comment [OPTIONS] [TASK_REF] TEXT...
 
   Add a comment to a task.
 
@@ -1987,7 +2016,7 @@ Options:
 
 ```
 $ td comments --help
-Usage: td comments [OPTIONS] TASK_REF
+Usage: td comments [OPTIONS] [TASK_REF]
 
   List comments on a task.
 
@@ -2127,6 +2156,31 @@ Usage: td label-add [OPTIONS] NAME...
 
 Options:
   -h, --help  Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
+```
+
+### `td review --help`
+
+```
+$ td review --help
+Usage: td review [OPTIONS]
+
+  Interactive inbox review — process tasks one by one.
+
+  Defaults to inbox tasks. Use -p for a project or -f for a filter.
+
+Options:
+  -p, --project TEXT  Review a specific project.
+  -f, --filter TEXT   Review tasks matching a filter.
+  -h, --help          Show this message and exit.
 {
   "ok": false,
   "error": {

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0-alpha] - 2026-03-25
+
+### Added
+- `td review` — interactive TUI for inbox processing with j/k navigation and action keybindings (#101)
+- Interactive task picker for commands called with no arguments in TTY mode (#101)
+- `textual` added as optional dependency: `pip install todoist-cli[interactive]`
+- TUI picker infrastructure: reusable table/picker widgets in `src/td/tui/`
+- Modal picker screens for project, priority, and label selection in review mode
+- Shortcut bar toggle (h) and help screen (?) in review TUI
+
 ## [0.5.0-alpha] - 2026-03-25
 
 ### Added

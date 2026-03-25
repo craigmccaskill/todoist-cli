@@ -173,6 +173,7 @@ The core is a library. The CLI is one frontend. An MCP server ([planned](https:/
 | `td section-add` | Create a new section in a project |
 | `td labels` | List labels |
 | `td label-add` | Create a new label |
+| `td review` | Interactive inbox review TUI (requires `[interactive]`) |
 | `td rate-limit` | Show API rate limit status |
 | `td schema` | Output capability manifest (JSON) |
 | `td init` | Set up authentication (config file or env var) |

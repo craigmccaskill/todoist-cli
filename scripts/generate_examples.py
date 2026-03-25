@@ -491,6 +491,7 @@ def generate() -> str:
         "section-add",
         "labels",
         "label-add",
+        "review",
         "rate-limit",
         "schema",
     ]
