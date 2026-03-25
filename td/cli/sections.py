@@ -1,4 +1,4 @@
-"""Sections CLI command."""
+"""Sections CLI commands."""
 
 from __future__ import annotations
 
@@ -31,3 +31,23 @@ def sections(ctx: click.Context, project_name: str) -> None:
     project = resolve_project(api, project_name)
     all_sections = _collect_sections(api, project_id=project.id)
     fmt.section_list(all_sections)
+
+
+@click.command(name="section-add")
+@click.argument("name", nargs=-1, required=True)
+@click.option(
+    "-p",
+    "--project",
+    "project_name",
+    required=True,
+    help="Project name or ID.",
+)
+@click.pass_context
+def section_add(ctx: click.Context, name: tuple[str, ...], project_name: str) -> None:
+    """Create a new section in a project."""
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    project = resolve_project(api, project_name)
+    section = api.add_section(name=" ".join(name), project_id=project.id)
+    fmt.item_created("section", section)

@@ -71,10 +71,10 @@ def cli(ctx: click.Context, output_json: bool, plain: bool, debug: bool) -> None
 # Register subcommands (imported here to avoid circular imports)
 def _register_commands() -> None:
     from td.cli.config_cmd import completions, init
-    from td.cli.labels import labels
+    from td.cli.labels import label_add, labels
     from td.cli.projects import project_add, projects
     from td.cli.schema_cmd import schema
-    from td.cli.sections import sections
+    from td.cli.sections import section_add, sections
     from td.cli.tasks import (
         add,
         capture,
@@ -110,7 +110,9 @@ def _register_commands() -> None:
     cli.add_command(projects)
     cli.add_command(project_add)
     cli.add_command(sections)
+    cli.add_command(section_add)
     cli.add_command(labels)
+    cli.add_command(label_add)
 
 
 _register_commands()
