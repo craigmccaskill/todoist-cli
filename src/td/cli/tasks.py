@@ -482,3 +482,37 @@ def capture(ctx: click.Context, text: tuple[str, ...]) -> None:
 
     task, _ = create_task(api, " ".join(text))
     fmt.success(f"Captured: {task.content}", {"task_id": task.id})
+
+
+@click.command()
+@click.argument("query", nargs=-1, required=True)
+@click.option("-p", "--project", "project_name", help="Scope to a project.")
+@click.pass_context
+def search(ctx: click.Context, query: tuple[str, ...], project_name: str | None) -> None:
+    """Search tasks by keyword across all projects.
+
+    Example: td search deploy | td search "blog post" -p Work
+    """
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    search_term = " ".join(query)
+    tasks = list_tasks(api, filter_query=f"search: {search_term}")
+
+    if project_name:
+        project_id = resolve_project(api, project_name).id
+        tasks = [t for t in tasks if t.project_id == project_id]
+
+    # Sort by relevance: exact match > starts-with > contains
+    lower = search_term.lower()
+
+    def relevance(t: object) -> int:
+        content = getattr(t, "content", "").lower()
+        if content == lower:
+            return 0
+        if content.startswith(lower):
+            return 1
+        return 2
+
+    tasks.sort(key=relevance)
+    fmt.task_list(tasks)
