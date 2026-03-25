@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0-alpha] - 2026-03-25
+
+### Added
+- Dynamic shell completions for project, label, and section names (#24)
+- Documentation site with mkdocs-material — deployed to GitHub Pages (#38)
+- `make docs` for local documentation preview
+
 ## [0.6.0-alpha] - 2026-03-25
 
 ### Added
