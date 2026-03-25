@@ -50,7 +50,7 @@ Commands:
 
 ```
 $ td --version
-td, version 0.2.0-alpha
+td, version 0.3.0-alpha
 ```
 
 
@@ -302,12 +302,42 @@ $ td --json quick "Buy groceries tomorrow p2 #errands"
 }
 ```
 
+### `td --json capture Call dentist about appointment`
+
+Quick-capture to inbox — no parsing, no flags.
+
+```
+$ td --json capture Call dentist about appointment
+{
+  "ok": true,
+  "type": "success",
+  "data": {
+    "task_id": "8bx9a0c2"
+  }
+}
+```
+
 ### `td --json done 8bx9a0c2`
 
 Complete a task.
 
 ```
 $ td --json done 8bx9a0c2
+{
+  "ok": true,
+  "type": "success",
+  "data": {
+    "task_id": "8bx9a0c2"
+  }
+}
+```
+
+### `td --json undo 8bx9a0c2`
+
+Reopen a completed task.
+
+```
+$ td --json undo 8bx9a0c2
 {
   "ok": true,
   "type": "success",
@@ -356,6 +386,145 @@ $ td --json delete 8bx9a0c2 --yes
   "data": {
     "task_id": "8bx9a0c2"
   }
+}
+```
+
+
+## Workflow Commands
+
+### `td --json today`
+
+Show tasks due today and overdue — your morning dashboard.
+
+```
+$ td --json today
+{
+  "ok": true,
+  "type": "task_list",
+  "data": [
+    {
+      "id": "8bx9a0c2",
+      "content": "Review PR for auth module",
+      "priority": 4,
+      "labels": [
+        "work",
+        "code-review"
+      ],
+      "project_id": "220474322",
+      "description": "",
+      "due": {
+        "string": "Mar 25",
+        "date": "2026-03-25"
+      }
+    },
+    {
+      "id": "7ky3m1f9",
+      "content": "Buy groceries",
+      "priority": 1,
+      "labels": [
+        "errands"
+      ],
+      "project_id": "220474322",
+      "description": "",
+      "due": {
+        "string": "Mar 26",
+        "date": "2026-03-26"
+      }
+    }
+  ]
+}
+```
+
+### `td --json next`
+
+Show your highest priority task.
+
+```
+$ td --json next
+{
+  "ok": true,
+  "type": "task",
+  "data": {
+    "id": "8bx9a0c2",
+    "content": "Review PR for auth module",
+    "priority": 4,
+    "labels": [
+      "work",
+      "code-review"
+    ],
+    "project_id": "220474322",
+    "description": "",
+    "due": {
+      "string": "Mar 25",
+      "date": "2026-03-25"
+    }
+  }
+}
+```
+
+### `td --json focus "Work"`
+
+Focus on a single project.
+
+```
+$ td --json focus "Work"
+{
+  "ok": true,
+  "type": "task_list",
+  "data": [
+    {
+      "id": "8bx9a0c2",
+      "content": "Review PR for auth module",
+      "priority": 4,
+      "labels": [
+        "work",
+        "code-review"
+      ],
+      "project_id": "220474322",
+      "description": "",
+      "due": {
+        "string": "Mar 25",
+        "date": "2026-03-25"
+      }
+    },
+    {
+      "id": "4np6r2d5",
+      "content": "Write blog post draft",
+      "priority": 3,
+      "labels": [
+        "writing"
+      ],
+      "project_id": "220474322",
+      "description": "",
+      "due": {
+        "string": "Mar 28",
+        "date": "2026-03-28"
+      }
+    },
+    {
+      "id": "1aq8s4g7",
+      "content": "Schedule dentist appointment",
+      "priority": 2,
+      "labels": [],
+      "project_id": "220474322",
+      "description": "",
+      "due": null
+    },
+    {
+      "id": "7ky3m1f9",
+      "content": "Buy groceries",
+      "priority": 1,
+      "labels": [
+        "errands"
+      ],
+      "project_id": "220474322",
+      "description": "",
+      "due": {
+        "string": "Mar 26",
+        "date": "2026-03-26"
+      }
+    }
+  ]
 }
 ```
 
@@ -428,6 +597,24 @@ $ td --json projects -s "Work"
 }
 ```
 
+### `td --json project-add "Side Projects"`
+
+Create a new project.
+
+```
+$ td --json project-add "Side Projects"
+{
+  "ok": true,
+  "type": "project_created",
+  "data": {
+    "id": "220474323",
+    "name": "Work",
+    "is_favorite": true,
+    "created": true
+  }
+}
+```
+
 ### `td --json sections -p "Work"`
 
 List sections in a project.
@@ -452,6 +639,18 @@ $ td --json sections -p "Work"
     }
   ]
 }
+```
+
+### `td --json section-add "In Progress" -p "Work"`
+
+Create a new section in a project.
+
+```
+$ td --json section-add "In Progress" -p "Work"
+Usage: td [OPTIONS] COMMAND [ARGS]...
+Try 'td -h' for help.
+
+Error: No such command 'section-add'.
 ```
 
 ### `td --json labels`
@@ -502,6 +701,18 @@ lbl4	writing
 lbl5	code-review
 ```
 
+### `td --json label-add urgent`
+
+Create a new label.
+
+```
+$ td --json label-add urgent
+Usage: td [OPTIONS] COMMAND [ARGS]...
+Try 'td -h' for help.
+
+Error: No such command 'label-add'.
+```
+
 
 ## AI-Native Commands
 
@@ -513,7 +724,7 @@ Output the full capability manifest. Agents call this once to learn everything.
 $ td schema
 {
   "name": "td",
-  "version": "0.2.0-alpha",
+  "version": "0.3.0-alpha",
   "description": "AI-native Todoist CLI",
   "commands": {
     "add": {
@@ -1083,6 +1294,29 @@ Options:
 }
 ```
 
+### `td capture --help`
+
+```
+$ td capture --help
+Usage: td capture [OPTIONS] TEXT...
+
+  Quick-capture to inbox — no parsing, no flags, minimal output.
+
+  Example: td capture call dentist about appointment
+
+Options:
+  -h, --help  Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
+```
+
 ### `td ls --help`
 
 ```
@@ -1112,6 +1346,119 @@ Options:
 }
 ```
 
+### `td inbox --help`
+
+```
+$ td inbox --help
+Usage: td inbox [OPTIONS]
+
+  Show unprocessed inbox tasks.
+
+Options:
+  -h, --help  Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
+```
+
+### `td today --help`
+
+```
+$ td today --help
+Usage: td today [OPTIONS]
+
+  Show tasks due today and overdue — your morning dashboard.
+
+Options:
+  -s, --sort [priority|due|project|created]
+                                  Sort order (default: priority).
+  --reverse                       Reverse sort order.
+  -h, --help                      Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
+```
+
+### `td next --help`
+
+```
+$ td next --help
+Usage: td next [OPTIONS]
+
+  Show your highest priority task — what to work on now.
+
+Options:
+  -p, --project TEXT  Scope to a project.
+  -h, --help          Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
+```
+
+### `td log --help`
+
+```
+$ td log --help
+Usage: td log [OPTIONS]
+
+  Show completed tasks — your end-of-day review.
+
+Options:
+  --week      Show completed this week (default: today).
+  -h, --help  Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
+```
+
+### `td focus --help`
+
+```
+$ td focus --help
+Usage: td focus [OPTIONS] PROJECT_NAME
+
+  Focus on a single project — deep work mode.
+
+Options:
+  -s, --sort [priority|due|project|created]
+                                  Sort order (default: priority).
+  --reverse                       Reverse sort order.
+  -h, --help                      Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
+```
+
 ### `td done --help`
 
 ```
@@ -1121,6 +1468,29 @@ Usage: td done [OPTIONS] TASK_REF...
   Complete a task. Accepts row number, content match, or task ID.
 
   Examples: td done 1 | td done buy milk | td done 8bx9a0c2
+
+Options:
+  -h, --help  Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
+```
+
+### `td undo --help`
+
+```
+$ td undo --help
+Usage: td undo [OPTIONS] TASK_REF...
+
+  Reopen a completed task. Accepts row number, content match, or task ID.
+
+  Examples: td undo 1 | td undo buy milk | td undo 8bx9a0c2
 
 Options:
   -h, --help  Show this message and exit.
@@ -1211,27 +1581,6 @@ Options:
 }
 ```
 
-### `td inbox --help`
-
-```
-$ td inbox --help
-Usage: td inbox [OPTIONS]
-
-  Show unprocessed inbox tasks.
-
-Options:
-  -h, --help  Show this message and exit.
-{
-  "ok": false,
-  "error": {
-    "code": "API_ERROR",
-    "message": "Unexpected error: 0",
-    "suggestion": "",
-    "details": {}
-  }
-}
-```
-
 ### `td projects --help`
 
 ```
@@ -1243,6 +1592,29 @@ Usage: td projects [OPTIONS]
 Options:
   -s, --search TEXT  Search projects by name.
   -h, --help         Show this message and exit.
+{
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: 0",
+    "suggestion": "",
+    "details": {}
+  }
+}
+```
+
+### `td project-add --help`
+
+```
+$ td project-add --help
+Usage: td project-add [OPTIONS] NAME...
+
+  Create a new project.
+
+Options:
+  --parent TEXT  Parent project name or ID (for sub-projects).
+  --favorite     Mark as favorite.
+  -h, --help     Show this message and exit.
 {
   "ok": false,
   "error": {
@@ -1276,6 +1648,16 @@ Options:
 }
 ```
 
+### `td section-add --help`
+
+```
+$ td section-add --help
+Usage: td [OPTIONS] COMMAND [ARGS]...
+Try 'td -h' for help.
+
+Error: No such command 'section-add'.
+```
+
 ### `td labels --help`
 
 ```
@@ -1296,6 +1678,16 @@ Options:
     "details": {}
   }
 }
+```
+
+### `td label-add --help`
+
+```
+$ td label-add --help
+Usage: td [OPTIONS] COMMAND [ARGS]...
+Try 'td -h' for help.
+
+Error: No such command 'label-add'.
 ```
 
 ### `td schema --help`

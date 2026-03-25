@@ -183,8 +183,13 @@ def make_api() -> MagicMock:
     api.add_task.return_value = TASKS[0]
     api.add_task_quick.return_value = TASKS[1]
     api.update_task.return_value = TASKS[0]
+    api.get_task.return_value = TASKS[0]
     api.complete_task.return_value = None
+    api.uncomplete_task.return_value = None
     api.delete_task.return_value = None
+    api.add_project.return_value = PROJECTS[1]
+    api.add_section.return_value = SECTIONS[1]
+    api.add_label.return_value = LABELS[0]
     return api
 
 
@@ -288,9 +293,21 @@ def generate() -> str:
         output,
     )
 
+    # --- td capture ---
+    output = run_cmd(["--json", "capture", "Call dentist about appointment"], make_api())
+    example(
+        "Quick-capture to inbox — no parsing, no flags.",
+        "td --json capture Call dentist about appointment",
+        output,
+    )
+
     # --- td done ---
     output = run_cmd(["--json", "done", "8bx9a0c2"], make_api())
     example("Complete a task.", "td --json done 8bx9a0c2", output)
+
+    # --- td undo ---
+    output = run_cmd(["--json", "undo", "8bx9a0c2"], make_api())
+    example("Reopen a completed task.", "td --json undo 8bx9a0c2", output)
 
     # --- td edit ---
     edit_args = [
@@ -316,6 +333,25 @@ def generate() -> str:
         output,
     )
 
+    # --- Workflow Commands ---
+    heading("Workflow Commands")
+
+    # --- td today ---
+    output = run_cmd(["--json", "today"], make_api())
+    example(
+        "Show tasks due today and overdue — your morning dashboard.",
+        "td --json today",
+        output,
+    )
+
+    # --- td next ---
+    output = run_cmd(["--json", "next"], make_api())
+    example("Show your highest priority task.", "td --json next", output)
+
+    # --- td focus ---
+    output = run_cmd(["--json", "focus", "Work"], make_api())
+    example("Focus on a single project.", 'td --json focus "Work"', output)
+
     # --- td projects ---
     heading("Organization Commands")
 
@@ -329,9 +365,21 @@ def generate() -> str:
     output = run_cmd(["--json", "projects", "-s", "Work"], make_api())
     example("Search projects.", 'td --json projects -s "Work"', output)
 
+    # --- td project-add ---
+    output = run_cmd(["--json", "project-add", "Side Projects"], make_api())
+    example("Create a new project.", 'td --json project-add "Side Projects"', output)
+
     # --- td sections ---
     output = run_cmd(["--json", "sections", "-p", "Work"], make_api())
     example("List sections in a project.", 'td --json sections -p "Work"', output)
+
+    # --- td section-add ---
+    output = run_cmd(["--json", "section-add", "In Progress", "-p", "Work"], make_api())
+    example(
+        "Create a new section in a project.",
+        'td --json section-add "In Progress" -p "Work"',
+        output,
+    )
 
     # --- td labels ---
     output = run_cmd(["--json", "labels"], make_api())
@@ -339,6 +387,10 @@ def generate() -> str:
 
     output = run_cmd(["--plain", "labels"], make_api())
     example("List labels (plain mode).", "td --plain labels", output)
+
+    # --- td label-add ---
+    output = run_cmd(["--json", "label-add", "urgent"], make_api())
+    example("Create a new label.", "td --json label-add urgent", output)
 
     # --- td schema ---
     heading("AI-Native Commands")
@@ -379,15 +431,24 @@ def generate() -> str:
 
     cmds = [
         "add",
+        "capture",
         "ls",
+        "inbox",
+        "today",
+        "next",
+        "log",
+        "focus",
         "done",
+        "undo",
         "edit",
         "delete",
         "quick",
-        "inbox",
         "projects",
+        "project-add",
         "sections",
+        "section-add",
         "labels",
+        "label-add",
         "schema",
     ]
     for cmd in cmds:
