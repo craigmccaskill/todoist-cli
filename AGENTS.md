@@ -41,6 +41,7 @@ Set `TD_API_TOKEN` env var (preferred for agents), or run `td init` interactivel
 - `td section-add <name> -p <project>` — create a section in a project
 - `td labels` — list all labels
 - `td label-add <name>` — create a label
+- `td review` — interactive TUI inbox review. `-p` for a project, `-f` for a filter. Requires `[interactive]` extra
 - `td rate-limit` — show API rate limit status from cached response headers (no API call)
 - `td schema` — full capability manifest as JSON
 
