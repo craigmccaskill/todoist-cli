@@ -7,8 +7,8 @@ import contextlib
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Project
 
-from td.core.exceptions import ProjectNotFoundError
 from td.core.cache import load_name_cache, save_name_cache
+from td.core.exceptions import ProjectNotFoundError
 
 
 def _collect_projects(api: TodoistAPI, use_cache: bool = True) -> list[Project]:

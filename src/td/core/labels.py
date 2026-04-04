@@ -7,8 +7,8 @@ import contextlib
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Label
 
-from td.core.exceptions import LabelNotFoundError
 from td.core.cache import load_name_cache, save_name_cache
+from td.core.exceptions import LabelNotFoundError
 
 
 def _collect_labels(api: TodoistAPI, use_cache: bool = True) -> list[Label]:

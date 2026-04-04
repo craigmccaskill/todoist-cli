@@ -7,8 +7,8 @@ import contextlib
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Section
 
-from td.core.exceptions import SectionNotFoundError
 from td.core.cache import load_name_cache, save_name_cache
+from td.core.exceptions import SectionNotFoundError
 
 
 def _collect_sections(api: TodoistAPI, project_id: str | None = None) -> list[Section]:
