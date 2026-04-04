@@ -107,9 +107,11 @@ def _pick_task_interactive(api: Any) -> str | None:
     return pick_task(tasks)
 
 
-def _require_task_ref(task_ref: tuple[str, ...], api: Any) -> str:
+def _require_task_ref(task_ref: tuple[str, ...], api: Any, *, use_id: bool = False) -> str:
     """Resolve task ref, launching picker if empty and TTY."""
     ref = " ".join(task_ref)
+    if ref and use_id:
+        return ref
     if ref:
         return _resolve_task(ref, api)
 
@@ -421,8 +423,9 @@ def _is_fuzzy_ref(ref: str) -> bool:
 @click.command()
 @click.argument("task_ref", nargs=-1)
 @click.option("-y", "--yes", is_flag=True, help="Skip confirmation on fuzzy match.")
+@click.option("--id", "use_id", is_flag=True, help="Treat task ref as a literal task ID.")
 @click.pass_context
-def done(ctx: click.Context, task_ref: tuple[str, ...], yes: bool) -> None:
+def done(ctx: click.Context, task_ref: tuple[str, ...], yes: bool, use_id: bool) -> None:
     """Complete a task. Accepts row number, content match, or task ID.
 
     Examples: td done 1 | td done buy milk | td done 8bx9a0c2
@@ -430,7 +433,7 @@ def done(ctx: click.Context, task_ref: tuple[str, ...], yes: bool) -> None:
     api = get_client()
     fmt = _get_formatter(ctx)
     ref = " ".join(task_ref)
-    task_id = _require_task_ref(task_ref, api)
+    task_id = _require_task_ref(task_ref, api, use_id=use_id)
     task = api.get_task(task_id)
 
     # Confirm on fuzzy match in TTY mode
@@ -452,15 +455,16 @@ def done(ctx: click.Context, task_ref: tuple[str, ...], yes: bool) -> None:
 
 @click.command()
 @click.argument("task_ref", nargs=-1)
+@click.option("--id", "use_id", is_flag=True, help="Treat task ref as a literal task ID.")
 @click.pass_context
-def undo(ctx: click.Context, task_ref: tuple[str, ...]) -> None:
+def undo(ctx: click.Context, task_ref: tuple[str, ...], use_id: bool) -> None:
     """Reopen a completed task. Accepts row number, content match, or task ID.
 
     Examples: td undo 1 | td undo buy milk | td undo 8bx9a0c2
     """
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = _require_task_ref(task_ref, api)
+    task_id = _require_task_ref(task_ref, api, use_id=use_id)
     task = api.get_task(task_id)
 
     uncomplete_task(api, task_id)
@@ -488,6 +492,7 @@ def undo(ctx: click.Context, task_ref: tuple[str, ...]) -> None:
     shell_complete=_complete_labels,
 )
 @click.option("--desc", "description", help="New description.")
+@click.option("--id", "use_id", is_flag=True, help="Treat task ref as a literal task ID.")
 @click.pass_context
 def edit(
     ctx: click.Context,
@@ -497,6 +502,7 @@ def edit(
     due: str | None,
     labels: tuple[str, ...],
     description: str | None,
+    use_id: bool,
 ) -> None:
     """Update a task. Accepts row number, content match, or task ID.
 
@@ -504,7 +510,7 @@ def edit(
     """
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = _require_task_ref(task_ref, api)
+    task_id = _require_task_ref(task_ref, api, use_id=use_id)
 
     # No flags provided — show current task values
     has_updates = content or priority or due or labels or description
@@ -530,15 +536,16 @@ def edit(
 @click.command()
 @click.argument("task_ref", nargs=-1)
 @click.option("-y", "--yes", is_flag=True, help="Skip confirmation.")
+@click.option("--id", "use_id", is_flag=True, help="Treat task ref as a literal task ID.")
 @click.pass_context
-def delete(ctx: click.Context, task_ref: tuple[str, ...], yes: bool) -> None:
+def delete(ctx: click.Context, task_ref: tuple[str, ...], yes: bool, use_id: bool) -> None:
     """Delete a task. Accepts row number, content match, or task ID.
 
     Examples: td delete 1 -y | td delete buy milk -y
     """
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = _require_task_ref(task_ref, api)
+    task_id = _require_task_ref(task_ref, api, use_id=use_id)
     task = api.get_task(task_id)
     if not yes:
         if not sys.stdout.isatty():
@@ -580,15 +587,16 @@ def quick(ctx: click.Context, text: tuple[str, ...]) -> None:
 
 @click.command()
 @click.argument("task_ref", nargs=-1)
+@click.option("--id", "use_id", is_flag=True, help="Treat task ref as a literal task ID.")
 @click.pass_context
-def show(ctx: click.Context, task_ref: tuple[str, ...]) -> None:
+def show(ctx: click.Context, task_ref: tuple[str, ...], use_id: bool) -> None:
     """View full task details. Accepts row number, content match, or task ID.
 
     Examples: td show 1 | td show buy milk | td show 8bx9a0c2
     """
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = _require_task_ref(task_ref, api)
+    task_id = _require_task_ref(task_ref, api, use_id=use_id)
 
     task = api.get_task(task_id)
     project_name: str | None = None
@@ -663,15 +671,16 @@ def search(ctx: click.Context, query: tuple[str, ...], project_name: str | None)
     help="Target project.",
     shell_complete=_complete_projects,
 )
+@click.option("--id", "use_id", is_flag=True, help="Treat task ref as a literal task ID.")
 @click.pass_context
-def move(ctx: click.Context, task_ref: tuple[str, ...], project_name: str) -> None:
+def move(ctx: click.Context, task_ref: tuple[str, ...], project_name: str, use_id: bool) -> None:
     """Move a task to a different project.
 
     Examples: td move 1 -p Personal | td move buy milk -p Work
     """
     api = get_client()
     fmt = _get_formatter(ctx)
-    task_id = _require_task_ref(task_ref, api)
+    task_id = _require_task_ref(task_ref, api, use_id=use_id)
     task = api.get_task(task_id)
 
     project = resolve_project(api, project_name)

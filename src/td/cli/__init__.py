@@ -9,9 +9,10 @@ from typing import cast
 import click
 
 from td import __version__
-from td.cli.errors import TdError, handle_error, map_api_exception
+from td.cli.errors import TdError, handle_error, map_api_exception, map_core_exception
 from td.cli.output import OutputFormatter, OutputMode, resolve_output_mode
 from td.core.config import load_config
+from td.core.exceptions import TdCoreError
 
 
 class TdGroup(click.Group):
@@ -23,6 +24,11 @@ class TdGroup(click.Group):
         except TdError as e:
             mode = self._get_mode(ctx)
             handle_error(e, mode)
+            sys.exit(1)
+        except TdCoreError as e:
+            td_error = map_core_exception(e)
+            mode = self._get_mode(ctx)
+            handle_error(td_error, mode)
             sys.exit(1)
         except Exception as e:
             if isinstance(e, (click.ClickException, SystemExit)):
