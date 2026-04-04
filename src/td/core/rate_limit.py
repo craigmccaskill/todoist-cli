@@ -1,4 +1,4 @@
-"""Rate limit monitoring via requests session hooks."""
+"""Rate limit monitoring via httpx client event hooks."""
 
 from __future__ import annotations
 
@@ -6,9 +6,8 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Any
 
-import requests
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +31,8 @@ class RateLimitMonitor:
         self.remaining: int | None = None
         self.limit: int | None = None
 
-    def hook(self, response: requests.Response, **kwargs: Any) -> None:
-        """requests response hook — called after every API response."""
+    def hook(self, response: httpx.Response) -> None:
+        """httpx response event hook — called after every API response."""
         raw_remaining = response.headers.get("X-Ratelimit-Remaining")
         raw_limit = response.headers.get("X-Ratelimit-Limit")
 
@@ -90,7 +89,7 @@ def load_rate_limit_cache() -> dict[str, int | None]:
     return {"remaining": None, "limit": None}
 
 
-# Singleton monitor — shared across the session
+# Singleton monitor — shared across the client
 _monitor = RateLimitMonitor()
 
 
@@ -99,8 +98,6 @@ def get_monitor() -> RateLimitMonitor:
     return _monitor
 
 
-def create_monitored_session() -> requests.Session:
-    """Create a requests.Session with rate limit monitoring."""
-    session = requests.Session()
-    session.hooks["response"].append(_monitor.hook)
-    return session
+def create_monitored_client() -> httpx.Client:
+    """Create an httpx.Client with rate limit monitoring."""
+    return httpx.Client(event_hooks={"response": [_monitor.hook]})
