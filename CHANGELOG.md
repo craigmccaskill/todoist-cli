@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Core exceptions moved to `core/exceptions.py` — `core/` no longer imports from `cli/`, enabling standalone library use (#125, #136)
+- Broad `except Exception` in cache operations narrowed to specific types with debug logging (#126, #141)
 - `todoist-api-python` constraint bumped from `<4` to `<5`; `requests` dependency dropped in favor of `httpx` (#135)
 
 ### Internal

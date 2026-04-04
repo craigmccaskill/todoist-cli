@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-import contextlib
+import json
+import logging
 
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Section
 
 from td.core.cache import load_name_cache, save_name_cache
 from td.core.exceptions import SectionNotFoundError
+
+logger = logging.getLogger(__name__)
 
 
 def _collect_sections(api: TodoistAPI, project_id: str | None = None) -> list[Section]:
@@ -18,13 +21,15 @@ def _collect_sections(api: TodoistAPI, project_id: str | None = None) -> list[Se
             cached = load_name_cache()
             if cached.get("sections"):
                 return [Section.from_dict(s) for s in cached["sections"]]
-        except Exception:
-            pass
+        except (OSError, json.JSONDecodeError, KeyError):
+            logger.debug("Section cache read failed", exc_info=True)
 
     sections = [s for page in api.get_sections(project_id=project_id) for s in page]
     if not project_id:
-        with contextlib.suppress(Exception):
+        try:
             save_name_cache(sections=[s.to_dict() for s in sections])
+        except (OSError, json.JSONDecodeError, KeyError, TypeError):
+            logger.debug("Section cache write failed", exc_info=True)
     return sections
 
 

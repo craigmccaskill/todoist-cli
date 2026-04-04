@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-import contextlib
+import json
+import logging
 
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Label
 
 from td.core.cache import load_name_cache, save_name_cache
 from td.core.exceptions import LabelNotFoundError
+
+logger = logging.getLogger(__name__)
 
 
 def _collect_labels(api: TodoistAPI, use_cache: bool = True) -> list[Label]:
@@ -18,12 +21,14 @@ def _collect_labels(api: TodoistAPI, use_cache: bool = True) -> list[Label]:
             cached = load_name_cache()
             if cached.get("labels"):
                 return [Label.from_dict(lbl) for lbl in cached["labels"]]
-        except Exception:
-            pass
+        except (OSError, json.JSONDecodeError, KeyError):
+            logger.debug("Label cache read failed", exc_info=True)
 
     labels = [lbl for page in api.get_labels() for lbl in page]
-    with contextlib.suppress(Exception):
+    try:
         save_name_cache(labels=[lbl.to_dict() for lbl in labels])
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
+        logger.debug("Label cache write failed", exc_info=True)
     return labels
 
 

@@ -72,8 +72,8 @@ class RateLimitMonitor:
             from td.core.cache import atomic_write
 
             atomic_write(path, json.dumps(data))
-        except Exception:
-            pass
+        except (OSError, json.JSONDecodeError):
+            logger.debug("Rate limit cache write failed", exc_info=True)
 
 
 def load_rate_limit_cache() -> dict[str, int | None]:
@@ -86,8 +86,8 @@ def load_rate_limit_cache() -> dict[str, int | None]:
                 "remaining": data.get("remaining"),
                 "limit": data.get("limit"),
             }
-    except Exception:
-        pass
+    except (OSError, json.JSONDecodeError):
+        logger.debug("Rate limit cache read failed", exc_info=True)
     return {"remaining": None, "limit": None}
 
 
