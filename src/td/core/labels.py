@@ -27,7 +27,7 @@ def _collect_labels(api: TodoistAPI, use_cache: bool = True) -> list[Label]:
     labels = [lbl for page in api.get_labels() for lbl in page]
     try:
         save_name_cache(labels=[lbl.to_dict() for lbl in labels])
-    except (OSError, json.JSONDecodeError, KeyError):
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
         logger.debug("Label cache write failed", exc_info=True)
     return labels
 

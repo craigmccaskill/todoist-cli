@@ -27,7 +27,7 @@ def _collect_projects(api: TodoistAPI, use_cache: bool = True) -> list[Project]:
     projects = [p for page in api.get_projects() for p in page]
     try:
         save_name_cache(projects=[p.to_dict() for p in projects])
-    except (OSError, json.JSONDecodeError, KeyError):
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
         logger.debug("Project cache write failed", exc_info=True)
     return projects
 

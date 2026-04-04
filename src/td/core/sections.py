@@ -28,7 +28,7 @@ def _collect_sections(api: TodoistAPI, project_id: str | None = None) -> list[Se
     if not project_id:
         try:
             save_name_cache(sections=[s.to_dict() for s in sections])
-        except (OSError, json.JSONDecodeError, KeyError):
+        except (OSError, json.JSONDecodeError, KeyError, TypeError):
             logger.debug("Section cache write failed", exc_info=True)
     return sections
 
