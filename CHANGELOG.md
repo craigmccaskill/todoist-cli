@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Internal
+- CI: added `cache: 'pip'` to all `setup-python` steps for faster workflow runs (#145)
+
 ## [0.7.0-alpha] - 2026-03-25
 
 ### Added
