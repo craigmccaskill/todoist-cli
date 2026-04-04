@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Core exceptions moved to `core/exceptions.py` — `core/` no longer imports from `cli/`, enabling standalone library use (#125, #136)
+
 ## [0.7.0-alpha] - 2026-03-25
 
 ### Added
