@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- SDK `type: ignore[arg-type]` suppressions replaced with named parameters for full mypy coverage at API boundaries (#129)
+- Formatter access `type: ignore[no-any-return]` replaced with `cast()` across all CLI modules (#129)
+
 ## [0.7.0-alpha] - 2026-03-25
 
 ### Added
