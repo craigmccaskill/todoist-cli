@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Config file written with default permissions (world-readable) — now sets `0o600` on file, `0o700` on directory (#137)
+
 ## [0.7.0-alpha] - 2026-03-25
 
 ### Added
