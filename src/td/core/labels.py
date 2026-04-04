@@ -7,8 +7,8 @@ import contextlib
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Label
 
-from td.cli.errors import LABEL_NOT_FOUND, TdError
 from td.core.cache import load_name_cache, save_name_cache
+from td.core.exceptions import LabelNotFoundError
 
 
 def _collect_labels(api: TodoistAPI, use_cache: bool = True) -> list[Label]:
@@ -40,8 +40,7 @@ def resolve_label(api: TodoistAPI, name_or_id: str) -> Label:
         if lbl.name.lower() == lower:
             return lbl
 
-    raise TdError(
+    raise LabelNotFoundError(
         f"Label '{name_or_id}' not found",
-        code=LABEL_NOT_FOUND,
         suggestion="Run `td labels` to list available labels.",
     )
