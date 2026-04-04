@@ -125,10 +125,10 @@ def handle_error(error: TdError, mode: OutputMode) -> None:
 
 
 def map_api_exception(exc: Exception) -> TdError:
-    """Map SDK/requests exceptions to structured TdError subclasses."""
-    from requests import HTTPError
+    """Map SDK/httpx exceptions to structured TdError subclasses."""
+    from httpx import HTTPStatusError
 
-    if isinstance(exc, HTTPError) and exc.response is not None:
+    if isinstance(exc, HTTPStatusError):
         status = exc.response.status_code
         if status == 401:
             return TdAuthError(
@@ -146,8 +146,27 @@ def map_api_exception(exc: Exception) -> TdError:
         if status == 429:
             return TdRateLimitError("Rate limit exceeded.")
         return TdApiError(
-            f"API error: {status} {exc.response.reason}",
+            f"API error: {status} {exc.response.reason_phrase}",
             details={"status_code": status},
         )
 
     return TdApiError(f"Unexpected error: {exc}")
+
+
+def map_core_exception(exc: Exception) -> TdError:
+    """Map a core-layer exception to a CLI TdError, preserving code/message/suggestion."""
+    from td.core.exceptions import AuthError, TdCoreError
+
+    if not isinstance(exc, TdCoreError):
+        return TdApiError(f"Unexpected error: {exc}")
+
+    if isinstance(exc, AuthError):
+        return TdAuthError(exc.message, suggestion=exc.suggestion)
+
+    # Generic mapping — preserves code, message, suggestion, and details
+    return TdError(
+        exc.message,
+        code=exc.code,
+        suggestion=exc.suggestion,
+        details=exc.details,
+    )

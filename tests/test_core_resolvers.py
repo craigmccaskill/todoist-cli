@@ -6,7 +6,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from td.cli.errors import TdError, TdProjectNotFoundError
+from td.core.exceptions import (
+    LabelNotFoundError,
+    ProjectNotFoundError,
+    SectionNotFoundError,
+)
 from td.core.labels import resolve_label
 from td.core.projects import get_inbox_project, resolve_project
 from td.core.sections import resolve_section
@@ -56,7 +60,7 @@ class TestResolveProject:
         proj = _mock_project(id="p1", name="Work")
         api.get_projects.return_value = iter([[proj]])
 
-        with pytest.raises(TdProjectNotFoundError) as exc_info:
+        with pytest.raises(ProjectNotFoundError) as exc_info:
             resolve_project(api, "Wor")
         assert "Did you mean" in exc_info.value.suggestion
         assert "Work" in exc_info.value.suggestion
@@ -66,7 +70,7 @@ class TestResolveProject:
         proj = _mock_project(id="p1", name="Work")
         api.get_projects.return_value = iter([[proj]])
 
-        with pytest.raises(TdProjectNotFoundError):
+        with pytest.raises(ProjectNotFoundError):
             resolve_project(api, "zzz")
 
 
@@ -92,7 +96,7 @@ class TestGetInboxProject:
         proj = _mock_project(id="p1", name="Work", is_inbox_project=False)
         api.get_projects.return_value = iter([[proj]])
 
-        with pytest.raises(TdProjectNotFoundError):
+        with pytest.raises(ProjectNotFoundError):
             get_inbox_project(api)
 
 
@@ -117,7 +121,7 @@ class TestResolveLabel:
         api = MagicMock()
         api.get_labels.return_value = iter([[]])
 
-        with pytest.raises(TdError, match="not found"):
+        with pytest.raises(LabelNotFoundError, match="not found"):
             resolve_label(api, "missing")
 
 
@@ -142,7 +146,7 @@ class TestResolveSection:
         api = MagicMock()
         api.get_sections.return_value = iter([[]])
 
-        with pytest.raises(TdError, match="not found"):
+        with pytest.raises(SectionNotFoundError, match="not found"):
             resolve_section(api, "missing")
 
     def test_filters_by_project_id(self) -> None:
