@@ -263,6 +263,20 @@ class TestDeleteCommand:
         api.delete_task.assert_called_once_with("t1")
 
 
+class TestInvalidDefaultCommand:
+    @patch("td.cli.load_config")
+    def test_invalid_default_command_exits_nonzero(self, mock_config: MagicMock) -> None:
+        from td.core.config import TdConfig
+
+        mock_config.return_value = TdConfig(default_command="nonexistent")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json"])
+
+        assert result.exit_code == 1
+        assert "nonexistent" in result.output or "nonexistent" in (result.stderr or "")
+
+
 class TestErrorBoundary:
     @patch("td.cli.tasks.get_client")
     def test_td_error_caught(self, mock_gc: MagicMock) -> None:

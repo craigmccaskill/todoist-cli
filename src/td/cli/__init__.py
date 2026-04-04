@@ -84,6 +84,13 @@ def cli(ctx: click.Context, output_json: bool, plain: bool, debug: bool) -> None
         cmd = cli.get_command(ctx, cmd_name)
         if cmd:
             ctx.invoke(cmd)
+        else:
+            valid = sorted(cli.list_commands(ctx))
+            raise TdError(
+                f"Invalid default_command '{cmd_name}' in config.",
+                code="VALIDATION_ERROR",
+                suggestion=f"Valid commands: {', '.join(valid)}",
+            )
 
 
 # Register subcommands (imported here to avoid circular imports)

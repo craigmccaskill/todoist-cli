@@ -126,6 +126,47 @@ class TestConfigPermissions:
         assert config_dir.stat().st_mode & 0o777 == 0o700
 
 
+class TestConfigValidation:
+    def test_invalid_default_format_warns_and_resets(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
+        monkeypatch.delenv("TD_API_TOKEN", raising=False)
+        monkeypatch.delenv("TD_FORMAT", raising=False)
+
+        (tmp_path / "config.toml").write_text('[settings]\ndefault_format = "yaml"\n')
+        config = load_config()
+
+        assert config.default_format is None
+        assert "invalid default_format" in capsys.readouterr().err
+
+    def test_invalid_default_sort_warns_and_resets(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
+        monkeypatch.delenv("TD_API_TOKEN", raising=False)
+        monkeypatch.delenv("TD_SORT", raising=False)
+
+        (tmp_path / "config.toml").write_text('[settings]\ndefault_sort = "alphabetical"\n')
+        config = load_config()
+
+        assert config.default_sort == "priority"
+        assert "invalid default_sort" in capsys.readouterr().err
+
+    def test_valid_format_no_warning(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
+        monkeypatch.delenv("TD_API_TOKEN", raising=False)
+        monkeypatch.delenv("TD_FORMAT", raising=False)
+
+        (tmp_path / "config.toml").write_text('[settings]\ndefault_format = "json"\n')
+        config = load_config()
+
+        assert config.default_format == "json"
+        assert capsys.readouterr().err == ""
+
+
 class TestGetConfigPath:
     def test_returns_toml_path(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))

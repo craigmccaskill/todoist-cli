@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 import os
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -13,6 +15,11 @@ except ModuleNotFoundError:
     import tomli as tomllib  # type: ignore[import-not-found,no-redef]
 
 import tomli_w
+
+logger = logging.getLogger(__name__)
+
+VALID_FORMATS = {"rich", "plain", "json"}
+VALID_SORT_OPTIONS = {"priority", "due", "project", "created"}
 
 
 def get_config_dir() -> Path:
@@ -77,6 +84,23 @@ def load_config() -> TdConfig:
     # Respect NO_COLOR (https://no-color.org/)
     if os.environ.get("NO_COLOR") is not None:
         config.color = False
+
+    # Validate non-critical settings (warn and fall back to defaults)
+    if config.default_format and config.default_format not in VALID_FORMATS:
+        print(
+            f"Warning: invalid default_format '{config.default_format}' in config"
+            f" (expected one of: {', '.join(sorted(VALID_FORMATS))}). Using TTY detection.",
+            file=sys.stderr,
+        )
+        config.default_format = None
+
+    if config.default_sort not in VALID_SORT_OPTIONS:
+        print(
+            f"Warning: invalid default_sort '{config.default_sort}' in config"
+            f" (expected one of: {', '.join(sorted(VALID_SORT_OPTIONS))}). Using 'priority'.",
+            file=sys.stderr,
+        )
+        config.default_sort = "priority"
 
     return config
 

@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `py.typed` marker declared in package data so it ships in wheels (#139)
 - SDK `type: ignore[arg-type]` suppressions replaced with named parameters for full mypy coverage at API boundaries (#129)
 - Formatter access `type: ignore[no-any-return]` replaced with `cast()` across all CLI modules (#129)
+- Invalid `default_command` in config silently exited 0 — now errors with exit code 1 and lists valid commands (#155)
+- Invalid `default_format` and `default_sort` in config now warn on stderr and fall back to defaults (#153)
 
 ### Changed
 - Core exceptions moved to `core/exceptions.py` — `core/` no longer imports from `cli/`, enabling standalone library use (#125, #136)
