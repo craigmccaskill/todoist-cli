@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `--id` flag on `done`, `edit`, `show`, `delete`, `move`, `undo` to bypass task reference resolution and use literal task IDs (#128)
+
 ## [0.7.0-alpha] - 2026-03-25
 
 ### Added
