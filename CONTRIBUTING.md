@@ -63,21 +63,45 @@ chore(deps): bump rich to v14
 
 **Scope** is optional but encouraged — use the module name (`tasks`, `output`, `errors`, `config`, `core`, `ci`, `deps`).
 
-## Branching
+## Workflow
 
-- Work on feature branches: `feat/description`, `fix/description`, `docs/description`
-- PR into `main`
-- CI must pass before merge
-- Keep PRs focused — one issue per PR when possible
+### Issue-first
 
-## Making Changes
+All work is tracked in GitHub Issues. Issues are for planning and backlog — creating an issue
+does not immediately trigger work. When it's time to code, pick from existing issues, either
+individually or grouped by theme.
 
-1. Create a branch from `main`: `git checkout -b feat/my-feature`
-2. Make your changes
-3. Run `make check` (must pass)
-4. Update `CHANGELOG.md` under `[Unreleased]` if the change is user-facing
-5. Commit with conventional commit message
-6. Push and open a pull request
+### Milestones
+
+Before starting a batch of work, create a GitHub milestone (e.g. "v0.8.0") and assign the
+target issues. The milestone defines what ships in that release:
+
+- **Scope is defined upfront** — we know what's in a release before we start
+- **Progress is visible** — milestone shows X/Y issues closed
+- **Release trigger is mechanical** — milestone 100% complete → cut the release
+- **Hotfixes bypass this** — critical bugs get a PATCH release immediately
+
+### Branch → PR → Merge
+
+1. Create a branch from `main`: `feat/description`, `fix/description`, `docs/description`
+2. Implement the change, updating `CHANGELOG.md` (see below)
+3. Run `make check` before pushing
+4. Open a PR with `Closes #X` in the body (or multiple `Closes #X` for themed work)
+5. CI must pass
+6. Squash merge to main
+
+Feature branches merge directly to main. No long-lived release branches.
+Keep PRs focused — one issue per PR when possible.
+
+### CHANGELOG
+
+Update `CHANGELOG.md` under `[Unreleased]` in every PR — all changes, not just user-facing.
+CLI users are developers who appreciate transparency. Organize entries under:
+
+- **Added** — new commands, features, options
+- **Changed** — modifications to existing behavior, refactors, performance
+- **Fixed** — bug fixes
+- **Internal** — tests, CI, dependency bumps, architecture changes
 
 ## Code Style
 
@@ -100,13 +124,41 @@ chore(deps): bump rich to v14
 
 ## Releasing
 
-Maintainers only:
+PRs squash merge to main continuously. The CHANGELOG accumulates under `[Unreleased]`.
 
-```bash
-make release VERSION=0.2.0
-```
+A release is cut when a milestone reaches 100% completion:
 
-This bumps the version, updates CHANGELOG.md, commits, tags, and pushes. The CI release workflow handles PyPI publishing.
+1. Review `[Unreleased]` in CHANGELOG to confirm the version bump
+2. Run `make release VERSION=x.y.z`
+3. After CI passes and PR merges, tag and push
+
+Critical bug fixes get a PATCH release immediately without waiting for a milestone.
+
+## Versioning
+
+Follows semver: `0.MINOR.PATCH[-prerelease]`
+
+### Pre-1.0 (current)
+
+- **MINOR** (0.X.0) — themed batch of work. New commands, significant features, architectural
+  changes. Bump this for each milestone release.
+- **PATCH** (0.X.Y) — bug fixes, dependency bumps, small corrections that don't warrant waiting
+  for the next milestone. Pressure valve for regressions.
+- **Pre-release tag** — `-alpha` while the command set and output formats are still shifting.
+  Move to `-beta` when the CLI surface and JSON envelope stabilize. Drop the tag for 1.0.
+
+### 1.0 criteria
+
+- Command set is stable (no more renames or removals)
+- JSON output envelope is a contract, not best-effort
+- Published to PyPI/Homebrew (users can't easily pin to a commit)
+- Breaking changes warrant a major bump going forward
+
+### Post-1.0
+
+- **MAJOR** — breaking changes to CLI flags, JSON output format, config file format
+- **MINOR** — new commands, options, output fields
+- **PATCH** — bug fixes, performance, internal changes
 
 ## Questions?
 
