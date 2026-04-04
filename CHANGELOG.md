@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Internal
 - CI: added `cache: 'pip'` to all `setup-python` steps for faster workflow runs (#145)
+- Tier 3 architectural test: `core/` never imports from `cli/` (#125)
+- Regression test: unexpected exceptions propagate from narrowed cache catches (#126)
 
 ## [0.7.0-alpha] - 2026-03-25
 

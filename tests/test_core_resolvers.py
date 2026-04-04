@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -157,3 +157,31 @@ class TestResolveSection:
         resolve_section(api, "s1", project_id="p1")
         _, kwargs = api.get_sections.call_args
         assert kwargs["project_id"] == "p1"
+
+
+class TestNarrowedExceptionCatches:
+    """Unexpected exceptions in cache operations must propagate, not be swallowed."""
+
+    @patch("td.core.projects.save_name_cache", side_effect=RuntimeError("unexpected"))
+    def test_unexpected_exception_propagates_from_project_cache(
+        self,
+        _mock_save: MagicMock,
+    ) -> None:
+        api = MagicMock()
+        proj = _mock_project(id="p1", name="Work")
+        api.get_projects.return_value = iter([[proj]])
+
+        with pytest.raises(RuntimeError, match="unexpected"):
+            resolve_project(api, "p1")
+
+    @patch("td.core.projects.load_name_cache", side_effect=AttributeError("bug"))
+    def test_unexpected_exception_propagates_from_cache_read(
+        self,
+        _mock_load: MagicMock,
+    ) -> None:
+        api = MagicMock()
+        proj = _mock_project(id="p1", name="Work")
+        api.get_projects.return_value = iter([[proj]])
+
+        with pytest.raises(AttributeError, match="bug"):
+            resolve_project(api, "p1")
