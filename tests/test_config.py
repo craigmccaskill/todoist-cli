@@ -107,6 +107,23 @@ class TestResolveToken:
         assert resolve_token() is None
 
 
+class TestConfigPermissions:
+    def test_config_file_permissions(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        config_dir = tmp_path / "td"
+        monkeypatch.setenv("TD_CONFIG_DIR", str(config_dir))
+
+        save_config(TdConfig(api_token="secret"))
+        config_file = config_dir / "config.toml"
+        assert config_file.stat().st_mode & 0o777 == 0o600
+
+    def test_config_dir_permissions(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        config_dir = tmp_path / "td"
+        monkeypatch.setenv("TD_CONFIG_DIR", str(config_dir))
+
+        save_config(TdConfig(api_token="secret"))
+        assert config_dir.stat().st_mode & 0o777 == 0o700
+
+
 class TestGetConfigPath:
     def test_returns_toml_path(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
