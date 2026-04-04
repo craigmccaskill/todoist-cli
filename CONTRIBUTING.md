@@ -147,6 +147,36 @@ CLI users are developers who appreciate transparency. Organize entries under:
 - **Fixed** — bug fixes
 - **Internal** — tests, CI, dependency bumps, architecture changes
 
+## Testing Philosophy
+
+Tests should cover three tiers:
+
+### Tier 1: Unit tests
+
+Mock external dependencies, test business logic in isolation. This is the majority of the
+test suite — pure functions, data transformations, CLI output formatting.
+
+### Tier 2: Boundary tests
+
+Test that integration points actually work. **Don't mock the thing you're testing against.**
+
+- **SDK**: verify parameter names and types match the real API (inspect signatures, don't
+  call the live API)
+- **TUI**: Textual pilot tests that simulate keypresses headless
+- **Filesystem**: verify permissions, atomic writes, corrupt file handling
+- **Config**: round-trip through TOML parse/write
+
+### Tier 3: Architectural tests
+
+Assert structural invariants that should never be violated:
+
+- `core/` never imports from `cli/` (scan imports)
+- No bare `except Exception` outside documented exceptions
+- All commands registered in schema
+- All CLI commands use `OutputFormatter`
+
+These tests are cheap to write, rarely change, and catch entire categories of bugs at once.
+
 ## Code Style
 
 - **Framework**: Click (not Typer) — we own the output/schema/completions layer
