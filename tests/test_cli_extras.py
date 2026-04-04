@@ -227,7 +227,7 @@ class TestDeleteCommand:
 
 
 class TestInvalidDefaultCommand:
-    @patch("td.core.config.load_config")
+    @patch("td.cli.load_config")
     def test_invalid_default_command_exits_nonzero(self, mock_config: MagicMock) -> None:
         from td.core.config import TdConfig
 

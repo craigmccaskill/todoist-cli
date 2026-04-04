@@ -9,17 +9,17 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-logger = logging.getLogger(__name__)
-
-VALID_FORMATS = {"rich", "plain", "json"}
-VALID_SORT_OPTIONS = {"priority", "due", "project", "created"}
-
 try:
     import tomllib  # type: ignore[import-not-found]
 except ModuleNotFoundError:
     import tomli as tomllib  # type: ignore[import-not-found,no-redef]
 
 import tomli_w
+
+logger = logging.getLogger(__name__)
+
+VALID_FORMATS = {"rich", "plain", "json"}
+VALID_SORT_OPTIONS = {"priority", "due", "project", "created"}
 
 
 def get_config_dir() -> Path:
