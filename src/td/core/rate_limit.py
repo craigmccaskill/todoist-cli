@@ -72,7 +72,7 @@ class RateLimitMonitor:
             data = {"remaining": self.remaining, "limit": self.limit}
             path.write_text(json.dumps(data))
         except (OSError, json.JSONDecodeError):
-            pass
+            logger.debug("Rate limit cache write failed", exc_info=True)
 
 
 def load_rate_limit_cache() -> dict[str, int | None]:
@@ -86,7 +86,7 @@ def load_rate_limit_cache() -> dict[str, int | None]:
                 "limit": data.get("limit"),
             }
     except (OSError, json.JSONDecodeError):
-        pass
+        logger.debug("Rate limit cache read failed", exc_info=True)
     return {"remaining": None, "limit": None}
 
 

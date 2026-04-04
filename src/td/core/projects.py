@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-import contextlib
 import json
+import logging
 
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Project
 
 from td.cli.errors import TdProjectNotFoundError
 from td.core.cache import load_name_cache, save_name_cache
+
+logger = logging.getLogger(__name__)
 
 
 def _collect_projects(api: TodoistAPI, use_cache: bool = True) -> list[Project]:
@@ -20,11 +22,13 @@ def _collect_projects(api: TodoistAPI, use_cache: bool = True) -> list[Project]:
             if cached.get("projects"):
                 return [Project.from_dict(p) for p in cached["projects"]]
         except (OSError, json.JSONDecodeError, KeyError):
-            pass
+            logger.debug("Project cache read failed", exc_info=True)
 
     projects = [p for page in api.get_projects() for p in page]
-    with contextlib.suppress(OSError, json.JSONDecodeError, KeyError):
+    try:
         save_name_cache(projects=[p.to_dict() for p in projects])
+    except (OSError, json.JSONDecodeError, KeyError):
+        logger.debug("Project cache write failed", exc_info=True)
     return projects
 
 
