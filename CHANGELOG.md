@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Cache file writes are now atomic via temp file + `os.rename()`, preventing corruption from concurrent invocations or Ctrl+C (#152)
+
 ## [0.7.0-alpha] - 2026-03-25
 
 ### Added
