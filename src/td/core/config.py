@@ -105,9 +105,11 @@ def save_config(config: TdConfig) -> Path:
         data["settings"] = settings
 
     path = get_config_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
 
     with open(path, "wb") as f:
         tomli_w.dump(data, f)
+
+    path.chmod(0o600)
 
     return path

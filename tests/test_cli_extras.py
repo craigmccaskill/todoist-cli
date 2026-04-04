@@ -93,12 +93,20 @@ class TestCommentCommand:
 
 class TestRateLimitMonitor:
     def test_hook_captures_headers(self) -> None:
+        import httpx
+
         from td.core.rate_limit import RateLimitMonitor
 
         monitor = RateLimitMonitor()
-        response = MagicMock()
-        response.headers = {"X-Ratelimit-Remaining": "400", "X-Ratelimit-Limit": "450"}
-        response.status_code = 200
+        request = httpx.Request("GET", "https://api.todoist.com/rest/v2/tasks")
+        response = httpx.Response(
+            200,
+            request=request,
+            headers={
+                "X-Ratelimit-Remaining": "400",
+                "X-Ratelimit-Limit": "450",
+            },
+        )
 
         monitor.hook(response)
 
@@ -198,6 +206,35 @@ class TestDoneFuzzyConfirmation:
         api.complete_task.assert_called_once_with("t1")
 
 
+class TestIdFlag:
+    @patch("td.cli.tasks.get_client")
+    def test_done_with_id_flag_bypasses_resolution(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        task = _mock_task(id="8bx9a0c2")
+        api.get_task.return_value = task
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "done", "--id", "8bx9a0c2", "-y"])
+
+        assert result.exit_code == 0
+        api.complete_task.assert_called_once_with("8bx9a0c2")
+
+    @patch("td.cli.tasks.get_client")
+    def test_show_with_id_flag(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        task = _mock_task(id="8bx9a0c2")
+        api.get_task.return_value = task
+        api.get_projects.return_value = iter([[]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "show", "--id", "8bx9a0c2"])
+
+        assert result.exit_code == 0
+        api.get_task.assert_called_once_with("8bx9a0c2")
+
+
 class TestUndoCommand:
     @patch("td.cli.tasks.get_client")
     def test_undo_task(self, mock_gc: MagicMock) -> None:
@@ -243,13 +280,15 @@ class TestErrorBoundary:
 
     @patch("td.cli.tasks.get_client")
     def test_api_exception_caught(self, mock_gc: MagicMock) -> None:
-        from requests import HTTPError
+        import httpx
 
         api = MagicMock()
         mock_gc.return_value = api
-        resp = MagicMock()
-        resp.status_code = 404
-        api.complete_task.side_effect = HTTPError(response=resp)
+        request = httpx.Request("POST", "https://api.todoist.com/rest/v2/tasks/bad/close")
+        response = httpx.Response(404, request=request)
+        api.complete_task.side_effect = httpx.HTTPStatusError(
+            "404 Not Found", request=request, response=response
+        )
 
         runner = CliRunner()
         result = runner.invoke(cli, ["--json", "done", "bad"])

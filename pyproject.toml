@@ -28,7 +28,7 @@ classifiers = [
 ]
 dependencies = [
     "click>=8.1,<9",
-    "todoist-api-python>=3.2,<4",
+    "todoist-api-python>=3.2,<5",
     "rich>=13.0,<15",
     "tomli>=2.0; python_version < '3.11'",
     "tomli-w>=1.0,<2",
@@ -44,7 +44,6 @@ test = [
 lint = [
     "ruff",
     "mypy",
-    "types-requests",
 ]
 interactive = [
     "textual>=0.50",
@@ -69,6 +68,9 @@ Changelog = "https://github.com/craigmccaskill/todoist-cli/blob/main/CHANGELOG.m
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+td = ["py.typed"]
 
 [tool.setuptools.dynamic]
 version = { attr = "td.__version__" }
