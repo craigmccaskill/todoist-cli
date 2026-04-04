@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Rate limit monitoring never captured data — rewritten from `requests.Session` to `httpx.Client` event hooks to match SDK's HTTP stack (#119)
+
+### Changed
+- `todoist-api-python` constraint bumped from `<4` to `<5`; `requests` dependency dropped in favor of `httpx` (#135)
+
 ## [0.7.0-alpha] - 2026-03-25
 
 ### Added
