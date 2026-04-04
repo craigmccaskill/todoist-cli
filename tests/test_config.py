@@ -108,7 +108,9 @@ class TestResolveToken:
 
 
 class TestConfigPermissions:
-    def test_config_file_permissions(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_config_file_permissions(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
         config_dir = tmp_path / "td"
         monkeypatch.setenv("TD_CONFIG_DIR", str(config_dir))
 
