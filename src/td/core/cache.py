@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import tempfile
@@ -28,10 +29,8 @@ def atomic_write(path: Path, data: str) -> None:
         if fd >= 0:
             os.close(fd)
         if tmp:
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(tmp)
-            except OSError:
-                pass
         raise
 
 

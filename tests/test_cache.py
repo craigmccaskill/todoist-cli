@@ -93,10 +93,6 @@ class TestAtomicWrite:
         target = tmp_path / "test.json"
         target.write_text("original")
 
-        # Make the directory read-only so rename fails after mkstemp
-        import os
-        import stat
-
         # Create a subdirectory for isolation
         sub = tmp_path / "sub"
         sub.mkdir()
