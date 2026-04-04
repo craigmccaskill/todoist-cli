@@ -112,6 +112,19 @@ Before coding on an issue, add a comment to the issue with:
 This creates a paper trail for decisions, catches bad assumptions early, and helps future
 contributors understand context without re-investigating.
 
+### Bug fixes require regression tests
+
+Every bug fix PR must include a test that would have caught the bug. The test should target
+the **root cause**, not just verify the fix works. Examples:
+
+- Architecture violation → test that scans imports to enforce the boundary
+- File permissions bug → test that checks `stat().st_mode` after write
+- Silent failure → test that an unexpected exception type propagates
+
+This prevents the same class of bug from recurring and builds up the test suite in the areas
+that matter most. If a fix genuinely doesn't need a test (e.g., a typo in a comment), document
+why in the PR.
+
 ### Branch → PR → Merge
 
 1. Create a branch from `main`: `feat/description`, `fix/description`, `docs/description`
