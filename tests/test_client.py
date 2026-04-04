@@ -6,7 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from td.core.client import TdAuthError, get_client
+from td.core.client import get_client
+from td.core.exceptions import AuthError
 
 
 class TestGetClient:
@@ -14,7 +15,7 @@ class TestGetClient:
         monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
         monkeypatch.delenv("TD_API_TOKEN", raising=False)
 
-        with pytest.raises(TdAuthError, match="No API token configured"):
+        with pytest.raises(AuthError, match="No API token configured"):
             get_client()
 
     def test_returns_client_with_env_token(self, monkeypatch: pytest.MonkeyPatch) -> None:

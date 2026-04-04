@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import click
 
@@ -11,7 +11,7 @@ from td.core.client import get_client
 
 
 def _get_formatter(ctx: click.Context) -> OutputFormatter:
-    return ctx.obj["formatter"]  # type: ignore[no-any-return]
+    return cast(OutputFormatter, ctx.obj["formatter"])
 
 
 def _require_task(ref: str | None, api: Any) -> str:

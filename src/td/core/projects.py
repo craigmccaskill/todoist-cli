@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-import contextlib
+import json
+import logging
 
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Project
 
-from td.cli.errors import TdProjectNotFoundError
 from td.core.cache import load_name_cache, save_name_cache
+from td.core.exceptions import ProjectNotFoundError
+
+logger = logging.getLogger(__name__)
 
 
 def _collect_projects(api: TodoistAPI, use_cache: bool = True) -> list[Project]:
@@ -18,19 +21,21 @@ def _collect_projects(api: TodoistAPI, use_cache: bool = True) -> list[Project]:
             cached = load_name_cache()
             if cached.get("projects"):
                 return [Project.from_dict(p) for p in cached["projects"]]
-        except Exception:
-            pass
+        except (OSError, json.JSONDecodeError, KeyError):
+            logger.debug("Project cache read failed", exc_info=True)
 
     projects = [p for page in api.get_projects() for p in page]
-    with contextlib.suppress(Exception):
+    try:
         save_name_cache(projects=[p.to_dict() for p in projects])
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
+        logger.debug("Project cache write failed", exc_info=True)
     return projects
 
 
 def resolve_project(api: TodoistAPI, name_or_id: str) -> Project:
     """Resolve a project by name (case-insensitive) or ID.
 
-    Raises TdProjectNotFoundError with suggestions if not found.
+    Raises ProjectNotFoundError with suggestions if not found.
     """
     projects = _collect_projects(api)
 
@@ -51,7 +56,7 @@ def resolve_project(api: TodoistAPI, name_or_id: str) -> Project:
     if partial:
         suggestion += f" Did you mean: {', '.join(partial[:3])}?"
 
-    raise TdProjectNotFoundError(
+    raise ProjectNotFoundError(
         f"Project '{name_or_id}' not found",
         suggestion=suggestion,
         details={"query": name_or_id},
@@ -66,12 +71,11 @@ def create_project(
     is_favorite: bool = False,
 ) -> Project:
     """Create a new project."""
-    kwargs: dict[str, object] = {}
-    if parent_id:
-        kwargs["parent_id"] = parent_id
-    if is_favorite:
-        kwargs["is_favorite"] = True
-    return api.add_project(name, **kwargs)  # type: ignore[arg-type]
+    return api.add_project(
+        name,
+        parent_id=parent_id,
+        is_favorite=is_favorite or None,
+    )
 
 
 def get_project_name_map(api: TodoistAPI) -> dict[str, str]:
@@ -90,4 +94,4 @@ def get_inbox_project(api: TodoistAPI) -> Project:
     for proj in projects:
         if proj.name.lower() == "inbox":
             return proj
-    raise TdProjectNotFoundError("Could not find Inbox project")
+    raise ProjectNotFoundError("Could not find Inbox project")

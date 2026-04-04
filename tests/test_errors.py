@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import MagicMock
 
 from td.cli.errors import (
     TdApiError,
@@ -13,6 +12,7 @@ from td.cli.errors import (
     TdRateLimitError,
     handle_error,
     map_api_exception,
+    map_core_exception,
 )
 from td.cli.output import OutputMode
 
@@ -90,41 +90,32 @@ class TestHandleError:
 
 
 class TestMapApiException:
-    def test_401_maps_to_auth_error(self) -> None:
-        from requests import HTTPError
+    def _make_status_error(self, status_code: int, reason: str = "") -> Exception:
+        """Create an httpx.HTTPStatusError with the given status code."""
+        import httpx
 
-        resp = MagicMock()
-        resp.status_code = 401
-        exc = HTTPError(response=resp)
+        request = httpx.Request("GET", "https://api.todoist.com/rest/v2/tasks")
+        response = httpx.Response(status_code, request=request)
+        return httpx.HTTPStatusError(f"{status_code} {reason}", request=request, response=response)
+
+    def test_401_maps_to_auth_error(self) -> None:
+        exc = self._make_status_error(401, "Unauthorized")
         result = map_api_exception(exc)
         assert isinstance(result, TdAuthError)
         assert result.code == "AUTH_INVALID"
 
     def test_404_maps_to_not_found(self) -> None:
-        from requests import HTTPError
-
-        resp = MagicMock()
-        resp.status_code = 404
-        exc = HTTPError(response=resp)
+        exc = self._make_status_error(404, "Not Found")
         result = map_api_exception(exc)
         assert isinstance(result, TdNotFoundError)
 
     def test_429_maps_to_rate_limit(self) -> None:
-        from requests import HTTPError
-
-        resp = MagicMock()
-        resp.status_code = 429
-        exc = HTTPError(response=resp)
+        exc = self._make_status_error(429, "Too Many Requests")
         result = map_api_exception(exc)
         assert isinstance(result, TdRateLimitError)
 
     def test_500_maps_to_api_error(self) -> None:
-        from requests import HTTPError
-
-        resp = MagicMock()
-        resp.status_code = 500
-        resp.reason = "Internal Server Error"
-        exc = HTTPError(response=resp)
+        exc = self._make_status_error(500, "Internal Server Error")
         result = map_api_exception(exc)
         assert isinstance(result, TdApiError)
 
@@ -132,3 +123,36 @@ class TestMapApiException:
         result = map_api_exception(ValueError("weird"))
         assert isinstance(result, TdApiError)
         assert "weird" in result.message
+
+
+class TestMapCoreException:
+    def test_auth_error_maps_to_td_auth_error(self) -> None:
+        from td.core.exceptions import AuthError
+
+        exc = AuthError()
+        result = map_core_exception(exc)
+        assert isinstance(result, TdAuthError)
+        assert "td init" in result.suggestion
+
+    def test_project_not_found_preserves_fields(self) -> None:
+        from td.core.exceptions import ProjectNotFoundError
+
+        exc = ProjectNotFoundError(
+            "Project 'foo' not found",
+            suggestion="Did you mean: bar?",
+            details={"query": "foo"},
+        )
+        result = map_core_exception(exc)
+        assert isinstance(result, TdError)
+        assert result.code == "PROJECT_NOT_FOUND"
+        assert result.message == "Project 'foo' not found"
+        assert result.suggestion == "Did you mean: bar?"
+        assert result.details["query"] == "foo"
+
+    def test_generic_core_error(self) -> None:
+        from td.core.exceptions import TdCoreError
+
+        exc = TdCoreError("something broke", code="CUSTOM")
+        result = map_core_exception(exc)
+        assert isinstance(result, TdError)
+        assert result.code == "CUSTOM"
