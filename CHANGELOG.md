@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Invalid `default_command` in config silently exited 0 — now errors with exit code 1 and lists valid commands (#155)
+- Invalid `default_format` and `default_sort` in config now warn on stderr and fall back to defaults (#153)
+
 ## [0.7.0-alpha] - 2026-03-25
 
 ### Added
