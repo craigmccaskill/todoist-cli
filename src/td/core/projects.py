@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import json
 
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Project
@@ -18,11 +19,11 @@ def _collect_projects(api: TodoistAPI, use_cache: bool = True) -> list[Project]:
             cached = load_name_cache()
             if cached.get("projects"):
                 return [Project.from_dict(p) for p in cached["projects"]]
-        except Exception:
+        except (OSError, json.JSONDecodeError, KeyError):
             pass
 
     projects = [p for page in api.get_projects() for p in page]
-    with contextlib.suppress(Exception):
+    with contextlib.suppress(OSError, json.JSONDecodeError, KeyError):
         save_name_cache(projects=[p.to_dict() for p in projects])
     return projects
 

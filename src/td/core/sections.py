@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import json
 
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Section
@@ -18,12 +19,12 @@ def _collect_sections(api: TodoistAPI, project_id: str | None = None) -> list[Se
             cached = load_name_cache()
             if cached.get("sections"):
                 return [Section.from_dict(s) for s in cached["sections"]]
-        except Exception:
+        except (OSError, json.JSONDecodeError, KeyError):
             pass
 
     sections = [s for page in api.get_sections(project_id=project_id) for s in page]
     if not project_id:
-        with contextlib.suppress(Exception):
+        with contextlib.suppress(OSError, json.JSONDecodeError, KeyError):
             save_name_cache(sections=[s.to_dict() for s in sections])
     return sections
 

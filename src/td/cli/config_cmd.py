@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 
 import click
@@ -39,6 +40,7 @@ def init() -> None:
         projects = list(next(iter(api.get_projects())))
         click.echo(f"Authenticated. Found {len(projects)} project(s).")
     except Exception as e:
+        logging.getLogger(__name__).debug("Token validation failed: %s", e, exc_info=True)
         click.echo(f"Error: Could not authenticate — {e}", err=True)
         raise SystemExit(1) from None
 
