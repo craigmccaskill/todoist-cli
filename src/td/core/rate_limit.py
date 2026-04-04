@@ -70,7 +70,9 @@ class RateLimitMonitor:
         try:
             path = _cache_path()
             data = {"remaining": self.remaining, "limit": self.limit}
-            path.write_text(json.dumps(data))
+            from td.core.cache import atomic_write
+
+            atomic_write(path, json.dumps(data))
         except Exception:
             pass
 

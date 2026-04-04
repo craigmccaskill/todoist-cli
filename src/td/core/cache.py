@@ -2,11 +2,36 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
+import tempfile
 import time
 from pathlib import Path
 from typing import Any
+
+
+def atomic_write(path: Path, data: str) -> None:
+    """Write data to path atomically via temp file + rename.
+
+    Uses mkstemp in the same directory so os.rename() is atomic on POSIX.
+    On failure, the temp file is cleaned up and the original is untouched.
+    """
+    fd = -1
+    tmp = ""
+    try:
+        fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
+        os.write(fd, data.encode())
+        os.close(fd)
+        fd = -1
+        os.rename(tmp, path)
+    except BaseException:
+        if fd >= 0:
+            os.close(fd)
+        if tmp:
+            with contextlib.suppress(OSError):
+                os.unlink(tmp)
+        raise
 
 
 def get_cache_dir() -> Path:
@@ -27,7 +52,7 @@ def save_result_cache(task_ids: list[str]) -> None:
         "ids": {str(i + 1): tid for i, tid in enumerate(task_ids)},
         "timestamp": time.time(),
     }
-    (cache_dir / "last_results.json").write_text(json.dumps(data))
+    atomic_write(cache_dir / "last_results.json", json.dumps(data))
 
 
 def load_result_cache(max_age: int = 600) -> dict[str, str]:
@@ -89,7 +114,7 @@ def save_name_cache(
         existing["sections"] = sections
     existing["timestamp"] = time.time()
 
-    path.write_text(json.dumps(existing))
+    atomic_write(path, json.dumps(existing))
 
 
 def load_name_cache(max_age: int = 300) -> dict[str, Any]:

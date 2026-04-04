@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Cache file writes are now atomic via temp file + `os.rename()`, preventing corruption from concurrent invocations or Ctrl+C (#152)
 - Config file written with default permissions (world-readable) — now sets `0o600` on file, `0o700` on directory (#137)
 - `py.typed` marker declared in package data so it ships in wheels (#139)
 
