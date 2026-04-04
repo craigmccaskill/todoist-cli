@@ -81,6 +81,37 @@ target issues. The milestone defines what ships in that release:
 - **Release trigger is mechanical** — milestone 100% complete → cut the release
 - **Hotfixes bypass this** — critical bugs get a PATCH release immediately
 
+#### Planning a milestone
+
+After assigning issues, prepare each one before coding starts:
+
+1. **Identify dependencies** — which issues must land before others? Document the
+   suggested ordering so work flows without blocking.
+2. **Define "done"** — each issue should have explicit acceptance criteria beyond
+   "code merged." How do we verify the fix works? Manual test? New automated test?
+   Integration check?
+3. **Specify testing expectations** — what new tests does each issue need? Not every
+   fix needs a test (e.g., a 2-line config change), but the decision should be explicit.
+4. **Group into PRs** — related issues can share a PR (e.g., two aspects of the same
+   bug). Document which issues will be combined to avoid duplicate work.
+5. **Handle housekeeping first** — merge pending dependency updates, clean up stale
+   branches, and resolve any blocking infrastructure issues before starting feature work.
+
+Document all of this in issue comments so the plan is visible to anyone picking up the work.
+
+### Before starting work
+
+Before coding on an issue, add a comment to the issue with:
+
+1. **Root cause** — what you found during investigation
+2. **Approach** — what you'll do and why
+3. **Risks / open questions** — anything that could go wrong or needs clarification
+4. **Definition of done** — how do we verify this is actually fixed?
+5. **Testing** — what new tests are needed, if any?
+
+This creates a paper trail for decisions, catches bad assumptions early, and helps future
+contributors understand context without re-investigating.
+
 ### Branch → PR → Merge
 
 1. Create a branch from `main`: `feat/description`, `fix/description`, `docs/description`
