@@ -44,7 +44,6 @@ test = [
 lint = [
     "ruff",
     "mypy",
-    "types-httpx",
 ]
 interactive = [
     "textual>=0.50",
