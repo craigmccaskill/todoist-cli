@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import sys
+from typing import cast
 
 import click
 
@@ -42,7 +43,7 @@ class TdGroup(click.Group):
         try:
             formatter = ctx.obj.get("formatter") if ctx.obj else None
             if formatter:
-                return formatter.mode  # type: ignore[no-any-return]
+                return cast(OutputMode, formatter.mode)
         except Exception:
             pass
         return OutputMode.JSON
