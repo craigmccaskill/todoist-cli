@@ -7,7 +7,7 @@ import contextlib
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Project
 
-from td.cli.errors import TdProjectNotFoundError
+from td.core.exceptions import ProjectNotFoundError
 from td.core.cache import load_name_cache, save_name_cache
 
 
@@ -30,7 +30,7 @@ def _collect_projects(api: TodoistAPI, use_cache: bool = True) -> list[Project]:
 def resolve_project(api: TodoistAPI, name_or_id: str) -> Project:
     """Resolve a project by name (case-insensitive) or ID.
 
-    Raises TdProjectNotFoundError with suggestions if not found.
+    Raises ProjectNotFoundError with suggestions if not found.
     """
     projects = _collect_projects(api)
 
@@ -51,7 +51,7 @@ def resolve_project(api: TodoistAPI, name_or_id: str) -> Project:
     if partial:
         suggestion += f" Did you mean: {', '.join(partial[:3])}?"
 
-    raise TdProjectNotFoundError(
+    raise ProjectNotFoundError(
         f"Project '{name_or_id}' not found",
         suggestion=suggestion,
         details={"query": name_or_id},
@@ -90,4 +90,4 @@ def get_inbox_project(api: TodoistAPI) -> Project:
     for proj in projects:
         if proj.name.lower() == "inbox":
             return proj
-    raise TdProjectNotFoundError("Could not find Inbox project")
+    raise ProjectNotFoundError("Could not find Inbox project")

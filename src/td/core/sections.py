@@ -7,7 +7,7 @@ import contextlib
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Section
 
-from td.cli.errors import SECTION_NOT_FOUND, TdError
+from td.core.exceptions import SectionNotFoundError
 from td.core.cache import load_name_cache, save_name_cache
 
 
@@ -41,8 +41,7 @@ def resolve_section(api: TodoistAPI, name_or_id: str, *, project_id: str | None 
         if sec.name.lower() == lower:
             return sec
 
-    raise TdError(
+    raise SectionNotFoundError(
         f"Section '{name_or_id}' not found",
-        code=SECTION_NOT_FOUND,
         suggestion="Run `td sections -p <project>` to list sections.",
     )

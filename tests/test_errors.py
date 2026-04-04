@@ -13,6 +13,7 @@ from td.cli.errors import (
     TdRateLimitError,
     handle_error,
     map_api_exception,
+    map_core_exception,
 )
 from td.cli.output import OutputMode
 
@@ -132,3 +133,36 @@ class TestMapApiException:
         result = map_api_exception(ValueError("weird"))
         assert isinstance(result, TdApiError)
         assert "weird" in result.message
+
+
+class TestMapCoreException:
+    def test_auth_error_maps_to_td_auth_error(self) -> None:
+        from td.core.exceptions import AuthError
+
+        exc = AuthError()
+        result = map_core_exception(exc)
+        assert isinstance(result, TdAuthError)
+        assert "td init" in result.suggestion
+
+    def test_project_not_found_preserves_fields(self) -> None:
+        from td.core.exceptions import ProjectNotFoundError
+
+        exc = ProjectNotFoundError(
+            "Project 'foo' not found",
+            suggestion="Did you mean: bar?",
+            details={"query": "foo"},
+        )
+        result = map_core_exception(exc)
+        assert isinstance(result, TdError)
+        assert result.code == "PROJECT_NOT_FOUND"
+        assert result.message == "Project 'foo' not found"
+        assert result.suggestion == "Did you mean: bar?"
+        assert result.details["query"] == "foo"
+
+    def test_generic_core_error(self) -> None:
+        from td.core.exceptions import TdCoreError
+
+        exc = TdCoreError("something broke", code="CUSTOM")
+        result = map_core_exception(exc)
+        assert isinstance(result, TdError)
+        assert result.code == "CUSTOM"

@@ -151,3 +151,22 @@ def map_api_exception(exc: Exception) -> TdError:
         )
 
     return TdApiError(f"Unexpected error: {exc}")
+
+
+def map_core_exception(exc: Exception) -> TdError:
+    """Map a core-layer exception to a CLI TdError, preserving code/message/suggestion."""
+    from td.core.exceptions import AuthError, TdCoreError
+
+    if not isinstance(exc, TdCoreError):
+        return TdApiError(f"Unexpected error: {exc}")
+
+    if isinstance(exc, AuthError):
+        return TdAuthError(exc.message, suggestion=exc.suggestion)
+
+    # Generic mapping — preserves code, message, suggestion, and details
+    return TdError(
+        exc.message,
+        code=exc.code,
+        suggestion=exc.suggestion,
+        details=exc.details,
+    )
