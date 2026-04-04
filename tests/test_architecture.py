@@ -16,8 +16,10 @@ class TestCoreCLIBoundary:
         for py_file in sorted(core_dir.glob("*.py")):
             tree = ast.parse(py_file.read_text())
             for node in ast.walk(tree):
-                if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith(
-                    "td.cli"
+                if (
+                    isinstance(node, ast.ImportFrom)
+                    and node.module
+                    and node.module.startswith("td.cli")
                 ):
                     violations.append(f"{py_file.name}:{node.lineno} imports {node.module}")
 

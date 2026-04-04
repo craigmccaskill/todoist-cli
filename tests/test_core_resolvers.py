@@ -164,7 +164,8 @@ class TestNarrowedExceptionCatches:
 
     @patch("td.core.projects.save_name_cache", side_effect=RuntimeError("unexpected"))
     def test_unexpected_exception_propagates_from_project_cache(
-        self, _mock_save: MagicMock
+        self,
+        _mock_save: MagicMock,
     ) -> None:
         api = MagicMock()
         proj = _mock_project(id="p1", name="Work")
@@ -175,7 +176,8 @@ class TestNarrowedExceptionCatches:
 
     @patch("td.core.projects.load_name_cache", side_effect=AttributeError("bug"))
     def test_unexpected_exception_propagates_from_cache_read(
-        self, _mock_load: MagicMock
+        self,
+        _mock_load: MagicMock,
     ) -> None:
         api = MagicMock()
         proj = _mock_project(id="p1", name="Work")
