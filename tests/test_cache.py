@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from td.core.cache import (
+    atomic_write,
     load_name_cache,
     load_result_cache,
     resolve_task_ref,
@@ -74,3 +75,44 @@ class TestNameCache:
         cache = load_name_cache()
         assert "projects" in cache
         assert "labels" in cache
+
+
+class TestAtomicWrite:
+    def test_writes_file_contents(self, tmp_path: Path) -> None:
+        target = tmp_path / "test.json"
+        atomic_write(target, '{"key": "value"}')
+        assert target.read_text() == '{"key": "value"}'
+
+    def test_no_temp_files_left(self, tmp_path: Path) -> None:
+        target = tmp_path / "test.json"
+        atomic_write(target, "data")
+        files = list(tmp_path.iterdir())
+        assert files == [target]
+
+    def test_original_intact_on_failure(self, tmp_path: Path) -> None:
+        target = tmp_path / "test.json"
+        target.write_text("original")
+
+        # Make the directory read-only so rename fails after mkstemp
+        import os
+        import stat
+
+        # Create a subdirectory for isolation
+        sub = tmp_path / "sub"
+        sub.mkdir()
+        target2 = sub / "test.json"
+        target2.write_text("original")
+
+        # Write to a non-existent directory to trigger failure
+        bad_path = tmp_path / "nonexistent" / "test.json"
+        with pytest.raises(OSError):
+            atomic_write(bad_path, "new data")
+
+        # Original file untouched
+        assert target2.read_text() == "original"
+
+    def test_overwrites_existing(self, tmp_path: Path) -> None:
+        target = tmp_path / "test.json"
+        target.write_text("old")
+        atomic_write(target, "new")
+        assert target.read_text() == "new"
