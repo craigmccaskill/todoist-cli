@@ -95,9 +95,7 @@ class TestMapApiException:
 
         request = httpx.Request("GET", "https://api.todoist.com/rest/v2/tasks")
         response = httpx.Response(status_code, request=request)
-        return httpx.HTTPStatusError(
-            f"{status_code} {reason}", request=request, response=response
-        )
+        return httpx.HTTPStatusError(f"{status_code} {reason}", request=request, response=response)
 
     def test_401_maps_to_auth_error(self) -> None:
         exc = self._make_status_error(401, "Unauthorized")
