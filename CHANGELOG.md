@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Broad `except Exception` in cache operations narrowed to specific types with debug logging (#126, #141)
+
 ## [0.7.0-alpha] - 2026-03-25
 
 ### Added
