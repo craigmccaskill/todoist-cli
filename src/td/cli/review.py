@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from typing import cast
 
 import click
 
@@ -16,7 +17,7 @@ from td.core.tasks import list_tasks, sort_tasks
 
 
 def _get_formatter(ctx: click.Context) -> OutputFormatter:
-    return ctx.obj["formatter"]  # type: ignore[no-any-return]
+    return cast(OutputFormatter, ctx.obj["formatter"])
 
 
 @click.command()

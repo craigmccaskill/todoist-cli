@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import click
 
 from td.cli.output import OutputFormatter
@@ -10,7 +12,7 @@ from td.core.labels import _collect_labels
 
 
 def _get_formatter(ctx: click.Context) -> OutputFormatter:
-    return ctx.obj["formatter"]  # type: ignore[no-any-return]
+    return cast(OutputFormatter, ctx.obj["formatter"])
 
 
 @click.command()

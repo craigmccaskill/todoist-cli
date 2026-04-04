@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sys
-from typing import Any
+from typing import Any, cast
 
 import click
 
@@ -35,7 +35,7 @@ from td.core.tasks import (
 
 
 def _get_formatter(ctx: click.Context) -> OutputFormatter:
-    return ctx.obj["formatter"]  # type: ignore[no-any-return]
+    return cast(OutputFormatter, ctx.obj["formatter"])
 
 
 def _resolve_task(ref: str, api: Any = None) -> str:

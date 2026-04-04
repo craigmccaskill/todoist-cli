@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import click
 
 from td.cli.completions import _complete_projects
@@ -12,7 +14,7 @@ from td.core.sections import _collect_sections
 
 
 def _get_formatter(ctx: click.Context) -> OutputFormatter:
-    return ctx.obj["formatter"]  # type: ignore[no-any-return]
+    return cast(OutputFormatter, ctx.obj["formatter"])
 
 
 @click.command()

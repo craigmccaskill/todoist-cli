@@ -66,12 +66,11 @@ def create_project(
     is_favorite: bool = False,
 ) -> Project:
     """Create a new project."""
-    kwargs: dict[str, object] = {}
-    if parent_id:
-        kwargs["parent_id"] = parent_id
-    if is_favorite:
-        kwargs["is_favorite"] = True
-    return api.add_project(name, **kwargs)  # type: ignore[arg-type]
+    return api.add_project(
+        name,
+        parent_id=parent_id,
+        is_favorite=is_favorite or None,
+    )
 
 
 def get_project_name_map(api: TodoistAPI) -> dict[str, str]:
