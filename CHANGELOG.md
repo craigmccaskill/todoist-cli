@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `py.typed` marker declared in package data so it ships in wheels (#139)
+
 ## [0.7.0-alpha] - 2026-03-25
 
 ### Added
