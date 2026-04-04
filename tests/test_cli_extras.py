@@ -206,6 +206,35 @@ class TestDoneFuzzyConfirmation:
         api.complete_task.assert_called_once_with("t1")
 
 
+class TestIdFlag:
+    @patch("td.cli.tasks.get_client")
+    def test_done_with_id_flag_bypasses_resolution(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        task = _mock_task(id="8bx9a0c2")
+        api.get_task.return_value = task
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "done", "--id", "8bx9a0c2", "-y"])
+
+        assert result.exit_code == 0
+        api.complete_task.assert_called_once_with("8bx9a0c2")
+
+    @patch("td.cli.tasks.get_client")
+    def test_show_with_id_flag(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        task = _mock_task(id="8bx9a0c2")
+        api.get_task.return_value = task
+        api.get_projects.return_value = iter([[]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "show", "--id", "8bx9a0c2"])
+
+        assert result.exit_code == 0
+        api.get_task.assert_called_once_with("8bx9a0c2")
+
+
 class TestUndoCommand:
     @patch("td.cli.tasks.get_client")
     def test_undo_task(self, mock_gc: MagicMock) -> None:

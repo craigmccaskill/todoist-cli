@@ -7,11 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `--id` flag on `done`, `edit`, `show`, `delete`, `move`, `undo` to bypass task reference resolution and use literal task IDs (#128)
+
 ### Fixed
 - Rate limit monitoring never captured data — rewritten from `requests.Session` to `httpx.Client` event hooks to match SDK's HTTP stack (#119)
+- Cache file writes are now atomic via temp file + `os.rename()`, preventing corruption from concurrent invocations or Ctrl+C (#152)
+- Config file written with default permissions (world-readable) — now sets `0o600` on file, `0o700` on directory (#137)
+- `py.typed` marker declared in package data so it ships in wheels (#139)
 
 ### Changed
 - `todoist-api-python` constraint bumped from `<4` to `<5`; `requests` dependency dropped in favor of `httpx` (#135)
+
+### Internal
+- CI: added `cache: 'pip'` to all `setup-python` steps for faster workflow runs (#145)
 
 ## [0.7.0-alpha] - 2026-03-25
 
