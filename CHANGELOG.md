@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Empty list states show helpful messages instead of empty tables
   - `search` and `log` commands now include project name column
 - Full UX review: improved help text, documented defaults, consistent flag descriptions, cleaner error messages (#122)
+- Add CI packaging verification — build sdist/wheel and smoke-test installs on every push/PR (#150)
 
 ### Fixed
 - TUI `RowKey` resolution: use `row_key.value` instead of `str(row_key)` for Textual 8.x compatibility in picker and review modal screens (#159)
