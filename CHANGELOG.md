@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add pytest-timeout (30s per test) and CI job timeouts to prevent hanging tests (#140)
 - Add dependency vulnerability scanning with pip-audit in CI and `make audit` locally (#146)
 - Enhance PR template with CONTRIBUTING.md workflow checklist and consolidate feature templates (#148)
+### Fixed
+- `td init` no longer exposes API token in shell history when choosing environment variable storage (#138)
 
 ## [0.8.0-alpha] - 2026-04-04
 

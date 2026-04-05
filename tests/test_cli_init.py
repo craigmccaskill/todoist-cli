@@ -70,6 +70,28 @@ class TestInit:
         assert result.exit_code == 0
         assert "Aborted" in result.output
 
+    def test_init_env_var_does_not_expose_token(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
+        monkeypatch.delenv("TD_API_TOKEN", raising=False)
+
+        mock_api = MagicMock()
+        mock_api.get_projects.return_value = iter(
+            [
+                [MagicMock(), MagicMock()],
+            ]
+        )
+
+        monkeypatch.setattr("td.cli.config_cmd.TodoistAPI", lambda token: mock_api)
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["init"], input="secret-token-abc123\n2\n")
+
+        assert result.exit_code == 0
+        assert "secret-token-abc123" not in result.output
+        assert "TD_API_TOKEN" in result.output
+
 
 class TestCompletions:
     @pytest.mark.parametrize("shell", ["bash", "zsh", "fish"])
