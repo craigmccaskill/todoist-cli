@@ -59,15 +59,14 @@ def init() -> None:
     else:
         shell = os.environ.get("SHELL", "/bin/bash")
         click.echo()
-        if "fish" in shell:
-            click.echo("Add to ~/.config/fish/config.fish:")
-            click.echo(f'  set -x TD_API_TOKEN "{token}"')
-        else:
-            click.echo("Add to your shell profile (~/.bashrc, ~/.zshrc):")
-            click.echo(f'  export TD_API_TOKEN="{token}"')
+        click.echo("Run this command to set your token (it won't appear in shell history):")
         click.echo()
-        click.echo("Or for a .env file:")
-        click.echo(f"  TD_API_TOKEN={token}")
+        if "fish" in shell:
+            click.echo("  read -s -P 'Token: ' TD_API_TOKEN && set -x TD_API_TOKEN $TD_API_TOKEN")
+        else:
+            click.echo("  read -rs TD_API_TOKEN && export TD_API_TOKEN")
+        click.echo()
+        click.echo("To persist it, add TD_API_TOKEN to your shell profile or .env file.")
 
     click.echo()
     click.echo("Try `td ls` to see your tasks.")
