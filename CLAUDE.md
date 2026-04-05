@@ -2,7 +2,7 @@
 
 ## What is this?
 
-`td` — an AI-native Todoist CLI built for humans and AI agents. Python 3.10+, alpha (v0.7.0-alpha).
+`td` — an AI-native Todoist CLI built for humans and AI agents. Python 3.10+, alpha (v0.9.0-alpha).
 
 ## Quick Reference
 
@@ -11,6 +11,7 @@ make check      # Run lint + tests (the one command before committing)
 make fmt        # Auto-format code
 make test       # Tests only (pytest, 85% coverage minimum)
 make lint       # ruff check + ruff format --check + mypy strict
+make audit      # Scan dependencies for known vulnerabilities (pip-audit)
 make install    # pip install -e ".[dev]" + pre-commit hooks
 make examples   # Regenerate docs/examples.md
 make docs       # Serve mkdocs locally
@@ -61,7 +62,7 @@ src/td/
 - **Interactive TUI:** Textual (optional `[interactive]` extra)
 - **Linting:** ruff (E, F, W, I, UP, B, SIM, RUF rules, line-length 99)
 - **Types:** mypy --strict (Python 3.10 target)
-- **Tests:** pytest + pytest-cov (85% minimum), pytest-mock, pytest-asyncio
+- **Tests:** pytest + pytest-cov (85% minimum), pytest-mock, pytest-asyncio, pytest-timeout (30s)
 - **Docs:** mkdocs-material + mkdocs-click
 
 ## Critical Patterns
@@ -92,6 +93,11 @@ Output mode resolution order (most specific wins):
 2. `default_format` from config
 3. `NO_COLOR` / `color` setting
 4. TTY detection (TTY → Rich, pipe → JSON)
+
+**Output consistency principle:** Rich and Plain modes must use the same column order for
+all list views. Smart column hiding (e.g., omitting PROJECT in inbox view) applies to both
+modes. Empty lists show a helpful message ("No tasks found.") instead of an empty table.
+Overdue dates are styled red; non-overdue dates are yellow.
 
 ### Error handling
 
@@ -165,10 +171,14 @@ pytest tests/test_tasks.py -k "test_sort"  # Single test by name
 
 ## Known Architectural Issues
 
-- `core/client.py` defines its own `TdAuthError` (plain Exception), separate from
-  `cli/errors.py`'s `TdAuthError` (TdError subclass) — issue #125, a layering violation
 - Cache TTLs (10 min results, 5 min names) are hardcoded — issue #127
-- Some SDK type mismatches suppressed with `type: ignore` — issue #129
+
+### Textual 8.x gotcha
+
+In Textual 8.x, `DataTable.coordinate_to_cell_key()` returns a `RowKey` object. Use
+`row_key.value` to get the actual key string — `str(row_key)` returns the Python repr,
+not the key. This affects `PickerApp.action_select()`, `ReviewApp._get_selected_task()`,
+and all modal `action_select()` methods.
 
 ## Environment Variables
 
@@ -180,7 +190,10 @@ pytest tests/test_tasks.py -k "test_sort"  # Single test by name
 ## CI
 
 - Lint on Python 3.13 (Ubuntu)
-- Tests on Python 3.10–3.13 x Ubuntu + macOS
+- Tests on Python 3.10–3.13 x Ubuntu + macOS (30s per-test timeout, 20min job timeout)
+- Security: pip-audit vulnerability scanning on every push/PR
+- Packaging: build sdist/wheel + smoke-test installs (td --version, td schema, py.typed)
+- Dependency Review: GitHub advisory comments on PRs that change dependencies
 - Coverage uploaded to Codecov from Ubuntu 3.13 run
 - Pre-commit hooks: ruff check (auto-fix) + ruff format
 
