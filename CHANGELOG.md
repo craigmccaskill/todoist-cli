@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Internal
+- Add pytest-timeout (30s per test) and CI job timeouts to prevent hanging tests (#140)
+
 ## [0.8.0-alpha] - 2026-04-04
 
 ### Added
