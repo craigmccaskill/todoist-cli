@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhance PR template with CONTRIBUTING.md workflow checklist and consolidate feature templates (#148)
 ### Fixed
 - `td init` no longer exposes API token in shell history when choosing environment variable storage (#138)
+### Changed
+- Fix TUI keyboard shortcuts: implement `/` filter in picker, real undo in review, modal Enter binding, standardize hints (#117)
 
 ## [0.8.0-alpha] - 2026-04-04
 
