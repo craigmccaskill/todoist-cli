@@ -17,3 +17,4 @@ htmlcov/
 *.so
 .env
 site/
+.claude/settings.local.json
