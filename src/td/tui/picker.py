@@ -143,7 +143,8 @@ class PickerApp(App[str | None]):
         table = self.query_one(DataTable)
         if table.row_count > 0:
             row_key, _ = table.coordinate_to_cell_key(table.cursor_coordinate)
-            self.exit(str(row_key))
+            key = row_key.value if row_key.value is not None else str(row_key)
+            self.exit(key)
         else:
             self.exit(None)
 

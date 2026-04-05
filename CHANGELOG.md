@@ -30,6 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `search` and `log` commands now include project name column
 - Full UX review: improved help text, documented defaults, consistent flag descriptions, cleaner error messages (#122)
 
+### Fixed
+- TUI `RowKey` resolution: use `row_key.value` instead of `str(row_key)` for Textual 8.x compatibility in picker and review modal screens (#159)
+
+### Internal
+- Comprehensive Textual pilot tests for all TUI components: PickerApp, filter, domain pickers, modal screens, and ReviewApp actions (58 tests) (#159)
+
 ## [0.8.0-alpha] - 2026-04-04
 
 ### Added
