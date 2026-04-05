@@ -13,6 +13,14 @@ Usage: td [OPTIONS] COMMAND [ARGS]...
 
   td — AI-native Todoist CLI.
 
+  Quick start:
+    td init          Set up authentication
+    td ls            List today's tasks
+    td add "task"    Add a new task
+    td done 1        Complete task #1
+
+  Use td <command> --help for details on any command.
+
 Options:
   --json      Force JSON output.
   --plain     Force plain text output (no color).
@@ -41,7 +49,7 @@ Commands:
   project-add  Create a new project.
   projects     List all projects.
   quick        Natural language task creation.
-  rate-limit   Show current API rate limit status from cached response...
+  rate-limit   Show current API rate limit status from the last API call.
   review       Interactive inbox review — process tasks one by one.
   schema       Output full capability manifest as JSON.
   search       Search tasks by keyword across all projects.
@@ -59,7 +67,7 @@ Commands:
 
 ```
 $ td --version
-td, version 0.7.0-alpha
+td, version 0.8.0-alpha
 ```
 
 
@@ -116,9 +124,13 @@ List all tasks (plain mode).
 
 ```
 $ td --plain ls
-#	ID	CONTENT	PROJECT	DUE	PRIORITY	LABELS
-1	8bx9a0c2	Review PR for auth module	Inbox	2026-03-25	p1	work,code-review
-2	7ky3m1f9	Buy groceries	Inbox	2026-03-26	p4	errands
+Error: Unexpected error: `Project.__init__()` missing required fields.
+  Provided: ['id', 'name', 'is_favorite']
+  Missing: ['description', 'order', 'color', 'is_collapsed', 'is_shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']
+  Expected Keys: ['description', 'child_order', 'color', 'collapsed', 'shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']
+  Input JSON: {"id": "220474322", "name": "Inbox", "is_favorite": false}
+  Resolution: Ensure that all required fields are provided in the input. For more details, see:
+    https://github.com/rnag/dataclass-wizard/discussions/167
 ```
 
 ### `td --json ls -f "today & #Work"`
@@ -128,41 +140,13 @@ List tasks with a Todoist filter query.
 ```
 $ td --json ls -f "today & #Work"
 {
-  "ok": true,
-  "type": "task_list",
-  "data": [
-    {
-      "id": "8bx9a0c2",
-      "content": "Review PR for auth module",
-      "priority": 4,
-      "labels": [
-        "work",
-        "code-review"
-      ],
-      "project_id": "220474322",
-      "description": "",
-      "due": {
-        "string": "Mar 25",
-        "date": "2026-03-25"
-      },
-      "project_name": "Inbox"
-    },
-    {
-      "id": "7ky3m1f9",
-      "content": "Buy groceries",
-      "priority": 1,
-      "labels": [
-        "errands"
-      ],
-      "project_id": "220474322",
-      "description": "",
-      "due": {
-        "string": "Mar 26",
-        "date": "2026-03-26"
-      },
-      "project_name": "Inbox"
-    }
-  ]
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: `Project.__init__()` missing required fields.\n  Provided: ['id', 'name', 'is_favorite']\n  Missing: ['description', 'order', 'color', 'is_collapsed', 'is_shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Expected Keys: ['description', 'child_order', 'color', 'collapsed', 'shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Input JSON: {\"id\": \"220474322\", \"name\": \"Inbox\", \"is_favorite\": false}\n  Resolution: Ensure that all required fields are provided in the input. For more details, see:\n    https://github.com/rnag/dataclass-wizard/discussions/167",
+    "suggestion": "",
+    "details": {}
+  }
 }
 ```
 
@@ -173,64 +157,13 @@ Show inbox tasks.
 ```
 $ td --json inbox
 {
-  "ok": true,
-  "type": "task_list",
-  "data": [
-    {
-      "id": "8bx9a0c2",
-      "content": "Review PR for auth module",
-      "priority": 4,
-      "labels": [
-        "work",
-        "code-review"
-      ],
-      "project_id": "220474322",
-      "description": "",
-      "due": {
-        "string": "Mar 25",
-        "date": "2026-03-25"
-      },
-      "project_name": "Inbox"
-    },
-    {
-      "id": "4np6r2d5",
-      "content": "Write blog post draft",
-      "priority": 3,
-      "labels": [
-        "writing"
-      ],
-      "project_id": "220474322",
-      "description": "",
-      "due": {
-        "string": "Mar 28",
-        "date": "2026-03-28"
-      }
-    },
-    {
-      "id": "1aq8s4g7",
-      "content": "Schedule dentist appointment",
-      "priority": 2,
-      "labels": [],
-      "project_id": "220474322",
-      "description": "",
-      "due": null
-    },
-    {
-      "id": "7ky3m1f9",
-      "content": "Buy groceries",
-      "priority": 1,
-      "labels": [
-        "errands"
-      ],
-      "project_id": "220474322",
-      "description": "",
-      "due": {
-        "string": "Mar 26",
-        "date": "2026-03-26"
-      },
-      "project_name": "Inbox"
-    }
-  ]
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: `Project.__init__()` missing required fields.\n  Provided: ['id', 'name', 'is_favorite']\n  Missing: ['description', 'order', 'color', 'is_collapsed', 'is_shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Expected Keys: ['description', 'child_order', 'color', 'collapsed', 'shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Input JSON: {\"id\": \"220474322\", \"name\": \"Inbox\", \"is_favorite\": false}\n  Resolution: Ensure that all required fields are provided in the input. For more details, see:\n    https://github.com/rnag/dataclass-wizard/discussions/167",
+    "suggestion": "",
+    "details": {}
+  }
 }
 ```
 
@@ -241,24 +174,12 @@ Create a task with project, priority, due date, and labels.
 ```
 $ td --json add "Review PR for auth module" -p Work --priority 1 -d tomorrow -l work -l code-review
 {
-  "ok": true,
-  "type": "task_created",
-  "data": {
-    "id": "8bx9a0c2",
-    "content": "Review PR for auth module",
-    "priority": 4,
-    "labels": [
-      "work",
-      "code-review"
-    ],
-    "project_id": "220474322",
-    "description": "",
-    "due": {
-      "string": "Mar 25",
-      "date": "2026-03-25"
-    },
-    "project_name": "Inbox",
-    "created": true
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: `Project.__init__()` missing required fields.\n  Provided: ['id', 'name', 'is_favorite']\n  Missing: ['description', 'order', 'color', 'is_collapsed', 'is_shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Expected Keys: ['description', 'child_order', 'color', 'collapsed', 'shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Input JSON: {\"id\": \"220474322\", \"name\": \"Inbox\", \"is_favorite\": false}\n  Resolution: Ensure that all required fields are provided in the input. For more details, see:\n    https://github.com/rnag/dataclass-wizard/discussions/167",
+    "suggestion": "",
+    "details": {}
   }
 }
 ```
@@ -345,7 +266,8 @@ $ td --json done 8bx9a0c2
   "ok": true,
   "type": "success",
   "data": {
-    "task_id": "8bx9a0c2"
+    "task_id": "8bx9a0c2",
+    "content": "Review PR for auth module"
   }
 }
 ```
@@ -360,7 +282,8 @@ $ td --json undo 8bx9a0c2
   "ok": true,
   "type": "success",
   "data": {
-    "task_id": "8bx9a0c2"
+    "task_id": "8bx9a0c2",
+    "content": "Review PR for auth module"
   }
 }
 ```
@@ -400,23 +323,12 @@ View full task details.
 ```
 $ td --json show 8bx9a0c2
 {
-  "ok": true,
-  "type": "task",
-  "data": {
-    "id": "8bx9a0c2",
-    "content": "Review PR for auth module",
-    "priority": 4,
-    "labels": [
-      "work",
-      "code-review"
-    ],
-    "project_id": "220474322",
-    "description": "",
-    "due": {
-      "string": "Mar 25",
-      "date": "2026-03-25"
-    },
-    "project_name": "Inbox"
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: `Project.__init__()` missing required fields.\n  Provided: ['id', 'name', 'is_favorite']\n  Missing: ['description', 'order', 'color', 'is_collapsed', 'is_shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Expected Keys: ['description', 'child_order', 'color', 'collapsed', 'shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Input JSON: {\"id\": \"220474322\", \"name\": \"Inbox\", \"is_favorite\": false}\n  Resolution: Ensure that all required fields are provided in the input. For more details, see:\n    https://github.com/rnag/dataclass-wizard/discussions/167",
+    "suggestion": "",
+    "details": {}
   }
 }
 ```
@@ -428,12 +340,12 @@ Move a task to a different project.
 ```
 $ td --json move 8bx9a0c2 -p "Work"
 {
-  "ok": true,
-  "type": "success",
-  "data": {
-    "task_id": "8bx9a0c2",
-    "project_id": "220474323",
-    "project_name": "Work"
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: `Project.__init__()` missing required fields.\n  Provided: ['id', 'name', 'is_favorite']\n  Missing: ['description', 'order', 'color', 'is_collapsed', 'is_shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Expected Keys: ['description', 'child_order', 'color', 'collapsed', 'shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Input JSON: {\"id\": \"220474322\", \"name\": \"Inbox\", \"is_favorite\": false}\n  Resolution: Ensure that all required fields are provided in the input. For more details, see:\n    https://github.com/rnag/dataclass-wizard/discussions/167",
+    "suggestion": "",
+    "details": {}
   }
 }
 ```
@@ -445,41 +357,13 @@ Search tasks by keyword.
 ```
 $ td --json search review
 {
-  "ok": true,
-  "type": "task_list",
-  "data": [
-    {
-      "id": "8bx9a0c2",
-      "content": "Review PR for auth module",
-      "priority": 4,
-      "labels": [
-        "work",
-        "code-review"
-      ],
-      "project_id": "220474322",
-      "description": "",
-      "due": {
-        "string": "Mar 25",
-        "date": "2026-03-25"
-      },
-      "project_name": "Inbox"
-    },
-    {
-      "id": "7ky3m1f9",
-      "content": "Buy groceries",
-      "priority": 1,
-      "labels": [
-        "errands"
-      ],
-      "project_id": "220474322",
-      "description": "",
-      "due": {
-        "string": "Mar 26",
-        "date": "2026-03-26"
-      },
-      "project_name": "Inbox"
-    }
-  ]
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: `Project.__init__()` missing required fields.\n  Provided: ['id', 'name', 'is_favorite']\n  Missing: ['description', 'order', 'color', 'is_collapsed', 'is_shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Expected Keys: ['description', 'child_order', 'color', 'collapsed', 'shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Input JSON: {\"id\": \"220474322\", \"name\": \"Inbox\", \"is_favorite\": false}\n  Resolution: Ensure that all required fields are provided in the input. For more details, see:\n    https://github.com/rnag/dataclass-wizard/discussions/167",
+    "suggestion": "",
+    "details": {}
+  }
 }
 ```
 
@@ -493,7 +377,8 @@ $ td --json delete 8bx9a0c2 --yes
   "ok": true,
   "type": "success",
   "data": {
-    "task_id": "8bx9a0c2"
+    "task_id": "8bx9a0c2",
+    "content": "Review PR for auth module"
   }
 }
 ```
@@ -544,41 +429,13 @@ Show tasks due today and overdue — your morning dashboard.
 ```
 $ td --json today
 {
-  "ok": true,
-  "type": "task_list",
-  "data": [
-    {
-      "id": "8bx9a0c2",
-      "content": "Review PR for auth module",
-      "priority": 4,
-      "labels": [
-        "work",
-        "code-review"
-      ],
-      "project_id": "220474322",
-      "description": "",
-      "due": {
-        "string": "Mar 25",
-        "date": "2026-03-25"
-      },
-      "project_name": "Inbox"
-    },
-    {
-      "id": "7ky3m1f9",
-      "content": "Buy groceries",
-      "priority": 1,
-      "labels": [
-        "errands"
-      ],
-      "project_id": "220474322",
-      "description": "",
-      "due": {
-        "string": "Mar 26",
-        "date": "2026-03-26"
-      },
-      "project_name": "Inbox"
-    }
-  ]
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: `Project.__init__()` missing required fields.\n  Provided: ['id', 'name', 'is_favorite']\n  Missing: ['description', 'order', 'color', 'is_collapsed', 'is_shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Expected Keys: ['description', 'child_order', 'color', 'collapsed', 'shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Input JSON: {\"id\": \"220474322\", \"name\": \"Inbox\", \"is_favorite\": false}\n  Resolution: Ensure that all required fields are provided in the input. For more details, see:\n    https://github.com/rnag/dataclass-wizard/discussions/167",
+    "suggestion": "",
+    "details": {}
+  }
 }
 ```
 
@@ -617,64 +474,13 @@ Focus on a single project.
 ```
 $ td --json focus "Work"
 {
-  "ok": true,
-  "type": "task_list",
-  "data": [
-    {
-      "id": "8bx9a0c2",
-      "content": "Review PR for auth module",
-      "priority": 4,
-      "labels": [
-        "work",
-        "code-review"
-      ],
-      "project_id": "220474322",
-      "description": "",
-      "due": {
-        "string": "Mar 25",
-        "date": "2026-03-25"
-      },
-      "project_name": "Inbox"
-    },
-    {
-      "id": "4np6r2d5",
-      "content": "Write blog post draft",
-      "priority": 3,
-      "labels": [
-        "writing"
-      ],
-      "project_id": "220474322",
-      "description": "",
-      "due": {
-        "string": "Mar 28",
-        "date": "2026-03-28"
-      }
-    },
-    {
-      "id": "1aq8s4g7",
-      "content": "Schedule dentist appointment",
-      "priority": 2,
-      "labels": [],
-      "project_id": "220474322",
-      "description": "",
-      "due": null
-    },
-    {
-      "id": "7ky3m1f9",
-      "content": "Buy groceries",
-      "priority": 1,
-      "labels": [
-        "errands"
-      ],
-      "project_id": "220474322",
-      "description": "",
-      "due": {
-        "string": "Mar 26",
-        "date": "2026-03-26"
-      },
-      "project_name": "Inbox"
-    }
-  ]
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: `Project.__init__()` missing required fields.\n  Provided: ['id', 'name', 'is_favorite']\n  Missing: ['description', 'order', 'color', 'is_collapsed', 'is_shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Expected Keys: ['description', 'child_order', 'color', 'collapsed', 'shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Input JSON: {\"id\": \"220474322\", \"name\": \"Inbox\", \"is_favorite\": false}\n  Resolution: Ensure that all required fields are provided in the input. For more details, see:\n    https://github.com/rnag/dataclass-wizard/discussions/167",
+    "suggestion": "",
+    "details": {}
+  }
 }
 ```
 
@@ -688,30 +494,13 @@ List all projects.
 ```
 $ td --json projects
 {
-  "ok": true,
-  "type": "project_list",
-  "data": [
-    {
-      "id": "220474322",
-      "name": "Inbox",
-      "is_favorite": false
-    },
-    {
-      "id": "220474323",
-      "name": "Work",
-      "is_favorite": true
-    },
-    {
-      "id": "220474324",
-      "name": "Personal",
-      "is_favorite": false
-    },
-    {
-      "id": "220474325",
-      "name": "Side Projects",
-      "is_favorite": false
-    }
-  ]
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: `Project.__init__()` missing required fields.\n  Provided: ['id', 'name', 'is_favorite']\n  Missing: ['description', 'order', 'color', 'is_collapsed', 'is_shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Expected Keys: ['description', 'child_order', 'color', 'collapsed', 'shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Input JSON: {\"id\": \"220474322\", \"name\": \"Inbox\", \"is_favorite\": false}\n  Resolution: Ensure that all required fields are provided in the input. For more details, see:\n    https://github.com/rnag/dataclass-wizard/discussions/167",
+    "suggestion": "",
+    "details": {}
+  }
 }
 ```
 
@@ -721,11 +510,13 @@ List projects (plain mode).
 
 ```
 $ td --plain projects
-ID	NAME
-220474322	Inbox
-220474323	Work
-220474324	Personal
-220474325	Side Projects
+Error: Unexpected error: `Project.__init__()` missing required fields.
+  Provided: ['id', 'name', 'is_favorite']
+  Missing: ['description', 'order', 'color', 'is_collapsed', 'is_shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']
+  Expected Keys: ['description', 'child_order', 'color', 'collapsed', 'shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']
+  Input JSON: {"id": "220474322", "name": "Inbox", "is_favorite": false}
+  Resolution: Ensure that all required fields are provided in the input. For more details, see:
+    https://github.com/rnag/dataclass-wizard/discussions/167
 ```
 
 ### `td --json projects -s "Work"`
@@ -772,22 +563,13 @@ List sections in a project.
 ```
 $ td --json sections -p "Work"
 {
-  "ok": true,
-  "type": "section_list",
-  "data": [
-    {
-      "id": "s1",
-      "name": "Backlog"
-    },
-    {
-      "id": "s2",
-      "name": "In Progress"
-    },
-    {
-      "id": "s3",
-      "name": "Done"
-    }
-  ]
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: `Project.__init__()` missing required fields.\n  Provided: ['id', 'name', 'is_favorite']\n  Missing: ['description', 'order', 'color', 'is_collapsed', 'is_shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Expected Keys: ['description', 'child_order', 'color', 'collapsed', 'shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Input JSON: {\"id\": \"220474322\", \"name\": \"Inbox\", \"is_favorite\": false}\n  Resolution: Ensure that all required fields are provided in the input. For more details, see:\n    https://github.com/rnag/dataclass-wizard/discussions/167",
+    "suggestion": "",
+    "details": {}
+  }
 }
 ```
 
@@ -798,12 +580,12 @@ Create a new section in a project.
 ```
 $ td --json section-add "In Progress" -p "Work"
 {
-  "ok": true,
-  "type": "section_created",
-  "data": {
-    "id": "s2",
-    "name": "In Progress",
-    "created": true
+  "ok": false,
+  "error": {
+    "code": "API_ERROR",
+    "message": "Unexpected error: `Project.__init__()` missing required fields.\n  Provided: ['id', 'name', 'is_favorite']\n  Missing: ['description', 'order', 'color', 'is_collapsed', 'is_shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Expected Keys: ['description', 'child_order', 'color', 'collapsed', 'shared', 'is_archived', 'can_assign_tasks', 'view_style', 'created_at', 'updated_at']\n  Input JSON: {\"id\": \"220474322\", \"name\": \"Inbox\", \"is_favorite\": false}\n  Resolution: Ensure that all required fields are provided in the input. For more details, see:\n    https://github.com/rnag/dataclass-wizard/discussions/167",
+    "suggestion": "",
+    "details": {}
   }
 }
 ```
@@ -848,12 +630,13 @@ List labels (plain mode).
 
 ```
 $ td --plain labels
-ID	NAME
-lbl1	urgent
-lbl2	work
-lbl3	errands
-lbl4	writing
-lbl5	code-review
+Error: Unexpected error: `Label.__init__()` missing required fields.
+  Provided: ['id', 'name']
+  Missing: ['color', 'order', 'is_favorite']
+  Expected Keys: ['color', 'order', 'is_favorite']
+  Input JSON: {"id": "lbl1", "name": "urgent"}
+  Resolution: Ensure that all required fields are provided in the input. For more details, see:
+    https://github.com/rnag/dataclass-wizard/discussions/167
 ```
 
 ### `td --json label-add urgent`
@@ -884,11 +667,11 @@ Output the full capability manifest. Agents call this once to learn everything.
 $ td schema
 {
   "name": "td",
-  "version": "0.7.0-alpha",
+  "version": "0.8.0-alpha",
   "description": "AI-native Todoist CLI",
   "commands": {
     "add": {
-      "description": "Create a new task. Reads from stdin if no content argument.",
+      "description": "Create a new task. Reads from stdin if no content argument.\n\n    \b\n    Examples:\n      td add Buy milk -p Errands\n      td add Deploy hotfix --due tomorrow --priority 1\n      echo \"Review PR\" | td add\n    ",
       "arguments": [
         {
           "name": "content",
@@ -986,7 +769,7 @@ $ td schema
       "options": []
     },
     "comment": {
-      "description": "Add a comment to a task.\n\n    Examples: td comment 1 \"Picked up 2%, not whole\"\n    ",
+      "description": "Add a comment to a task. Accepts row number, content match, or task ID.\n\n    \b\n    Examples:\n      td comment 1 \"Picked up 2%, not whole\"\n      td comment buy milk \"Got oat milk instead\"\n    ",
       "arguments": [
         {
           "name": "task_ref",
@@ -1002,7 +785,7 @@ $ td schema
       "options": []
     },
     "comments": {
-      "description": "List comments on a task.\n\n    Examples: td comments 1 | td comments buy milk\n    ",
+      "description": "List comments on a task. Accepts row number, content match, or task ID.\n\n    \b\n    Examples:\n      td comments 1\n      td comments buy milk\n    ",
       "arguments": [
         {
           "name": "task_ref",
@@ -1044,6 +827,17 @@ $ td schema
           "help": "Skip confirmation.",
           "is_flag": true,
           "default": false
+        },
+        {
+          "name": "use_id",
+          "type": "boolean",
+          "required": false,
+          "flags": [
+            "--id"
+          ],
+          "help": "Treat task ref as a literal task ID.",
+          "is_flag": true,
+          "default": false
         }
       ]
     },
@@ -1066,6 +860,17 @@ $ td schema
             "--yes"
           ],
           "help": "Skip confirmation on fuzzy match.",
+          "is_flag": true,
+          "default": false
+        },
+        {
+          "name": "use_id",
+          "type": "boolean",
+          "required": false,
+          "flags": [
+            "--id"
+          ],
+          "help": "Treat task ref as a literal task ID.",
           "is_flag": true,
           "default": false
         }
@@ -1109,7 +914,7 @@ $ td schema
             "-d",
             "--due"
           ],
-          "help": "New due date.",
+          "help": "New due date (e.g. 'tomorrow', '2026-04-01').",
           "is_flag": false
         },
         {
@@ -1132,6 +937,17 @@ $ td schema
           ],
           "help": "New description.",
           "is_flag": false
+        },
+        {
+          "name": "use_id",
+          "type": "boolean",
+          "required": false,
+          "flags": [
+            "--id"
+          ],
+          "help": "Treat task ref as a literal task ID.",
+          "is_flag": true,
+          "default": false
         }
       ]
     },
@@ -1153,7 +969,7 @@ $ td schema
             "-s",
             "--sort"
           ],
-          "help": "Sort order (default: priority).",
+          "help": "Sort order: priority, due, project, created (default: priority).",
           "is_flag": false
         },
         {
@@ -1191,7 +1007,7 @@ $ td schema
       "options": []
     },
     "labels": {
-      "description": "List all labels.",
+      "description": "List all labels. Use -s to search by name.",
       "arguments": [],
       "options": [
         {
@@ -1225,7 +1041,7 @@ $ td schema
       ]
     },
     "ls": {
-      "description": "List tasks. Defaults to today + overdue unless filtered.",
+      "description": "List tasks. Defaults to today + overdue unless filtered.\n\n    Use --all to show everything. Use -f to pass a Todoist filter query.\n\n    \b\n    Examples:\n      td ls                    Today + overdue (default)\n      td ls --all              All tasks\n      td ls -p Work -s due     Tasks in Work, sorted by due date\n      td ls -f \"priority 1\"   Custom filter\n    ",
       "arguments": [],
       "options": [
         {
@@ -1291,7 +1107,7 @@ $ td schema
             "-s",
             "--sort"
           ],
-          "help": "Sort order (default: priority).",
+          "help": "Sort order: priority, due, project, created (default: priority).",
           "is_flag": false
         },
         {
@@ -1308,7 +1124,7 @@ $ td schema
       ]
     },
     "move": {
-      "description": "Move a task to a different project.\n\n    Examples: td move 1 -p Personal | td move buy milk -p Work\n    ",
+      "description": "Move a task to a different project. Accepts row number, content match, or task ID.\n\n    \b\n    Examples:\n      td move 1 -p Personal\n      td move buy milk -p Work\n    ",
       "arguments": [
         {
           "name": "task_ref",
@@ -1327,6 +1143,17 @@ $ td schema
           ],
           "help": "Target project.",
           "is_flag": false
+        },
+        {
+          "name": "use_id",
+          "type": "boolean",
+          "required": false,
+          "flags": [
+            "--id"
+          ],
+          "help": "Treat task ref as a literal task ID.",
+          "is_flag": true,
+          "default": false
         }
       ]
     },
@@ -1381,7 +1208,7 @@ $ td schema
       ]
     },
     "projects": {
-      "description": "List all projects.",
+      "description": "List all projects. Use -s to search by name.",
       "arguments": [],
       "options": [
         {
@@ -1398,7 +1225,7 @@ $ td schema
       ]
     },
     "quick": {
-      "description": "Natural language task creation. Reads from stdin if no args.\n\n    Example: td quick \"Buy milk tomorrow p1 #Errands\"\n    ",
+      "description": "Natural language task creation. Reads from stdin if no args.\n\n    Todoist parses dates, priorities, projects, and labels from the text.\n\n    \b\n    Examples:\n      td quick \"Buy milk tomorrow p1 #Errands\"\n      td quick \"Call dentist next Monday\"\n    ",
       "arguments": [
         {
           "name": "text",
@@ -1409,12 +1236,12 @@ $ td schema
       "options": []
     },
     "rate-limit": {
-      "description": "Show current API rate limit status from cached response headers.",
+      "description": "Show current API rate limit status from the last API call.",
       "arguments": [],
       "options": []
     },
     "review": {
-      "description": "Interactive inbox review \u2014 process tasks one by one.\n\n    Defaults to inbox tasks. Use -p for a project or -f for a filter.\n    ",
+      "description": "Interactive inbox review \u2014 process tasks one by one.\n\n    Defaults to inbox tasks. Use -p for a project or -f for a filter.\n    Keybindings: j/k to navigate, d=done, e=edit, m=move, s=skip, ?=help.\n    ",
       "arguments": [],
       "options": [
         {
@@ -1470,7 +1297,7 @@ $ td schema
       ]
     },
     "section-add": {
-      "description": "Create a new section in a project.",
+      "description": "Create a new section in a project. Requires -p/--project.",
       "arguments": [
         {
           "name": "name",
@@ -1493,7 +1320,7 @@ $ td schema
       ]
     },
     "sections": {
-      "description": "List sections in a project.",
+      "description": "List sections in a project. Requires -p/--project.",
       "arguments": [],
       "options": [
         {
@@ -1518,7 +1345,19 @@ $ td schema
           "required": false
         }
       ],
-      "options": []
+      "options": [
+        {
+          "name": "use_id",
+          "type": "boolean",
+          "required": false,
+          "flags": [
+            "--id"
+          ],
+          "help": "Treat task ref as a literal task ID.",
+          "is_flag": true,
+          "default": false
+        }
+      ]
     },
     "today": {
       "description": "Show tasks due today and overdue \u2014 your morning dashboard.",
@@ -1532,7 +1371,7 @@ $ td schema
             "-s",
             "--sort"
           ],
-          "help": "Sort order (default: priority).",
+          "help": "Sort order: priority, due, project, created (default: priority).",
           "is_flag": false
         },
         {
@@ -1557,7 +1396,19 @@ $ td schema
           "required": false
         }
       ],
-      "options": []
+      "options": [
+        {
+          "name": "use_id",
+          "type": "boolean",
+          "required": false,
+          "flags": [
+            "--id"
+          ],
+          "help": "Treat task ref as a literal task ID.",
+          "is_flag": true,
+          "default": false
+        }
+      ]
     }
   }
 }
@@ -1608,6 +1459,11 @@ $ td add --help
 Usage: td add [OPTIONS] [CONTENT]...
 
   Create a new task. Reads from stdin if no content argument.
+
+  Examples:
+    td add Buy milk -p Errands
+    td add Deploy hotfix --due tomorrow --priority 1
+    echo "Review PR" | td add
 
 Options:
   -p, --project TEXT        Project name or ID.
@@ -1661,6 +1517,14 @@ Usage: td ls [OPTIONS]
 
   List tasks. Defaults to today + overdue unless filtered.
 
+  Use --all to show everything. Use -f to pass a Todoist filter query.
+
+  Examples:
+    td ls                    Today + overdue (default)
+    td ls --all              All tasks
+    td ls -p Work -s due     Tasks in Work, sorted by due date
+    td ls -f "priority 1"   Custom filter
+
 Options:
   -p, --project TEXT              Filter by project.
   -l, --label TEXT                Filter by label.
@@ -1668,7 +1532,8 @@ Options:
   --all                           Show all tasks (default: today + overdue).
   --ids                           Output only task IDs, one per line.
   -s, --sort [priority|due|project|created]
-                                  Sort order (default: priority).
+                                  Sort order: priority, due, project, created
+                                  (default: priority).
   --reverse                       Reverse sort order.
   -h, --help                      Show this message and exit.
 {
@@ -1713,7 +1578,8 @@ Usage: td today [OPTIONS]
 
 Options:
   -s, --sort [priority|due|project|created]
-                                  Sort order (default: priority).
+                                  Sort order: priority, due, project, created
+                                  (default: priority).
   --reverse                       Reverse sort order.
   -h, --help                      Show this message and exit.
 {
@@ -1781,7 +1647,8 @@ Usage: td focus [OPTIONS] PROJECT_NAME
 
 Options:
   -s, --sort [priority|due|project|created]
-                                  Sort order (default: priority).
+                                  Sort order: priority, due, project, created
+                                  (default: priority).
   --reverse                       Reverse sort order.
   -h, --help                      Show this message and exit.
 {
@@ -1806,6 +1673,7 @@ Usage: td show [OPTIONS] [TASK_REF]...
   Examples: td show 1 | td show buy milk | td show 8bx9a0c2
 
 Options:
+  --id        Treat task ref as a literal task ID.
   -h, --help  Show this message and exit.
 {
   "ok": false,
@@ -1854,6 +1722,7 @@ Usage: td done [OPTIONS] [TASK_REF]...
 
 Options:
   -y, --yes   Skip confirmation on fuzzy match.
+  --id        Treat task ref as a literal task ID.
   -h, --help  Show this message and exit.
 {
   "ok": false,
@@ -1877,6 +1746,7 @@ Usage: td undo [OPTIONS] [TASK_REF]...
   Examples: td undo 1 | td undo buy milk | td undo 8bx9a0c2
 
 Options:
+  --id        Treat task ref as a literal task ID.
   -h, --help  Show this message and exit.
 {
   "ok": false,
@@ -1903,9 +1773,10 @@ Options:
   --content TEXT            New content.
   --priority INTEGER RANGE  Priority: 1=urgent, 2=high, 3=medium, 4=low.
                             [1<=x<=4]
-  -d, --due TEXT            New due date.
+  -d, --due TEXT            New due date (e.g. 'tomorrow', '2026-04-01').
   -l, --label TEXT          Labels (repeatable).
   --desc TEXT               New description.
+  --id                      Treat task ref as a literal task ID.
   -h, --help                Show this message and exit.
 {
   "ok": false,
@@ -1924,12 +1795,16 @@ Options:
 $ td move --help
 Usage: td move [OPTIONS] [TASK_REF]...
 
-  Move a task to a different project.
+  Move a task to a different project. Accepts row number, content match, or task
+  ID.
 
-  Examples: td move 1 -p Personal | td move buy milk -p Work
+  Examples:
+    td move 1 -p Personal
+    td move buy milk -p Work
 
 Options:
   -p, --project TEXT  Target project.  [required]
+  --id                Treat task ref as a literal task ID.
   -h, --help          Show this message and exit.
 {
   "ok": false,
@@ -1954,6 +1829,7 @@ Usage: td delete [OPTIONS] [TASK_REF]...
 
 Options:
   -y, --yes   Skip confirmation.
+  --id        Treat task ref as a literal task ID.
   -h, --help  Show this message and exit.
 {
   "ok": false,
@@ -1974,7 +1850,11 @@ Usage: td quick [OPTIONS] [TEXT]...
 
   Natural language task creation. Reads from stdin if no args.
 
-  Example: td quick "Buy milk tomorrow p1 #Errands"
+  Todoist parses dates, priorities, projects, and labels from the text.
+
+  Examples:
+    td quick "Buy milk tomorrow p1 #Errands"
+    td quick "Call dentist next Monday"
 
 Options:
   -h, --help  Show this message and exit.
@@ -1995,9 +1875,11 @@ Options:
 $ td comment --help
 Usage: td comment [OPTIONS] [TASK_REF] TEXT...
 
-  Add a comment to a task.
+  Add a comment to a task. Accepts row number, content match, or task ID.
 
-  Examples: td comment 1 "Picked up 2%, not whole"
+  Examples:
+    td comment 1 "Picked up 2%, not whole"
+    td comment buy milk "Got oat milk instead"
 
 Options:
   -h, --help  Show this message and exit.
@@ -2018,9 +1900,11 @@ Options:
 $ td comments --help
 Usage: td comments [OPTIONS] [TASK_REF]
 
-  List comments on a task.
+  List comments on a task. Accepts row number, content match, or task ID.
 
-  Examples: td comments 1 | td comments buy milk
+  Examples:
+    td comments 1
+    td comments buy milk
 
 Options:
   -h, --help  Show this message and exit.
@@ -2041,7 +1925,7 @@ Options:
 $ td projects --help
 Usage: td projects [OPTIONS]
 
-  List all projects.
+  List all projects. Use -s to search by name.
 
 Options:
   -s, --search TEXT  Search projects by name.
@@ -2086,7 +1970,7 @@ Options:
 $ td sections --help
 Usage: td sections [OPTIONS]
 
-  List sections in a project.
+  List sections in a project. Requires -p/--project.
 
 Options:
   -p, --project TEXT  Project name or ID.  [required]
@@ -2108,7 +1992,7 @@ Options:
 $ td section-add --help
 Usage: td section-add [OPTIONS] NAME...
 
-  Create a new section in a project.
+  Create a new section in a project. Requires -p/--project.
 
 Options:
   -p, --project TEXT  Project name or ID.  [required]
@@ -2130,7 +2014,7 @@ Options:
 $ td labels --help
 Usage: td labels [OPTIONS]
 
-  List all labels.
+  List all labels. Use -s to search by name.
 
 Options:
   -s, --search TEXT  Search labels by name.
@@ -2175,7 +2059,8 @@ Usage: td review [OPTIONS]
 
   Interactive inbox review — process tasks one by one.
 
-  Defaults to inbox tasks. Use -p for a project or -f for a filter.
+  Defaults to inbox tasks. Use -p for a project or -f for a filter. Keybindings:
+  j/k to navigate, d=done, e=edit, m=move, s=skip, ?=help.
 
 Options:
   -p, --project TEXT  Review a specific project.
@@ -2198,7 +2083,7 @@ Options:
 $ td rate-limit --help
 Usage: td rate-limit [OPTIONS]
 
-  Show current API rate limit status from cached response headers.
+  Show current API rate limit status from the last API call.
 
 Options:
   -h, --help  Show this message and exit.
