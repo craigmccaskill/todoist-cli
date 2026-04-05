@@ -1,4 +1,4 @@
-.PHONY: help install test lint fmt check clean examples docs release
+.PHONY: help install test lint fmt check audit clean examples docs release
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -20,6 +20,9 @@ fmt: ## Auto-format code
 	ruff check --fix .
 
 check: lint test ## Run all checks (lint + test)
+
+audit: ## Scan dependencies for known vulnerabilities
+	pip-audit --desc
 
 examples: ## Regenerate command examples doc
 	python scripts/generate_examples.py > docs/examples.md

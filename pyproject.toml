@@ -56,6 +56,7 @@ docs = [
 dev = [
     "todoist-cli[test,lint,interactive,docs]",
     "pre-commit",
+    "pip-audit>=2.7",
 ]
 
 [project.scripts]
