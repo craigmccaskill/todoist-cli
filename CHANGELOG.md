@@ -7,15 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Internal
-- Add pytest-timeout (30s per test) and CI job timeouts to prevent hanging tests (#140)
-- Add dependency vulnerability scanning with pip-audit in CI and `make audit` locally (#146)
-- Enhance PR template with CONTRIBUTING.md workflow checklist and consolidate feature templates (#148)
-### Fixed
-- `td init` no longer exposes API token in shell history when choosing environment variable storage (#138)
->>>>>>> c89bdc6 (fix(tui): implement filter, undo, and fix keyboard shortcuts in TUI components)
 ### Changed
-- Fix TUI keyboard shortcuts: implement `/` filter in picker, real undo in review, modal Enter binding, standardize hints (#117)
 - Audit and improve table columns across all list views (#112)
   - Task list plain mode now matches Rich column order: #, PRI, CONTENT, PROJECT, DUE, LABELS
   - Smart column hiding in plain mode: PROJECT and LABELS columns auto-hide when not applicable
@@ -27,15 +19,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Empty list states show helpful messages instead of empty tables
   - `search` and `log` commands now include project name column
 - Full UX review: improved help text, documented defaults, consistent flag descriptions, cleaner error messages (#122)
-<<<<<<< HEAD
-- Add CI packaging verification — build sdist/wheel and smoke-test installs on every push/PR (#150)
-=======
+- Fix TUI keyboard shortcuts: implement `/` filter in picker, real undo in review, modal Enter binding, standardize hints (#117)
 - `td init` now shows clickable Todoist settings URL, trust-building helper text, and specific error messages for auth failures, network issues, and rate limits (#107)
 
 ### Fixed
+- `td init` no longer exposes API token in shell history when choosing environment variable storage (#138)
 - TUI `RowKey` resolution: use `row_key.value` instead of `str(row_key)` for Textual 8.x compatibility in picker and review modal screens (#159)
 
 ### Internal
+- Add pytest-timeout (30s per test) and CI job timeouts to prevent hanging tests (#140)
+- Add dependency vulnerability scanning with pip-audit in CI and `make audit` locally (#146)
+- Add CI packaging verification — build sdist/wheel and smoke-test installs on every push/PR (#150)
+- Enhance PR template with CONTRIBUTING.md workflow checklist and consolidate feature templates (#148)
 - Comprehensive Textual pilot tests for all TUI components: PickerApp, filter, domain pickers, modal screens, and ReviewApp actions (58 tests) (#159)
 
 ## [0.8.0-alpha] - 2026-04-04
