@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
@@ -11,7 +12,7 @@ import click
 from rich.console import Console
 from rich.table import Table
 from rich.text import Text
-from todoist_api_python.models import Label, Project, Section, Task
+from todoist_api_python.models import Comment, Label, Project, Section, Task
 
 from td.core.cache import save_result_cache
 
@@ -65,6 +66,57 @@ _PRIORITY_STYLES = {
 }
 
 
+def _is_overdue(due_string: str) -> bool:
+    """Check if a YYYY-MM-DD date string is before today."""
+    try:
+        due_date = datetime.strptime(due_string, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        today = datetime.now(tz=timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        return due_date < today
+    except ValueError:
+        return False
+
+
+def _format_timestamp(iso_str: str) -> str:
+    """Format an ISO timestamp into a human-readable relative string.
+
+    <1h -> "Xm ago", <24h -> "Xh ago", <7d -> "Xd ago", else "Mon DD".
+    """
+    try:
+        posted = datetime.fromisoformat(str(iso_str))
+        if posted.tzinfo is None:
+            posted = posted.replace(tzinfo=timezone.utc)
+        now = datetime.now(tz=timezone.utc)
+        delta = now - posted
+        total_seconds = int(delta.total_seconds())
+
+        if total_seconds < 0:
+            return str(iso_str)
+        if total_seconds < 3600:
+            minutes = max(1, total_seconds // 60)
+            return f"{minutes}m ago"
+        if total_seconds < 86400:
+            hours = total_seconds // 3600
+            return f"{hours}h ago"
+        if total_seconds < 604800:
+            days = total_seconds // 86400
+            return f"{days}d ago"
+        return posted.strftime("%b %d")
+    except (ValueError, TypeError):
+        return str(iso_str)
+
+
+def _empty_message(item_type: str) -> str:
+    """Return a user-friendly empty state message."""
+    messages = {
+        "tasks": "No tasks found.",
+        "projects": "No projects found.",
+        "labels": "No labels found.",
+        "sections": "No sections found.",
+        "comments": "No comments found.",
+    }
+    return messages.get(item_type, f"No {item_type} found.")
+
+
 def _task_to_dict(task: Task, project_names: dict[str, str] | None = None) -> dict[str, Any]:
     """Convert a Task to a plain dict for JSON output."""
     d = task.to_dict()
@@ -73,13 +125,28 @@ def _task_to_dict(task: Task, project_names: dict[str, str] | None = None) -> di
     return d
 
 
-def _task_plain_row(task: Task, project_names: dict[str, str] | None = None) -> str:
-    """Format a task as a tab-separated plain row."""
-    due = task.due.date if task.due else ""
+def _task_plain_row(
+    task: Task,
+    project_names: dict[str, str] | None = None,
+    *,
+    show_project: bool = True,
+    show_labels: bool = True,
+) -> str:
+    """Format a task as a tab-separated plain row.
+
+    Column order matches Rich: PRI, CONTENT, PROJECT, DUE, LABELS.
+    """
+    due = str(task.due.date) if task.due else ""
     priority = f"p{5 - task.priority}" if task.priority else ""
-    labels = ",".join(task.labels) if task.labels else ""
-    project = project_names.get(task.project_id, "") if project_names else ""
-    return f"{task.content}\t{project}\t{due}\t{priority}\t{labels}"
+    parts = [priority, task.content]
+    if show_project:
+        project = project_names.get(task.project_id, "") if project_names else ""
+        parts.append(project)
+    parts.append(due)
+    if show_labels:
+        labels = ",".join(task.labels) if task.labels else ""
+        parts.append(labels)
+    return "\t".join(parts)
 
 
 class OutputFormatter:
@@ -143,7 +210,8 @@ class OutputFormatter:
             lines.append(f"[dim]Project:[/dim]  {project_name}")
         lines.append(f"[dim]Priority:[/dim] [{p_style}]{p_label}[/{p_style}]")
         if task.due:
-            lines.append(f"[dim]Due:[/dim]      [yellow]{task.due.string}[/yellow]")
+            due_style = "red" if _is_overdue(str(task.due.date)) else "yellow"
+            lines.append(f"[dim]Due:[/dim]      [{due_style}]{task.due.string}[/{due_style}]")
         if task.labels:
             lbl_str = ", ".join(f"[cyan]@{lbl}[/cyan]" for lbl in task.labels)
             lines.append(f"[dim]Labels:[/dim]   {lbl_str}")
@@ -171,30 +239,57 @@ class OutputFormatter:
         # Cache task IDs for numbered references (td done 1, etc.)
         save_result_cache([t.id for t in tasks])
 
+        if not tasks:
+            if self.mode == OutputMode.JSON:
+                self._json_out([], "task_list")
+            elif self.mode == OutputMode.PLAIN:
+                click.echo(_empty_message("tasks"))
+            else:
+                assert self._console is not None
+                self._console.print(f"[dim]{_empty_message('tasks')}[/dim]")
+            return
+
+        # Smart column visibility (same logic for Rich and Plain)
+        has_labels = any(t.labels for t in tasks) if show_labels is None else show_labels
+        has_project = project_names is not None if show_project is None else show_project
+
         if self.mode == OutputMode.JSON:
             self._json_out([_task_to_dict(t, project_names) for t in tasks], "task_list")
         elif self.mode == OutputMode.PLAIN:
-            click.echo("#\tCONTENT\tPROJECT\tDUE\tPRIORITY\tLABELS")
+            header_parts = ["#", "PRI", "CONTENT"]
+            if has_project:
+                header_parts.append("PROJECT")
+            header_parts.append("DUE")
+            if has_labels:
+                header_parts.append("LABELS")
+            click.echo("\t".join(header_parts))
             for i, t in enumerate(tasks, 1):
-                click.echo(f"{i}\t{_task_plain_row(t, project_names)}")
+                row = _task_plain_row(
+                    t,
+                    project_names,
+                    show_project=has_project,
+                    show_labels=has_labels,
+                )
+                click.echo(f"{i}\t{row}")
         else:
             self._rich_task_table(
                 tasks,
                 title,
                 project_names,
-                show_labels=show_labels,
-                show_project=show_project,
+                show_labels=has_labels,
+                show_project=has_project,
             )
 
     def _rich_task(self, task: Task) -> None:
         assert self._console is not None
         text = Text()
         p_label, p_style = _PRIORITY_STYLES.get(task.priority, ("p4", "dim"))
-        text.append("▎ ", style=p_style)
+        text.append("\u258e ", style=p_style)
         text.append(p_label, style=p_style)
         text.append(f"  {task.content}")
         if task.due:
-            text.append(f"  {task.due.string}", style="yellow")
+            due_style = "red" if _is_overdue(str(task.due.date)) else "yellow"
+            text.append(f"  {task.due.string}", style=due_style)
         if task.labels:
             for label in task.labels:
                 text.append(f" @{label}", style="cyan")
@@ -205,40 +300,37 @@ class OutputFormatter:
         tasks: list[Task],
         title: str | None = None,
         project_names: dict[str, str] | None = None,
-        show_labels: bool | None = None,
-        show_project: bool | None = None,
+        show_labels: bool = False,
+        show_project: bool = False,
     ) -> None:
         assert self._console is not None
-
-        # Smart column visibility
-        has_labels = any(t.labels for t in tasks) if show_labels is None else show_labels
-        has_project = project_names is not None if show_project is None else show_project
 
         table = Table(title=title or "Tasks", show_lines=False)
         table.add_column("#", style="dim", width=3)
         table.add_column("", width=2)  # priority bar
         table.add_column("Pri", width=3)
         table.add_column("Content")
-        if has_project:
+        if show_project:
             table.add_column("Project", style="dim")
-        table.add_column("Due", style="yellow")
-        if has_labels:
+        table.add_column("Due")
+        if show_labels:
             table.add_column("Labels", style="cyan")
 
         for i, task in enumerate(tasks, 1):
             p_label, p_style = _PRIORITY_STYLES.get(task.priority, ("p4", "dim"))
-            due = task.due.string if task.due else ""
+            due_str = task.due.string if task.due else ""
+            due_style = "red" if task.due and _is_overdue(str(task.due.date)) else "yellow"
             row: list[str | Text] = [
                 str(i),
-                Text("▎", style=p_style),
+                Text("\u258e", style=p_style),
                 Text(p_label, style=p_style),
                 task.content,
             ]
-            if has_project:
+            if show_project:
                 project = project_names.get(task.project_id, "") if project_names else ""
                 row.append(project)
-            row.append(due)
-            if has_labels:
+            row.append(Text(due_str, style=due_style))
+            if show_labels:
                 labels = ", ".join(f"@{lbl}" for lbl in task.labels) if task.labels else ""
                 row.append(labels)
             table.add_row(*row)
@@ -249,12 +341,23 @@ class OutputFormatter:
 
     def project_list(self, projects: list[Project]) -> None:
         """Render a list of projects."""
+        if not projects:
+            if self.mode == OutputMode.JSON:
+                self._json_out([], "project_list")
+            elif self.mode == OutputMode.PLAIN:
+                click.echo(_empty_message("projects"))
+            else:
+                assert self._console is not None
+                self._console.print(f"[dim]{_empty_message('projects')}[/dim]")
+            return
+
         if self.mode == OutputMode.JSON:
             self._json_out([p.to_dict() for p in projects], "project_list")
         elif self.mode == OutputMode.PLAIN:
-            click.echo("ID\tNAME")
+            click.echo("NAME\t\u2605\tID")
             for p in projects:
-                click.echo(f"{p.id}\t{p.name}")
+                fav = "*" if p.is_favorite else ""
+                click.echo(f"{p.name}\t{fav}\t{p.id}")
         else:
             self._rich_project_table(projects)
 
@@ -262,12 +365,12 @@ class OutputFormatter:
         assert self._console is not None
         table = Table(title="Projects")
         table.add_column("Name", style="bold")
+        table.add_column("\u2605", width=3)
         table.add_column("ID", style="dim")
-        table.add_column("", width=3)
 
         for p in projects:
             fav = "*" if p.is_favorite else ""
-            table.add_row(p.name, p.id, fav)
+            table.add_row(p.name, fav, p.id)
 
         self._console.print(table)
 
@@ -275,12 +378,22 @@ class OutputFormatter:
 
     def section_list(self, sections: list[Section]) -> None:
         """Render a list of sections."""
+        if not sections:
+            if self.mode == OutputMode.JSON:
+                self._json_out([], "section_list")
+            elif self.mode == OutputMode.PLAIN:
+                click.echo(_empty_message("sections"))
+            else:
+                assert self._console is not None
+                self._console.print(f"[dim]{_empty_message('sections')}[/dim]")
+            return
+
         if self.mode == OutputMode.JSON:
             self._json_out([s.to_dict() for s in sections], "section_list")
         elif self.mode == OutputMode.PLAIN:
-            click.echo("ID\tNAME")
+            click.echo("NAME\tID")
             for s in sections:
-                click.echo(f"{s.id}\t{s.name}")
+                click.echo(f"{s.name}\t{s.id}")
         else:
             self._rich_section_table(sections)
 
@@ -299,12 +412,22 @@ class OutputFormatter:
 
     def label_list(self, labels: list[Label]) -> None:
         """Render a list of labels."""
+        if not labels:
+            if self.mode == OutputMode.JSON:
+                self._json_out([], "label_list")
+            elif self.mode == OutputMode.PLAIN:
+                click.echo(_empty_message("labels"))
+            else:
+                assert self._console is not None
+                self._console.print(f"[dim]{_empty_message('labels')}[/dim]")
+            return
+
         if self.mode == OutputMode.JSON:
             self._json_out([lbl.to_dict() for lbl in labels], "label_list")
         elif self.mode == OutputMode.PLAIN:
-            click.echo("ID\tNAME")
+            click.echo("NAME\tID")
             for lbl in labels:
-                click.echo(f"{lbl.id}\t{lbl.name}")
+                click.echo(f"@{lbl.name}\t{lbl.id}")
         else:
             self._rich_label_table(labels)
 
@@ -316,6 +439,43 @@ class OutputFormatter:
 
         for lbl in labels:
             table.add_row(f"@{lbl.name}", lbl.id)
+
+        self._console.print(table)
+
+    # --- Comments ---
+
+    def comment_list(self, comments: list[Comment]) -> None:
+        """Render a list of comments."""
+        if not comments:
+            if self.mode == OutputMode.JSON:
+                self._json_out([], "comment_list")
+            elif self.mode == OutputMode.PLAIN:
+                click.echo(_empty_message("comments"))
+            else:
+                assert self._console is not None
+                self._console.print(f"[dim]{_empty_message('comments')}[/dim]")
+            return
+
+        if self.mode == OutputMode.JSON:
+            self._json_out([c.to_dict() for c in comments], "comment_list")
+        elif self.mode == OutputMode.PLAIN:
+            click.echo("CONTENT\tPOSTED\tID")
+            for c in comments:
+                posted = _format_timestamp(str(c.posted_at))
+                click.echo(f"{c.content}\t{posted}\t{c.id}")
+        else:
+            self._rich_comment_table(comments)
+
+    def _rich_comment_table(self, comments: list[Comment]) -> None:
+        assert self._console is not None
+        table = Table(title="Comments", show_lines=False)
+        table.add_column("Content", style="bold")
+        table.add_column("Posted", style="dim")
+        table.add_column("ID", style="dim")
+
+        for c in comments:
+            posted = _format_timestamp(str(c.posted_at))
+            table.add_row(c.content, posted, c.id)
 
         self._console.print(table)
 

@@ -54,23 +54,4 @@ def comments(ctx: click.Context, task_ref: str | None) -> None:
     task_id = _require_task(task_ref, api)
 
     all_comments = [c for page in api.get_comments(task_id=task_id) for c in page]
-
-    if fmt.mode.value == "json":
-        fmt._json_out([c.to_dict() for c in all_comments], "comment_list")
-    elif fmt.mode.value == "plain":
-        click.echo("ID\tCONTENT\tPOSTED")
-        for c in all_comments:
-            click.echo(f"{c.id}\t{c.content}\t{c.posted_at}")
-    else:
-        assert fmt._console is not None
-        from rich.table import Table
-
-        table = Table(title="Comments", show_lines=False)
-        table.add_column("Content", style="bold")
-        table.add_column("Posted", style="dim")
-        table.add_column("ID", style="dim")
-
-        for c in all_comments:
-            table.add_row(c.content, str(c.posted_at), c.id)
-
-        fmt._console.print(table)
+    fmt.comment_list(all_comments)
