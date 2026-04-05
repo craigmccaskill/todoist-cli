@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0-alpha] - 2026-04-05
+
 ### Changed
 - Audit and improve table columns across all list views (#112)
   - Task list plain mode now matches Rich column order: #, PRI, CONTENT, PROJECT, DUE, LABELS
