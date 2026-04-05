@@ -35,6 +35,32 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: pip-audit --desc
 
+  packaging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: 'pip'
+      - run: pip install build
+      - run: python -m build
+      - name: Verify sdist install
+        run: |
+          python -m venv /tmp/test-sdist
+          /tmp/test-sdist/bin/pip install dist/*.tar.gz
+          /tmp/test-sdist/bin/td --version
+          /tmp/test-sdist/bin/td schema > /dev/null
+          /tmp/test-sdist/bin/python -c "import td; assert ((__import__('pathlib').Path(td.__file__).parent) / 'py.typed').exists()"
+      - name: Verify wheel install
+        run: |
+          python -m venv /tmp/test-wheel
+          /tmp/test-wheel/bin/pip install dist/*.whl
+          /tmp/test-wheel/bin/td --version
+          /tmp/test-wheel/bin/td schema > /dev/null
+          /tmp/test-wheel/bin/python -c "import td; assert ((__import__('pathlib').Path(td.__file__).parent) / 'py.typed').exists()"
+
   test:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
