@@ -15,6 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `td init` no longer exposes API token in shell history when choosing environment variable storage (#138)
 ### Changed
 - Fix TUI keyboard shortcuts: implement `/` filter in picker, real undo in review, modal Enter binding, standardize hints (#117)
+- Audit and improve table columns across all list views (#112)
+  - Task list plain mode now matches Rich column order: #, PRI, CONTENT, PROJECT, DUE, LABELS
+  - Smart column hiding in plain mode: PROJECT and LABELS columns auto-hide when not applicable
+  - Project list: consistent NAME, ★, ID order with favorite indicator in plain mode
+  - Label list: `@` prefix in plain mode to match Rich
+  - Section list: NAME, ID order in plain mode (was ID, NAME)
+  - Comment rendering moved into `OutputFormatter.comment_list()` with human-readable timestamps
+  - Overdue due dates styled red (was yellow) in Rich task tables
+  - Empty list states show helpful messages instead of empty tables
+  - `search` and `log` commands now include project name column
 
 ## [0.8.0-alpha] - 2026-04-04
 

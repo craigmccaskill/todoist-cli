@@ -385,7 +385,8 @@ def log(ctx: click.Context, week: bool) -> None:
         for page in api.get_completed_tasks_by_completion_date(since=since, until=now)
         for t in page
     ]
-    fmt.task_list(completed, title=title)
+    pnames = get_project_name_map(api)
+    fmt.task_list(completed, title=title, project_names=pnames)
 
 
 @click.command()
@@ -658,7 +659,8 @@ def search(ctx: click.Context, query: tuple[str, ...], project_name: str | None)
         return 2
 
     tasks.sort(key=relevance)
-    fmt.task_list(tasks)
+    pnames = get_project_name_map(api)
+    fmt.task_list(tasks, project_names=pnames)
 
 
 @click.command()
