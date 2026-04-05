@@ -38,6 +38,7 @@ def review(
     """Interactive inbox review — process tasks one by one.
 
     Defaults to inbox tasks. Use -p for a project or -f for a filter.
+    Keybindings: j/k to navigate, d=done, e=edit, m=move, s=skip, ?=help.
     """
     if not sys.stdout.isatty():
         raise TdValidationError(

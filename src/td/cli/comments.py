@@ -26,9 +26,12 @@ def _require_task(ref: str | None, api: Any) -> str:
 @click.argument("text", nargs=-1, required=True)
 @click.pass_context
 def comment(ctx: click.Context, task_ref: str | None, text: tuple[str, ...]) -> None:
-    """Add a comment to a task.
+    """Add a comment to a task. Accepts row number, content match, or task ID.
 
-    Examples: td comment 1 "Picked up 2%, not whole"
+    \b
+    Examples:
+      td comment 1 "Picked up 2%, not whole"
+      td comment buy milk "Got oat milk instead"
     """
     api = get_client()
     fmt = _get_formatter(ctx)
@@ -45,9 +48,12 @@ def comment(ctx: click.Context, task_ref: str | None, text: tuple[str, ...]) -> 
 @click.argument("task_ref", required=False, default=None)
 @click.pass_context
 def comments(ctx: click.Context, task_ref: str | None) -> None:
-    """List comments on a task.
+    """List comments on a task. Accepts row number, content match, or task ID.
 
-    Examples: td comments 1 | td comments buy milk
+    \b
+    Examples:
+      td comments 1
+      td comments buy milk
     """
     api = get_client()
     fmt = _get_formatter(ctx)

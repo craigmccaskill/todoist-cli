@@ -40,8 +40,8 @@ class AuthError(TdCoreError):
 
     def __init__(self) -> None:
         super().__init__(
-            "No API token configured. Run `td init` or set TD_API_TOKEN.",
-            suggestion="Run `td init` to set up authentication, or set TD_API_TOKEN.",
+            "No API token configured.",
+            suggestion="Run `td init` or set TD_API_TOKEN.",
         )
 
 

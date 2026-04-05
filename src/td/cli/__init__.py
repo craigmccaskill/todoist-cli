@@ -60,7 +60,17 @@ class TdGroup(click.Group):
 @click.version_option(version=__version__, prog_name="td")
 @click.pass_context
 def cli(ctx: click.Context, output_json: bool, plain: bool, debug: bool) -> None:
-    """td — AI-native Todoist CLI."""
+    """td — AI-native Todoist CLI.
+
+    \b
+    Quick start:
+      td init          Set up authentication
+      td ls            List today's tasks
+      td add "task"    Add a new task
+      td done 1        Complete task #1
+
+    Use td <command> --help for details on any command.
+    """
     ctx.ensure_object(dict)
     config = load_config()
     mode = resolve_output_mode(

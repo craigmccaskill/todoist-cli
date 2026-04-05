@@ -19,7 +19,7 @@ def _get_formatter(ctx: click.Context) -> OutputFormatter:
 @click.option("-s", "--search", help="Search projects by name.")
 @click.pass_context
 def projects(ctx: click.Context, search: str | None) -> None:
-    """List all projects."""
+    """List all projects. Use -s to search by name."""
     api = get_client()
     fmt = _get_formatter(ctx)
 

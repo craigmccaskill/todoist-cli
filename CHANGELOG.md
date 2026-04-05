@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Overdue due dates styled red (was yellow) in Rich task tables
   - Empty list states show helpful messages instead of empty tables
   - `search` and `log` commands now include project name column
+- Full UX review: improved help text, documented defaults, consistent flag descriptions, cleaner error messages (#122)
 
 ## [0.8.0-alpha] - 2026-04-04
 
