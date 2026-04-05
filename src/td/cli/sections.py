@@ -28,7 +28,7 @@ def _get_formatter(ctx: click.Context) -> OutputFormatter:
 )
 @click.pass_context
 def sections(ctx: click.Context, project_name: str) -> None:
-    """List sections in a project."""
+    """List sections in a project. Requires -p/--project."""
     api = get_client()
     fmt = _get_formatter(ctx)
 
@@ -49,7 +49,7 @@ def sections(ctx: click.Context, project_name: str) -> None:
 )
 @click.pass_context
 def section_add(ctx: click.Context, name: tuple[str, ...], project_name: str) -> None:
-    """Create a new section in a project."""
+    """Create a new section in a project. Requires -p/--project."""
     api = get_client()
     fmt = _get_formatter(ctx)
 

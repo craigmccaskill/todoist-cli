@@ -17,7 +17,7 @@ def _get_formatter(ctx: click.Context) -> OutputFormatter:
 @click.command(name="rate-limit")
 @click.pass_context
 def rate_limit(ctx: click.Context) -> None:
-    """Show current API rate limit status from cached response headers."""
+    """Show current API rate limit status from the last API call."""
     fmt = _get_formatter(ctx)
     data = load_rate_limit_cache()
 

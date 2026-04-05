@@ -173,7 +173,14 @@ def add(
     section_name: str | None,
     idempotent: bool,
 ) -> None:
-    """Create a new task. Reads from stdin if no content argument."""
+    """Create a new task. Reads from stdin if no content argument.
+
+    \b
+    Examples:
+      td add Buy milk -p Errands
+      td add Deploy hotfix --due tomorrow --priority 1
+      echo "Review PR" | td add
+    """
     api = get_client()
     fmt = _get_formatter(ctx)
     text = " ".join(content) if content else (_read_stdin() or "")
@@ -250,7 +257,7 @@ def _resolve_sort(sort: str | None) -> str:
     "--sort",
     "sort_by",
     type=click.Choice(SORT_OPTIONS),
-    help="Sort order (default: priority).",
+    help="Sort order: priority, due, project, created (default: priority).",
 )
 @click.option("--reverse", "reverse_sort", is_flag=True, help="Reverse sort order.")
 @click.pass_context
@@ -264,7 +271,17 @@ def ls(
     sort_by: str | None,
     reverse_sort: bool,
 ) -> None:
-    """List tasks. Defaults to today + overdue unless filtered."""
+    """List tasks. Defaults to today + overdue unless filtered.
+
+    Use --all to show everything. Use -f to pass a Todoist filter query.
+
+    \b
+    Examples:
+      td ls                    Today + overdue (default)
+      td ls --all              All tasks
+      td ls -p Work -s due     Tasks in Work, sorted by due date
+      td ls -f "priority 1"   Custom filter
+    """
     api = get_client()
     fmt = _get_formatter(ctx)
 
@@ -311,7 +328,7 @@ def inbox(ctx: click.Context) -> None:
     "--sort",
     "sort_by",
     type=click.Choice(SORT_OPTIONS),
-    help="Sort order (default: priority).",
+    help="Sort order: priority, due, project, created (default: priority).",
 )
 @click.option("--reverse", "reverse_sort", is_flag=True, help="Reverse sort order.")
 @click.pass_context
@@ -396,7 +413,7 @@ def log(ctx: click.Context, week: bool) -> None:
     "--sort",
     "sort_by",
     type=click.Choice(SORT_OPTIONS),
-    help="Sort order (default: priority).",
+    help="Sort order: priority, due, project, created (default: priority).",
 )
 @click.option("--reverse", "reverse_sort", is_flag=True, help="Reverse sort order.")
 @click.pass_context
@@ -483,7 +500,7 @@ def undo(ctx: click.Context, task_ref: tuple[str, ...], use_id: bool) -> None:
     type=click.IntRange(1, 4),
     help="Priority: 1=urgent, 2=high, 3=medium, 4=low.",
 )
-@click.option("-d", "--due", help="New due date.")
+@click.option("-d", "--due", help="New due date (e.g. 'tomorrow', '2026-04-01').")
 @click.option(
     "-l",
     "--label",
@@ -570,7 +587,12 @@ def delete(ctx: click.Context, task_ref: tuple[str, ...], yes: bool, use_id: boo
 def quick(ctx: click.Context, text: tuple[str, ...]) -> None:
     """Natural language task creation. Reads from stdin if no args.
 
-    Example: td quick "Buy milk tomorrow p1 #Errands"
+    Todoist parses dates, priorities, projects, and labels from the text.
+
+    \b
+    Examples:
+      td quick "Buy milk tomorrow p1 #Errands"
+      td quick "Call dentist next Monday"
     """
     api = get_client()
     fmt = _get_formatter(ctx)
@@ -676,9 +698,12 @@ def search(ctx: click.Context, query: tuple[str, ...], project_name: str | None)
 @click.option("--id", "use_id", is_flag=True, help="Treat task ref as a literal task ID.")
 @click.pass_context
 def move(ctx: click.Context, task_ref: tuple[str, ...], project_name: str, use_id: bool) -> None:
-    """Move a task to a different project.
+    """Move a task to a different project. Accepts row number, content match, or task ID.
 
-    Examples: td move 1 -p Personal | td move buy milk -p Work
+    \b
+    Examples:
+      td move 1 -p Personal
+      td move buy milk -p Work
     """
     api = get_client()
     fmt = _get_formatter(ctx)

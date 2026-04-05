@@ -79,7 +79,7 @@ class TdAuthError(TdError):
     """Authentication error."""
 
     code = AUTH_MISSING
-    suggestion = "Run `td init` to set up authentication, or set TD_API_TOKEN."
+    suggestion = "Run `td init` or set TD_API_TOKEN."
 
 
 class TdNotFoundError(TdError):

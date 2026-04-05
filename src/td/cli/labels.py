@@ -19,7 +19,7 @@ def _get_formatter(ctx: click.Context) -> OutputFormatter:
 @click.option("-s", "--search", help="Search labels by name.")
 @click.pass_context
 def labels(ctx: click.Context, search: str | None) -> None:
-    """List all labels."""
+    """List all labels. Use -s to search by name."""
     api = get_client()
     fmt = _get_formatter(ctx)
 
