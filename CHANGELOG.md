@@ -7,12 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ### Internal
 - Add pytest-timeout (30s per test) and CI job timeouts to prevent hanging tests (#140)
 - Add dependency vulnerability scanning with pip-audit in CI and `make audit` locally (#146)
 - Enhance PR template with CONTRIBUTING.md workflow checklist and consolidate feature templates (#148)
 ### Fixed
 - `td init` no longer exposes API token in shell history when choosing environment variable storage (#138)
+=======
+>>>>>>> c89bdc6 (fix(tui): implement filter, undo, and fix keyboard shortcuts in TUI components)
 ### Changed
 - Fix TUI keyboard shortcuts: implement `/` filter in picker, real undo in review, modal Enter binding, standardize hints (#117)
 - Audit and improve table columns across all list views (#112)
@@ -26,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Empty list states show helpful messages instead of empty tables
   - `search` and `log` commands now include project name column
 - Full UX review: improved help text, documented defaults, consistent flag descriptions, cleaner error messages (#122)
+
+### Fixed
+- TUI `RowKey` resolution: use `row_key.value` instead of `str(row_key)` for Textual 8.x compatibility in picker and review modal screens (#159)
+
+### Internal
+- Comprehensive Textual pilot tests for all TUI components: PickerApp, filter, domain pickers, modal screens, and ReviewApp actions (58 tests) (#159)
 
 ## [0.8.0-alpha] - 2026-04-04
 
