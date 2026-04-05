@@ -92,6 +92,107 @@ class TestInit:
         assert "secret-token-abc123" not in result.output
         assert "TD_API_TOKEN" in result.output
 
+    def test_init_shows_trust_building_text(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
+        monkeypatch.delenv("TD_API_TOKEN", raising=False)
+
+        mock_api = MagicMock()
+        mock_api.get_projects.return_value = iter([[MagicMock()]])
+        monkeypatch.setattr("td.cli.config_cmd.TodoistAPI", lambda token: mock_api)
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["init"], input="test-token\n1\n")
+
+        assert result.exit_code == 0
+        normalized = " ".join(result.output.split())
+        assert "stored locally" in normalized
+        assert "never sent anywhere except the Todoist API" in normalized
+
+    def test_init_shows_todoist_url(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
+        monkeypatch.delenv("TD_API_TOKEN", raising=False)
+
+        mock_api = MagicMock()
+        mock_api.get_projects.return_value = iter([[MagicMock()]])
+        monkeypatch.setattr("td.cli.config_cmd.TodoistAPI", lambda token: mock_api)
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["init"], input="test-token\n1\n")
+
+        assert result.exit_code == 0
+        assert "Todoist Settings" in result.output
+
+    def test_init_bad_token_shows_specific_error(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
+        monkeypatch.delenv("TD_API_TOKEN", raising=False)
+
+        from httpx import HTTPStatusError, Request, Response
+
+        def bad_api(token: str) -> MagicMock:
+            mock = MagicMock()
+            response = Response(401, request=Request("GET", "https://api.todoist.com"))
+            mock.get_projects.side_effect = HTTPStatusError(
+                "Unauthorized", request=response.request, response=response
+            )
+            return mock
+
+        monkeypatch.setattr("td.cli.config_cmd.TodoistAPI", bad_api)
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["init"], input="bad-token\n")
+
+        assert result.exit_code == 1
+        assert "copied the full token" in result.output
+
+    def test_init_network_error_shows_specific_message(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
+        monkeypatch.delenv("TD_API_TOKEN", raising=False)
+
+        from httpx import ConnectError
+
+        def bad_api(token: str) -> MagicMock:
+            mock = MagicMock()
+            mock.get_projects.side_effect = ConnectError("Connection refused")
+            return mock
+
+        monkeypatch.setattr("td.cli.config_cmd.TodoistAPI", bad_api)
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["init"], input="bad-token\n")
+
+        assert result.exit_code == 1
+        assert "internet connection" in result.output
+
+    def test_init_rate_limit_shows_specific_message(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
+        monkeypatch.delenv("TD_API_TOKEN", raising=False)
+
+        from httpx import HTTPStatusError, Request, Response
+
+        def bad_api(token: str) -> MagicMock:
+            mock = MagicMock()
+            response = Response(429, request=Request("GET", "https://api.todoist.com"))
+            mock.get_projects.side_effect = HTTPStatusError(
+                "Rate limited", request=response.request, response=response
+            )
+            return mock
+
+        monkeypatch.setattr("td.cli.config_cmd.TodoistAPI", bad_api)
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["init"], input="bad-token\n")
+
+        assert result.exit_code == 1
+        assert "rate limit" in result.output
+
 
 class TestCompletions:
     @pytest.mark.parametrize("shell", ["bash", "zsh", "fish"])
