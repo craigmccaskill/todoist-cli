@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Internal
 - Add pytest-timeout (30s per test) and CI job timeouts to prevent hanging tests (#140)
+- Add dependency vulnerability scanning with pip-audit in CI and `make audit` locally (#146)
 
 ## [0.8.0-alpha] - 2026-04-04
 

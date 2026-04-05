@@ -23,6 +23,18 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: make lint
 
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: 'pip'
+      - run: pip install -e ".[dev]"
+      - run: pip-audit --desc
+
   test:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
