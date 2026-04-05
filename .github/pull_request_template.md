@@ -1,3 +1,7 @@
+## Related issues
+
+<!-- Closes #X or Related to #X -->
+
 ## What
 
 <!-- Brief description of changes -->
@@ -12,7 +16,7 @@
 
 ## Checklist
 
-- [ ] Tests pass (`pytest`)
-- [ ] Linter passes (`ruff check .`)
-- [ ] Type checker passes (`mypy td/`)
-- [ ] CHANGELOG.md updated (if user-facing change)
+- [ ] `make check` passes (lint + tests)
+- [ ] CHANGELOG.md updated under `[Unreleased]` (Added / Changed / Fixed / Internal)
+- [ ] Bug fixes include a regression test
+- [ ] Help text updated for new/changed commands
