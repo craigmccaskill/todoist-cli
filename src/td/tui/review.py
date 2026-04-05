@@ -71,7 +71,8 @@ class ProjectPickerScreen(ModalScreen[str | None]):
         table = self.query_one(DataTable)
         if table.row_count > 0:
             row_key, _ = table.coordinate_to_cell_key(table.cursor_coordinate)
-            self.dismiss(str(row_key))
+            key = row_key.value if row_key.value is not None else str(row_key)
+            self.dismiss(key)
 
     def action_cancel(self) -> None:
         self.dismiss(None)
@@ -103,7 +104,8 @@ class PriorityPickerScreen(ModalScreen[int | None]):
         table = self.query_one(DataTable)
         if table.row_count > 0:
             row_key, _ = table.coordinate_to_cell_key(table.cursor_coordinate)
-            self.dismiss(int(str(row_key)))
+            key = row_key.value if row_key.value is not None else str(row_key)
+            self.dismiss(int(key))
 
     def action_cancel(self) -> None:
         self.dismiss(None)
@@ -137,7 +139,8 @@ class LabelPickerScreen(ModalScreen[str | None]):
         table = self.query_one(DataTable)
         if table.row_count > 0:
             row_key, _ = table.coordinate_to_cell_key(table.cursor_coordinate)
-            self.dismiss(str(row_key))
+            key = row_key.value if row_key.value is not None else str(row_key)
+            self.dismiss(key)
 
     def action_cancel(self) -> None:
         self.dismiss(None)
@@ -293,7 +296,8 @@ class ReviewApp(App[ReviewStats]):
         if table.row_count == 0:
             return None
         row_key, _ = table.coordinate_to_cell_key(table.cursor_coordinate)
-        return self._task_map.get(str(row_key))
+        key = row_key.value if row_key.value is not None else str(row_key)
+        return self._task_map.get(key)
 
     def action_cursor_down(self) -> None:
         self.query_one("#review-table", DataTable).action_cursor_down()
