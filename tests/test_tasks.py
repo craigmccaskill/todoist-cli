@@ -248,6 +248,50 @@ class TestCliCommands:
         assert data["ok"] is True
 
     @patch("td.cli.tasks.get_client")
+    def test_done_batch(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        # Set up cache so row numbers resolve
+        from td.core.cache import save_result_cache
+
+        save_result_cache(["t1", "t2", "t3", "t4"])
+
+        task2 = _mock_task(id="t2", content="Task two")
+        task4 = _mock_task(id="t4", content="Task four")
+        api.get_task.side_effect = lambda tid: {"t2": task2, "t4": task4}[tid]
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "done", "2", "4"])
+
+        assert result.exit_code == 0
+        assert api.complete_task.call_count == 2
+
+    @patch("td.cli.tasks.get_client")
+    def test_done_single_word_not_batch(self, mock_gc: MagicMock) -> None:
+        """Single digit is single task, not batch."""
+        api = MagicMock()
+        mock_gc.return_value = api
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "done", "t1"])
+
+        assert result.exit_code == 0
+        api.complete_task.assert_called_once()
+
+    @patch("td.cli.tasks.get_client")
+    def test_done_multi_word_not_batch(self, mock_gc: MagicMock) -> None:
+        """Multi-word text is content match, not batch."""
+        api = MagicMock()
+        mock_gc.return_value = api
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "done", "buy", "milk"])
+
+        assert result.exit_code == 0
+        # Should have joined into "buy milk" and treated as single ref
+        api.get_task.assert_called_once()
+
+    @patch("td.cli.tasks.get_client")
     def test_delete_with_yes(self, mock_gc: MagicMock) -> None:
         api = MagicMock()
         mock_gc.return_value = api

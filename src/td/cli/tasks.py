@@ -438,18 +438,48 @@ def _is_fuzzy_ref(ref: str) -> bool:
     return not ref.isdigit() and len(ref) > 2
 
 
+def _is_batch_ref(task_ref: tuple[str, ...]) -> bool:
+    """Return True if task_ref looks like multiple independent references.
+
+    Multiple digits (e.g., "2 4") are treated as batch; a single token or
+    multi-word text is treated as a single reference.
+    """
+    return len(task_ref) > 1 and all(tok.isdigit() for tok in task_ref)
+
+
 @click.command()
 @click.argument("task_ref", nargs=-1)
 @click.option("-y", "--yes", is_flag=True, help="Skip confirmation on fuzzy match.")
 @click.option("--id", "use_id", is_flag=True, help="Treat task ref as a literal task ID.")
 @click.pass_context
 def done(ctx: click.Context, task_ref: tuple[str, ...], yes: bool, use_id: bool) -> None:
-    """Complete a task. Accepts row number, content match, or task ID.
+    """Complete one or more tasks.
 
-    Examples: td done 1 | td done buy milk | td done 8bx9a0c2
+    \b
+    Accepts row numbers, content match, or task ID:
+      td done 1              # single row number
+      td done 2 4            # batch: complete rows 2 and 4
+      td done buy milk       # content match
+      td done 8bx9a0c2      # task ID
     """
     api = get_client()
     fmt = _get_formatter(ctx)
+
+    if _is_batch_ref(task_ref):
+        _done_batch(api, fmt, task_ref)
+    else:
+        _done_single(api, fmt, task_ref, yes=yes, use_id=use_id)
+
+
+def _done_single(
+    api: Any,
+    fmt: OutputFormatter,
+    task_ref: tuple[str, ...],
+    *,
+    yes: bool,
+    use_id: bool,
+) -> None:
+    """Complete a single task."""
     ref = " ".join(task_ref)
     task_id = _require_task_ref(task_ref, api, use_id=use_id)
     task = api.get_task(task_id)
@@ -469,6 +499,26 @@ def done(ctx: click.Context, task_ref: tuple[str, ...], yes: bool, use_id: bool)
         f"Completed: {task.content}",
         {"task_id": task_id, "content": task.content},
     )
+
+
+def _done_batch(api: Any, fmt: OutputFormatter, refs: tuple[str, ...]) -> None:
+    """Complete multiple tasks by row number. Reports per-task results."""
+    results: list[dict[str, Any]] = []
+    had_error = False
+    for ref in refs:
+        task_id = _resolve_task(ref, api)
+        try:
+            task = api.get_task(task_id)
+            complete_task(api, task_id)
+            results.append({"ref": ref, "task_id": task_id, "content": task.content, "ok": True})
+            fmt.success(f"Completed: {task.content}", {"task_id": task_id})
+        except Exception as exc:
+            had_error = True
+            results.append({"ref": ref, "task_id": task_id, "ok": False, "error": str(exc)})
+            click.echo(f"Failed to complete task #{ref}: {exc}", err=True)
+
+    if had_error:
+        sys.exit(1)
 
 
 @click.command()
