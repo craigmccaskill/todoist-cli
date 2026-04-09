@@ -10,6 +10,7 @@ from td.cli.errors import (
     TdError,
     TdNotFoundError,
     TdRateLimitError,
+    TdValidationError,
     handle_error,
     map_api_exception,
     map_core_exception,
@@ -90,12 +91,12 @@ class TestHandleError:
 
 
 class TestMapApiException:
-    def _make_status_error(self, status_code: int, reason: str = "") -> Exception:
+    def _make_status_error(self, status_code: int, reason: str = "", body: str = "") -> Exception:
         """Create an httpx.HTTPStatusError with the given status code."""
         import httpx
 
         request = httpx.Request("GET", "https://api.todoist.com/rest/v2/tasks")
-        response = httpx.Response(status_code, request=request)
+        response = httpx.Response(status_code, request=request, text=body)
         return httpx.HTTPStatusError(f"{status_code} {reason}", request=request, response=response)
 
     def test_401_maps_to_auth_error(self) -> None:
@@ -114,10 +115,39 @@ class TestMapApiException:
         result = map_api_exception(exc)
         assert isinstance(result, TdRateLimitError)
 
+    def test_400_maps_to_validation_error(self) -> None:
+        exc = self._make_status_error(400, "Bad Request")
+        result = map_api_exception(exc)
+        assert isinstance(result, TdValidationError)
+        assert result.code == "VALIDATION_ERROR"
+        assert "--help" in result.suggestion
+
+    def test_400_extracts_json_error_message(self) -> None:
+        exc = self._make_status_error(400, "Bad Request", body='{"error": "Invalid due date"}')
+        result = map_api_exception(exc)
+        assert isinstance(result, TdValidationError)
+        assert "Invalid due date" in result.message
+
+    def test_400_extracts_plain_text_body(self) -> None:
+        exc = self._make_status_error(400, "Bad Request", body="Missing required field")
+        result = map_api_exception(exc)
+        assert isinstance(result, TdValidationError)
+        assert "Missing required field" in result.message
+
     def test_500_maps_to_api_error(self) -> None:
         exc = self._make_status_error(500, "Internal Server Error")
         result = map_api_exception(exc)
         assert isinstance(result, TdApiError)
+
+    def test_500_includes_suggestion(self) -> None:
+        exc = self._make_status_error(500, "Internal Server Error")
+        result = map_api_exception(exc)
+        assert result.suggestion != ""
+
+    def test_500_extracts_response_body(self) -> None:
+        exc = self._make_status_error(500, "Server Error", body='{"error": "DB timeout"}')
+        result = map_api_exception(exc)
+        assert "DB timeout" in result.message
 
     def test_unknown_exception(self) -> None:
         result = map_api_exception(ValueError("weird"))
