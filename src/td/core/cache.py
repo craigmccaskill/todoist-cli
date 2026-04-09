@@ -55,11 +55,28 @@ def save_result_cache(task_ids: list[str]) -> None:
     atomic_write(cache_dir / "last_results.json", json.dumps(data))
 
 
-def load_result_cache(max_age: int = 600) -> dict[str, str]:
+def _default_result_ttl() -> int:
+    """Get result cache TTL from config, defaulting to 600s."""
+    from td.core.config import load_config
+
+    return load_config().cache_ttl_results
+
+
+def _default_name_ttl() -> int:
+    """Get name cache TTL from config, defaulting to 300s."""
+    from td.core.config import load_config
+
+    return load_config().cache_ttl_names
+
+
+def load_result_cache(max_age: int | None = None) -> dict[str, str]:
     """Load cached row-number-to-task-ID mapping.
 
-    Returns empty dict if cache is missing or stale (default 10 min).
+    Returns empty dict if cache is missing or stale. TTL defaults to
+    cache_ttl_results from config (10 min default).
     """
+    if max_age is None:
+        max_age = _default_result_ttl()
     path = get_cache_dir() / "last_results.json"
     if not path.exists():
         return {}
@@ -117,8 +134,13 @@ def save_name_cache(
     atomic_write(path, json.dumps(existing))
 
 
-def load_name_cache(max_age: int = 300) -> dict[str, Any]:
-    """Load cached name mappings. Returns empty dict if stale (default 5 min)."""
+def load_name_cache(max_age: int | None = None) -> dict[str, Any]:
+    """Load cached name mappings. Returns empty dict if stale.
+
+    TTL defaults to cache_ttl_names from config (5 min default).
+    """
+    if max_age is None:
+        max_age = _default_name_ttl()
     path = get_cache_dir() / "names.json"
     if not path.exists():
         return {}

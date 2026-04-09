@@ -46,6 +46,8 @@ class TdConfig:
     default_sort: str = "priority"  # "priority", "due", "project", "created"
     default_command: str = "today"  # "today", "ls", "inbox", "next"
     color: bool = True
+    cache_ttl_results: int = 600  # seconds, result cache (row numbers)
+    cache_ttl_names: int = 300  # seconds, name cache (projects/labels/sections)
     extra: dict[str, Any] = field(default_factory=dict)
 
 
@@ -67,6 +69,8 @@ def load_config() -> TdConfig:
         config.default_sort = settings.get("default_sort", "priority")
         config.default_command = settings.get("default_command", "today")
         config.color = settings.get("color", True)
+        config.cache_ttl_results = settings.get("cache_ttl_results", 600)
+        config.cache_ttl_names = settings.get("cache_ttl_names", 300)
 
         # Preserve unknown sections and keys for round-trip fidelity
         known_sections = {"auth", "settings"}
@@ -77,6 +81,8 @@ def load_config() -> TdConfig:
             "default_sort",
             "default_command",
             "color",
+            "cache_ttl_results",
+            "cache_ttl_names",
         }
         extra: dict[str, Any] = {}
         for key, value in data.items():
@@ -159,6 +165,10 @@ def save_config(config: TdConfig) -> Path:
         settings["default_project"] = config.default_project
     if not config.color:
         settings["color"] = False
+    if config.cache_ttl_results != 600:
+        settings["cache_ttl_results"] = config.cache_ttl_results
+    if config.cache_ttl_names != 300:
+        settings["cache_ttl_names"] = config.cache_ttl_names
     # Merge unknown settings keys
     if "settings" in config.extra:
         for k, v in config.extra["settings"].items():

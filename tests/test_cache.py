@@ -77,6 +77,33 @@ class TestNameCache:
         assert "labels" in cache
 
 
+class TestConfigurableTTL:
+    def test_result_cache_uses_config_ttl(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path / "config"))
+        save_result_cache(["aaa"])
+        # Default TTL (600s) — cache is fresh
+        assert load_result_cache() != {}
+
+    def test_result_cache_respects_short_ttl(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+        save_result_cache(["aaa"])
+        # Explicit short TTL overrides config
+        assert load_result_cache(max_age=0) == {}
+
+    def test_name_cache_uses_config_ttl(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path / "config"))
+        save_name_cache(projects=[{"id": "p1", "name": "Work"}])
+        assert load_name_cache() != {}
+
+
 class TestAtomicWrite:
     def test_writes_file_contents(self, tmp_path: Path) -> None:
         target = tmp_path / "test.json"

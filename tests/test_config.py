@@ -86,6 +86,32 @@ class TestSaveAndLoadConfig:
         assert loaded.default_format == "json"
 
 
+class TestCacheTTLConfig:
+    def test_custom_ttl_round_trip(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
+        monkeypatch.delenv("TD_API_TOKEN", raising=False)
+        monkeypatch.delenv("NO_COLOR", raising=False)
+
+        config = TdConfig(api_token="tok", cache_ttl_results=120, cache_ttl_names=60)
+        save_config(config)
+
+        loaded = load_config()
+        assert loaded.cache_ttl_results == 120
+        assert loaded.cache_ttl_names == 60
+
+    def test_default_ttls_not_written(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
+        monkeypatch.delenv("TD_API_TOKEN", raising=False)
+
+        config = TdConfig(api_token="tok")
+        save_config(config)
+
+        content = (tmp_path / "config.toml").read_text()
+        assert "cache_ttl" not in content
+
+
 class TestResolveToken:
     def test_env_var_precedence(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
