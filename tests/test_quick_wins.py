@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
@@ -79,3 +80,27 @@ class TestDebugFlag:
         result = runner.invoke(cli, ["--debug", "--json", "ls"])
 
         assert result.exit_code == 0
+
+    @patch("td.cli.tasks.get_client")
+    def test_debug_enables_td_logger(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.filter_tasks.return_value = iter([[]])
+
+        runner = CliRunner()
+        runner.invoke(cli, ["--debug", "--json", "ls"])
+
+        td_logger = logging.getLogger("td")
+        assert td_logger.level == logging.DEBUG
+
+    @patch("td.cli.tasks.get_client")
+    def test_debug_enables_httpx_loggers(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.filter_tasks.return_value = iter([[]])
+
+        runner = CliRunner()
+        runner.invoke(cli, ["--debug", "--json", "ls"])
+
+        assert logging.getLogger("httpx").level == logging.DEBUG
+        assert logging.getLogger("httpcore").level == logging.DEBUG

@@ -31,7 +31,7 @@ class TdGroup(click.Group):
             handle_error(td_error, mode)
             sys.exit(1)
         except Exception as e:
-            if isinstance(e, (click.ClickException, SystemExit)):
+            if isinstance(e, click.ClickException | SystemExit):
                 raise
             td_error = map_api_exception(e)
             mode = self._get_mode(ctx)
@@ -86,7 +86,9 @@ def cli(ctx: click.Context, output_json: bool, plain: bool, debug: bool) -> None
             format="%(levelname)s: %(message)s",
             stream=sys.stderr,
         )
-        logging.getLogger("urllib3").setLevel(logging.DEBUG)
+        logging.getLogger("td").setLevel(logging.DEBUG)
+        logging.getLogger("httpx").setLevel(logging.DEBUG)
+        logging.getLogger("httpcore").setLevel(logging.DEBUG)
 
     # If no subcommand was given, run the default command
     if ctx.invoked_subcommand is None:
