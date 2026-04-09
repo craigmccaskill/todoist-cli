@@ -208,3 +208,27 @@ class TestCompletions:
         result = runner.invoke(cli, ["completions", "powershell"])
 
         assert result.exit_code != 0
+
+    def test_auto_detects_zsh(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("SHELL", "/bin/zsh")
+        runner = CliRunner()
+        result = runner.invoke(cli, ["completions"])
+
+        assert result.exit_code == 0
+        assert "zsh_source" in result.output
+
+    def test_auto_detects_bash(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("SHELL", "/bin/bash")
+        runner = CliRunner()
+        result = runner.invoke(cli, ["completions"])
+
+        assert result.exit_code == 0
+        assert "bash_source" in result.output
+
+    def test_auto_detect_fails_gracefully(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("SHELL", "/bin/csh")
+        runner = CliRunner()
+        result = runner.invoke(cli, ["completions"])
+
+        assert result.exit_code != 0
+        assert "Could not detect shell" in result.output

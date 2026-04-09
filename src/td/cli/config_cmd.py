@@ -95,7 +95,7 @@ def _handle_auth_error(e: Exception) -> None:
         )
     elif isinstance(e, HTTPStatusError) and e.response.status_code == 429:
         msg = "Todoist API rate limit hit. Wait a moment and try again."
-    elif isinstance(e, (ConnectError, OSError)):
+    elif isinstance(e, ConnectError | OSError):
         msg = "Couldn't reach the Todoist API. Check your internet connection and try again."
     else:
         msg = f"Something went wrong: {e}"
@@ -104,13 +104,37 @@ def _handle_auth_error(e: Exception) -> None:
     raise SystemExit(1) from None
 
 
+_SUPPORTED_SHELLS = ("bash", "zsh", "fish")
+
+
+def _detect_shell() -> str | None:
+    """Detect the current shell from $SHELL."""
+    shell_path = os.environ.get("SHELL", "")
+    for name in _SUPPORTED_SHELLS:
+        if name in shell_path:
+            return name
+    return None
+
+
 @click.command()
-@click.argument("shell", type=click.Choice(["bash", "zsh", "fish"]))
-def completions(shell: str) -> None:
+@click.argument("shell", type=click.Choice(_SUPPORTED_SHELLS), required=False)
+def completions(shell: str | None) -> None:
     """Generate shell completion script.
 
-    Add the output of this command to your shell profile.
+    \b
+    Auto-detects your shell from $SHELL, or specify one explicitly:
+      td completions         # auto-detect
+      td completions zsh     # explicit
     """
+    if not shell:
+        shell = _detect_shell()
+        if not shell:
+            supported = ", ".join(_SUPPORTED_SHELLS)
+            raise click.UsageError(
+                f"Could not detect shell from $SHELL. "
+                f"Specify one explicitly: td completions [{supported}]"
+            )
+
     var = "_TD_COMPLETE"
     if shell == "bash":
         click.echo(f'eval "$({var}=bash_source td)"')
