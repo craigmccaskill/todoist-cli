@@ -285,7 +285,7 @@ class OutputFormatter:
         text = Text()
         p_label, p_style = _PRIORITY_STYLES.get(task.priority, ("p4", "dim"))
         text.append("\u258e ", style=p_style)
-        text.append(p_label, style=p_style)
+        text.append(p_label)
         text.append(f"  {task.content}")
         if task.due:
             due_style = "red" if _is_overdue(str(task.due.date)) else "yellow"
@@ -307,8 +307,7 @@ class OutputFormatter:
 
         table = Table(title=title or "Tasks", show_lines=False)
         table.add_column("#", style="dim", width=3)
-        table.add_column("", width=2)  # priority bar
-        table.add_column("Pri", width=3)
+        table.add_column("Pri", width=5)
         table.add_column("Content")
         if show_project:
             table.add_column("Project", style="dim")
@@ -320,10 +319,12 @@ class OutputFormatter:
             p_label, p_style = _PRIORITY_STYLES.get(task.priority, ("p4", "dim"))
             due_str = task.due.string if task.due else ""
             due_style = "red" if task.due and _is_overdue(str(task.due.date)) else "yellow"
+            pri_cell = Text()
+            pri_cell.append("\u258e ", style=p_style)
+            pri_cell.append(p_label)
             row: list[str | Text] = [
                 str(i),
-                Text("\u258e", style=p_style),
-                Text(p_label, style=p_style),
+                pri_cell,
                 task.content,
             ]
             if show_project:
