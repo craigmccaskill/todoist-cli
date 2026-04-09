@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from typing import cast
 
 import click
+from todoist_api_python.models import Section
 
 from td.cli.completions import _complete_projects
 from td.cli.output import OutputFormatter
 from td.core.client import get_client
-from td.core.projects import resolve_project
+from td.core.projects import get_project_name_map, resolve_project
 from td.core.sections import _collect_sections
 
 
@@ -22,19 +24,29 @@ def _get_formatter(ctx: click.Context) -> OutputFormatter:
     "-p",
     "--project",
     "project_name",
-    required=True,
-    help="Project name or ID.",
+    help="Scope to a project. Without this, lists all sections grouped by project.",
     shell_complete=_complete_projects,
 )
 @click.pass_context
-def sections(ctx: click.Context, project_name: str) -> None:
-    """List sections in a project. Requires -p/--project."""
+def sections(ctx: click.Context, project_name: str | None) -> None:
+    """List sections, optionally scoped to a project."""
     api = get_client()
     fmt = _get_formatter(ctx)
 
-    project = resolve_project(api, project_name)
-    all_sections = _collect_sections(api, project_id=project.id)
-    fmt.section_list(all_sections)
+    if project_name:
+        project = resolve_project(api, project_name)
+        all_sections = _collect_sections(api, project_id=project.id)
+        fmt.section_list(all_sections)
+    else:
+        all_sections = _collect_sections(api)
+        if not all_sections:
+            fmt.section_list([])
+            return
+        pnames = get_project_name_map(api)
+        grouped: dict[str, list[Section]] = defaultdict(list)
+        for s in all_sections:
+            grouped[s.project_id].append(s)
+        fmt.section_list_grouped(grouped, pnames)
 
 
 @click.command(name="section-add")

@@ -408,6 +408,40 @@ class OutputFormatter:
 
         self._console.print(table)
 
+    def section_list_grouped(
+        self,
+        grouped: dict[str, list[Section]],
+        project_names: dict[str, str],
+    ) -> None:
+        """Render sections grouped by project."""
+        if self.mode == OutputMode.JSON:
+            data = [
+                {
+                    "project_id": pid,
+                    "project_name": project_names.get(pid, pid),
+                    "sections": [s.to_dict() for s in secs],
+                }
+                for pid, secs in grouped.items()
+            ]
+            self._json_out(data, "section_list_grouped")
+        elif self.mode == OutputMode.PLAIN:
+            first = True
+            for pid, secs in grouped.items():
+                if not first:
+                    click.echo()
+                first = False
+                click.echo(project_names.get(pid, pid))
+                for s in secs:
+                    click.echo(f"  {s.name}")
+        else:
+            assert self._console is not None
+            for pid, secs in grouped.items():
+                pname = project_names.get(pid, pid)
+                self._console.print(f"[bold]{pname}[/bold]")
+                for s in secs:
+                    self._console.print(f"  {s.name}")
+                self._console.print()
+
     # --- Labels ---
 
     def label_list(self, labels: list[Label]) -> None:
