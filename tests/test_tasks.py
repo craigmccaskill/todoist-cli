@@ -289,6 +289,19 @@ class TestCliCommands:
         api.filter_tasks.assert_called_once_with(query="search: deploy")
 
     @patch("td.cli.tasks.get_client")
+    def test_search_empty_query_rejected(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "search", ""])
+
+        assert result.exit_code == 1
+        data = json.loads(result.output, strict=False)
+        assert data["error"]["code"] == "VALIDATION_ERROR"
+        api.filter_tasks.assert_not_called()
+
+    @patch("td.cli.tasks.get_client")
     def test_add_idempotent(self, mock_gc: MagicMock) -> None:
         api = MagicMock()
         mock_gc.return_value = api

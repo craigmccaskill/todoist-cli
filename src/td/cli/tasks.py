@@ -662,7 +662,12 @@ def search(ctx: click.Context, query: tuple[str, ...], project_name: str | None)
     api = get_client()
     fmt = _get_formatter(ctx)
 
-    search_term = " ".join(query)
+    search_term = " ".join(query).strip()
+    if not search_term:
+        raise TdValidationError(
+            "Search query cannot be empty.",
+            suggestion="Provide one or more search terms: td search <keyword>",
+        )
     tasks = list_tasks(api, filter_query=f"search: {search_term}")
 
     if project_name:
