@@ -10,19 +10,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.10.0-alpha] - 2026-04-09
 
 ### Added
-- `td done 2 4` — batch complete multiple tasks by row number (#194)
-- `td sections` with no args lists all sections grouped by project (#120)
-- `td completions` auto-detects shell from `$SHELL` when no argument given (#121)
-- Cache TTLs (`cache_ttl_results`, `cache_ttl_names`) configurable in config.toml (#127)
+
+- **Batch task completion** — knock out multiple tasks in one command (#194)
+  ```
+  td done 2 4        # complete rows 2 and 4 from your last td ls
+  ```
+  Each task is completed independently. If one fails, the rest still go through
+  and you'll see which ones failed.
+
+- **List all sections at a glance** — `td sections` no longer requires `-p` (#120)
+  ```
+  td sections          # all sections, grouped by project
+  td sections -p Work  # still works for a single project
+  ```
+
+- **Shell auto-detection for completions** — no more guessing (#121)
+  ```
+  td completions       # detects zsh/bash/fish from $SHELL
+  td completions zsh   # explicit override still works
+  ```
+
+- **Configurable cache TTLs** — tune how long row numbers and name lookups stay fresh (#127)
+  ```toml
+  # ~/.config/td/config.toml
+  [settings]
+  cache_ttl_results = 120   # row number cache (default: 600s)
+  cache_ttl_names = 60      # project/label/section cache (default: 300s)
+  ```
 
 ### Changed
-- Priority column merged into single column: colored bar + uncolored label for accessibility (#130)
+
+- **Priority column is now accessible** — single column with colored bar + uncolored label (#130)
+  ```
+  Before:  ▎  p1   Fix bug      (two columns, both colored)
+  After:   ▎ p1    Fix bug      (one column, label readable without color)
+  ```
+  The colored bar provides visual priority at a glance. The uncolored text label
+  ensures priority is readable for colorblind users and in plain terminals.
 
 ### Fixed
-- API errors now show human-readable messages instead of raw status codes like `400 Bad Request` (#195)
-- `td search ""` no longer sends malformed query to API — returns validation error (#154)
-- Config round-trip preserves unknown TOML keys and sections (#143)
-- `TD_DEBUG` now enables `td` package logger and uses `httpx`/`httpcore` instead of `urllib3` (#156)
+
+- **Error messages are human-readable** — no more raw `400 Bad Request` (#195)
+  ```
+  Before:  Error: API error: 400 Bad Request
+  After:   Error: Bad request: Invalid due date
+           Suggestion: Check command arguments. Use --help for usage details.
+  ```
+  The CLI now extracts error details from API responses and includes actionable
+  suggestions for all error types.
+
+- **Empty search queries caught before hitting the API** — `td search ""` now returns a clear validation error instead of sending a malformed query (#154)
+
+- **Config round-trip preserves your custom fields** — manually added TOML keys and sections are no longer silently dropped when td writes to config.toml (#143)
+
+- **Debug logging actually works now** — `TD_DEBUG=1` enables the `td` package logger and uses `httpx`/`httpcore` (matching the actual HTTP stack) instead of the unused `urllib3` logger (#156)
 
 ## [0.9.0-alpha] - 2026-04-05
 
