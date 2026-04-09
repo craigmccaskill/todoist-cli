@@ -147,6 +147,25 @@ CLI users are developers who appreciate transparency. Organize entries under:
 - **Fixed** — bug fixes
 - **Internal** — tests, CI, dependency bumps, architecture changes
 
+**Style:** Write entries for humans, not commit logs. Each entry should explain what changed,
+why it matters, and show usage when applicable. Use code blocks for commands and config
+examples. The changelog is the first place users look when upgrading — make it useful.
+
+```markdown
+- **Batch task completion** — knock out multiple tasks in one command (#194)
+  \`\`\`
+  td done 2 4        # complete rows 2 and 4 from your last td ls
+  \`\`\`
+  Each task is completed independently. If one fails, the rest still go through.
+
+- **Error messages are human-readable** — no more raw `400 Bad Request` (#195)
+  \`\`\`
+  Before:  Error: API error: 400 Bad Request
+  After:   Error: Bad request: Invalid due date
+           Suggestion: Check command arguments. Use --help for usage details.
+  \`\`\`
+```
+
 ## Testing Philosophy
 
 Tests should cover three tiers:
