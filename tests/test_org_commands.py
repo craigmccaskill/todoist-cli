@@ -28,7 +28,8 @@ def _mock_section(**overrides: object) -> MagicMock:
     sec = MagicMock()
     sec.id = overrides.get("id", "s1")
     sec.name = overrides.get("name", "In Progress")
-    sec.to_dict.return_value = {"id": sec.id, "name": sec.name}
+    sec.project_id = overrides.get("project_id", "p1")
+    sec.to_dict.return_value = {"id": sec.id, "name": sec.name, "project_id": sec.project_id}
     return sec
 
 
@@ -138,6 +139,48 @@ class TestSectionsCommand:
         data = json.loads(result.output)
         assert data["type"] == "section_list"
         assert len(data["data"]) == 2
+
+    @patch("td.cli.sections.get_client")
+    def test_lists_all_sections_grouped_by_project(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_sections.return_value = iter(
+            [
+                [
+                    _mock_section(name="Backlog", project_id="p1"),
+                    _mock_section(name="Done", id="s2", project_id="p1"),
+                    _mock_section(name="Ideas", id="s3", project_id="p2"),
+                ]
+            ]
+        )
+        api.get_projects.return_value = iter(
+            [[_mock_project(name="Work", id="p1"), _mock_project(name="Personal", id="p2")]]
+        )
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "sections"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["type"] == "section_list_grouped"
+        assert len(data["data"]) == 2
+        assert data["data"][0]["project_name"] == "Work"
+        assert len(data["data"][0]["sections"]) == 2
+        assert data["data"][1]["project_name"] == "Personal"
+
+    @patch("td.cli.sections.get_client")
+    def test_no_sections_shows_empty(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_sections.return_value = iter([[]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "sections"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["type"] == "section_list"
+        assert data["data"] == []
 
 
 class TestSectionAddCommand:
