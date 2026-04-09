@@ -2,7 +2,7 @@
 
 ## What is this?
 
-`td` — an AI-native Todoist CLI built for humans and AI agents. Python 3.10+, alpha (v0.9.0-alpha).
+`td` — an AI-native Todoist CLI built for humans and AI agents. Python 3.10+, alpha (v0.10.0-alpha).
 
 ## Quick Reference
 

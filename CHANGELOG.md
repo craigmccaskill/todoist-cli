@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0-alpha] - 2026-04-09
+
+### Added
+- `td done 2 4` — batch complete multiple tasks by row number (#194)
+- `td sections` with no args lists all sections grouped by project (#120)
+- `td completions` auto-detects shell from `$SHELL` when no argument given (#121)
+- Cache TTLs (`cache_ttl_results`, `cache_ttl_names`) configurable in config.toml (#127)
+
+### Changed
+- Priority column merged into single column: colored bar + uncolored label for accessibility (#130)
+
+### Fixed
+- API errors now show human-readable messages instead of raw status codes like `400 Bad Request` (#195)
+- `td search ""` no longer sends malformed query to API — returns validation error (#154)
+- Config round-trip preserves unknown TOML keys and sections (#143)
+- `TD_DEBUG` now enables `td` package logger and uses `httpx`/`httpcore` instead of `urllib3` (#156)
+
 ## [0.9.0-alpha] - 2026-04-05
 
 ### Changed
