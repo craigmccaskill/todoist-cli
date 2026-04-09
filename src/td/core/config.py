@@ -68,6 +68,28 @@ def load_config() -> TdConfig:
         config.default_command = settings.get("default_command", "today")
         config.color = settings.get("color", True)
 
+        # Preserve unknown sections and keys for round-trip fidelity
+        known_sections = {"auth", "settings"}
+        known_auth_keys = {"api_token"}
+        known_settings_keys = {
+            "default_project",
+            "default_format",
+            "default_sort",
+            "default_command",
+            "color",
+        }
+        extra: dict[str, Any] = {}
+        for key, value in data.items():
+            if key not in known_sections:
+                extra[key] = value
+        extra_auth = {k: v for k, v in auth.items() if k not in known_auth_keys}
+        if extra_auth:
+            extra.setdefault("auth", {}).update(extra_auth)
+        extra_settings = {k: v for k, v in settings.items() if k not in known_settings_keys}
+        if extra_settings:
+            extra.setdefault("settings", {}).update(extra_settings)
+        config.extra = extra
+
     # Env var overrides
     if token := os.environ.get("TD_API_TOKEN"):
         config.api_token = token
@@ -117,14 +139,30 @@ def save_config(config: TdConfig) -> Path:
     """Save config to TOML file. Returns the path written to."""
     data: dict[str, Any] = {}
 
+    # Merge unknown top-level sections first so known fields take precedence
+    for key, value in config.extra.items():
+        if key not in ("auth", "settings"):
+            data[key] = value
+
+    auth: dict[str, Any] = {}
     if config.api_token:
-        data["auth"] = {"api_token": config.api_token}
+        auth["api_token"] = config.api_token
+    # Merge unknown auth keys
+    if "auth" in config.extra:
+        for k, v in config.extra["auth"].items():
+            auth.setdefault(k, v)
+    if auth:
+        data["auth"] = auth
 
     settings: dict[str, Any] = {}
     if config.default_project:
         settings["default_project"] = config.default_project
     if not config.color:
         settings["color"] = False
+    # Merge unknown settings keys
+    if "settings" in config.extra:
+        for k, v in config.extra["settings"].items():
+            settings.setdefault(k, v)
     if settings:
         data["settings"] = settings
 

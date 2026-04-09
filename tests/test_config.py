@@ -167,6 +167,61 @@ class TestConfigValidation:
         assert capsys.readouterr().err == ""
 
 
+class TestConfigRoundTrip:
+    def test_unknown_top_level_section_preserved(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
+        monkeypatch.delenv("TD_API_TOKEN", raising=False)
+        monkeypatch.delenv("NO_COLOR", raising=False)
+
+        (tmp_path / "config.toml").write_text(
+            '[auth]\napi_token = "tok"\n\n[myplugin]\nfoo = "bar"\nbaz = 42\n'
+        )
+        config = load_config()
+        assert config.extra["myplugin"] == {"foo": "bar", "baz": 42}
+
+        save_config(config)
+        reloaded = load_config()
+        assert reloaded.extra["myplugin"] == {"foo": "bar", "baz": 42}
+
+    def test_unknown_settings_key_preserved(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
+        monkeypatch.delenv("TD_API_TOKEN", raising=False)
+        monkeypatch.delenv("NO_COLOR", raising=False)
+
+        (tmp_path / "config.toml").write_text(
+            '[settings]\ndefault_project = "Work"\ncustom_key = "custom_val"\n'
+        )
+        config = load_config()
+        assert config.default_project == "Work"
+        assert config.extra["settings"]["custom_key"] == "custom_val"
+
+        save_config(config)
+        reloaded = load_config()
+        assert reloaded.default_project == "Work"
+        assert reloaded.extra["settings"]["custom_key"] == "custom_val"
+
+    def test_unknown_auth_key_preserved(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
+        monkeypatch.delenv("TD_API_TOKEN", raising=False)
+        monkeypatch.delenv("NO_COLOR", raising=False)
+
+        (tmp_path / "config.toml").write_text('[auth]\napi_token = "tok"\nrefresh_token = "ref"\n')
+        config = load_config()
+        assert config.api_token == "tok"
+        assert config.extra["auth"]["refresh_token"] == "ref"
+
+        save_config(config)
+        reloaded = load_config()
+        assert reloaded.api_token == "tok"
+        assert reloaded.extra["auth"]["refresh_token"] == "ref"
+
+
 class TestGetConfigPath:
     def test_returns_toml_path(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         monkeypatch.setenv("TD_CONFIG_DIR", str(tmp_path))
