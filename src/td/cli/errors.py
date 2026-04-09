@@ -124,6 +124,29 @@ def handle_error(error: TdError, mode: OutputMode) -> None:
         click.echo(error.format_plain(), err=True)
 
 
+def _extract_response_detail(exc: Exception) -> str:
+    """Try to extract a human-readable message from an HTTP error response body."""
+    from httpx import HTTPStatusError
+
+    if not isinstance(exc, HTTPStatusError):
+        return ""
+    try:
+        text = exc.response.text.strip()
+        if not text:
+            return ""
+        # Todoist API may return JSON with an error message
+        import json
+
+        data = json.loads(text)
+        if isinstance(data, str):
+            return data
+        if isinstance(data, dict):
+            return str(data.get("error", data.get("message", text)))
+        return text  # pragma: no cover
+    except (ValueError, AttributeError):
+        return text if text else ""
+
+
 def map_api_exception(exc: Exception) -> TdError:
     """Map SDK/httpx exceptions to structured TdError subclasses."""
     from httpx import HTTPStatusError
@@ -145,8 +168,20 @@ def map_api_exception(exc: Exception) -> TdError:
             return TdNotFoundError("Resource not found.")
         if status == 429:
             return TdRateLimitError("Rate limit exceeded.")
+        if status == 400:
+            detail = _extract_response_detail(exc)
+            message = f"Bad request: {detail}" if detail else "Bad request to Todoist API."
+            return TdValidationError(
+                message,
+                suggestion="Check command arguments. Use --help for usage details.",
+                details={"status_code": status},
+            )
+        # Generic fallback — try to extract a useful message from the response
+        detail = _extract_response_detail(exc)
+        message = f"API error: {detail}" if detail else f"API error ({status})."
         return TdApiError(
-            f"API error: {status} {exc.response.reason_phrase}",
+            message,
+            suggestion="Try again or check https://todoist.com/help for service status.",
             details={"status_code": status},
         )
 
