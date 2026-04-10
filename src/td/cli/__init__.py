@@ -118,6 +118,7 @@ def _register_commands() -> None:
     from td.cli.tasks import (
         add,
         capture,
+        completed,
         delete,
         done,
         edit,
@@ -145,6 +146,7 @@ def _register_commands() -> None:
     cli.add_command(today)
     cli.add_command(next_task)
     cli.add_command(log)
+    cli.add_command(completed)
     cli.add_command(focus)
     cli.add_command(done)
     cli.add_command(edit)

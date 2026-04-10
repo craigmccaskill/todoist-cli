@@ -166,6 +166,128 @@ class TestLogCommand:
         assert result.exit_code == 0
 
 
+class TestCompletedCommand:
+    @patch("td.cli.tasks.get_client")
+    def test_completed_today_default(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_completed_tasks_by_completion_date.return_value = iter(
+            [[_mock_task(content="Done task", project_id="p1")]]
+        )
+        api.get_projects.return_value = iter([[_mock_project(id="p1", name="Work")]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "completed"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["type"] == "completed_list"
+        assert len(data["data"]) == 1
+        assert data["data"][0]["content"] == "Done task"
+
+    @patch("td.cli.tasks.get_client")
+    def test_completed_since_absolute(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_completed_tasks_by_completion_date.return_value = iter(
+            [[_mock_task(content="Old task")]]
+        )
+        api.get_projects.return_value = iter([[_mock_project()]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "completed", "--since", "2026-04-01"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["type"] == "completed_list"
+
+    @patch("td.cli.tasks.get_client")
+    def test_completed_since_relative(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_completed_tasks_by_completion_date.return_value = iter(
+            [[_mock_task(content="Recent task")]]
+        )
+        api.get_projects.return_value = iter([[_mock_project()]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "completed", "--since", "7 days"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["type"] == "completed_list"
+
+    @patch("td.cli.tasks.get_client")
+    def test_completed_project_positional(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        task = _mock_task(content="Work task", project_id="p1")
+        api.get_completed_tasks_by_completion_date.return_value = iter([[task]])
+        proj = _mock_project(id="p1", name="Work")
+        api.get_projects.return_value = iter([[proj]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "completed", "Work"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["type"] == "completed_list"
+
+    @patch("td.cli.tasks.get_client")
+    def test_completed_project_flag(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        task = _mock_task(content="Work task", project_id="p1")
+        api.get_completed_tasks_by_completion_date.return_value = iter([[task]])
+        proj = _mock_project(id="p1", name="Work")
+        api.get_projects.return_value = iter([[proj]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "completed", "-p", "Work"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["type"] == "completed_list"
+
+    @patch("td.cli.tasks.get_client")
+    def test_completed_empty(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_completed_tasks_by_completion_date.return_value = iter([[]])
+        api.get_projects.return_value = iter([[_mock_project()]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "completed"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["type"] == "completed_list"
+        assert data["data"] == []
+
+    @patch("td.cli.tasks.get_client")
+    def test_completed_empty_plain(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_completed_tasks_by_completion_date.return_value = iter([[]])
+        api.get_projects.return_value = iter([[_mock_project()]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--plain", "completed"])
+
+        assert result.exit_code == 0
+        assert "No tasks completed today." in result.output
+
+    @patch("td.cli.tasks.get_client")
+    def test_completed_invalid_since(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "completed", "--since", "garbage"])
+
+        assert result.exit_code == 1
+
+
 class TestFocusCommand:
     @patch("td.cli.tasks.get_client")
     def test_focus_project(self, mock_gc: MagicMock) -> None:

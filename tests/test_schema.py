@@ -30,6 +30,7 @@ class TestSchemaCommand:
             "capture",
             "comment",
             "comments",
+            "completed",
             "ls",
             "done",
             "edit",
