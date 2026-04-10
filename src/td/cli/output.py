@@ -355,10 +355,10 @@ class OutputFormatter:
         if self.mode == OutputMode.JSON:
             self._json_out([p.to_dict() for p in projects], "project_list")
         elif self.mode == OutputMode.PLAIN:
-            click.echo("NAME\t\u2605\tID")
+            click.echo("NAME\t\u2605")
             for p in projects:
                 fav = "*" if p.is_favorite else ""
-                click.echo(f"{p.name}\t{fav}\t{p.id}")
+                click.echo(f"{p.name}\t{fav}")
         else:
             self._rich_project_table(projects)
 
@@ -367,11 +367,10 @@ class OutputFormatter:
         table = Table(title="Projects")
         table.add_column("Name", style="bold")
         table.add_column("\u2605", width=3)
-        table.add_column("ID", style="dim")
 
         for p in projects:
-            fav = "*" if p.is_favorite else ""
-            table.add_row(p.name, fav, p.id)
+            fav = "\u2605" if p.is_favorite else ""
+            table.add_row(p.name, fav)
 
         self._console.print(table)
 
@@ -392,9 +391,9 @@ class OutputFormatter:
         if self.mode == OutputMode.JSON:
             self._json_out([s.to_dict() for s in sections], "section_list")
         elif self.mode == OutputMode.PLAIN:
-            click.echo("NAME\tID")
+            click.echo("NAME")
             for s in sections:
-                click.echo(f"{s.name}\t{s.id}")
+                click.echo(s.name)
         else:
             self._rich_section_table(sections)
 
@@ -402,10 +401,9 @@ class OutputFormatter:
         assert self._console is not None
         table = Table(title="Sections")
         table.add_column("Name", style="bold")
-        table.add_column("ID", style="dim")
 
         for s in sections:
-            table.add_row(s.name, s.id)
+            table.add_row(s.name)
 
         self._console.print(table)
 
@@ -460,9 +458,9 @@ class OutputFormatter:
         if self.mode == OutputMode.JSON:
             self._json_out([lbl.to_dict() for lbl in labels], "label_list")
         elif self.mode == OutputMode.PLAIN:
-            click.echo("NAME\tID")
+            click.echo("NAME")
             for lbl in labels:
-                click.echo(f"@{lbl.name}\t{lbl.id}")
+                click.echo(f"@{lbl.name}")
         else:
             self._rich_label_table(labels)
 
@@ -470,10 +468,9 @@ class OutputFormatter:
         assert self._console is not None
         table = Table(title="Labels")
         table.add_column("Name", style="bold")
-        table.add_column("ID", style="dim")
 
         for lbl in labels:
-            table.add_row(f"@{lbl.name}", lbl.id)
+            table.add_row(f"@{lbl.name}")
 
         self._console.print(table)
 
@@ -494,10 +491,10 @@ class OutputFormatter:
         if self.mode == OutputMode.JSON:
             self._json_out([c.to_dict() for c in comments], "comment_list")
         elif self.mode == OutputMode.PLAIN:
-            click.echo("CONTENT\tPOSTED\tID")
+            click.echo("CONTENT\tPOSTED")
             for c in comments:
                 posted = _format_timestamp(str(c.posted_at))
-                click.echo(f"{c.content}\t{posted}\t{c.id}")
+                click.echo(f"{c.content}\t{posted}")
         else:
             self._rich_comment_table(comments)
 
@@ -506,11 +503,10 @@ class OutputFormatter:
         table = Table(title="Comments", show_lines=False)
         table.add_column("Content", style="bold")
         table.add_column("Posted", style="dim")
-        table.add_column("ID", style="dim")
 
         for c in comments:
             posted = _format_timestamp(str(c.posted_at))
-            table.add_row(c.content, posted, c.id)
+            table.add_row(c.content, posted)
 
         self._console.print(table)
 

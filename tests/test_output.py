@@ -337,7 +337,7 @@ class TestPlainOutput:
 
         captured = capsys.readouterr()  # type: ignore[union-attr]
         lines = captured.out.strip().split("\n")
-        assert lines[0] == "NAME\t\u2605\tID"
+        assert lines[0] == "NAME\t\u2605"
         assert "Work" in lines[1]
         assert "*" in lines[1]
 
@@ -355,7 +355,7 @@ class TestPlainOutput:
 
         captured = capsys.readouterr()  # type: ignore[union-attr]
         lines = captured.out.strip().split("\n")
-        assert lines[0] == "NAME\tID"
+        assert lines[0] == "NAME"
         assert "@urgent" in lines[1]
 
     def test_section_list_plain_name_first(self, capsys: object) -> None:
@@ -364,7 +364,7 @@ class TestPlainOutput:
 
         captured = capsys.readouterr()  # type: ignore[union-attr]
         lines = captured.out.strip().split("\n")
-        assert lines[0] == "NAME\tID"
+        assert lines[0] == "NAME"
         assert lines[1].startswith("In Progress")
 
     def test_comment_list_plain(self, capsys: object) -> None:
@@ -373,7 +373,7 @@ class TestPlainOutput:
 
         captured = capsys.readouterr()  # type: ignore[union-attr]
         lines = captured.out.strip().split("\n")
-        assert lines[0] == "CONTENT\tPOSTED\tID"
+        assert lines[0] == "CONTENT\tPOSTED"
         assert "Nice!" in lines[1]
 
     def test_success_plain(self, capsys: object) -> None:
