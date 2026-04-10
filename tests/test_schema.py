@@ -31,6 +31,7 @@ class TestSchemaCommand:
             "comment",
             "comments",
             "completed",
+            "doctor",
             "ls",
             "done",
             "edit",

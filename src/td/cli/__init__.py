@@ -110,6 +110,7 @@ def cli(ctx: click.Context, output_json: bool, plain: bool, debug: bool) -> None
 def _register_commands() -> None:
     from td.cli.comments import comment, comments
     from td.cli.config_cmd import completions, init
+    from td.cli.doctor import doctor
     from td.cli.labels import label_add, labels
     from td.cli.projects import project_add, projects
     from td.cli.rate_limit import rate_limit
@@ -138,6 +139,7 @@ def _register_commands() -> None:
 
     cli.add_command(init)
     cli.add_command(completions)
+    cli.add_command(doctor)
     cli.add_command(comment)
     cli.add_command(comments)
     cli.add_command(schema)
