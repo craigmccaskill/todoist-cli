@@ -474,3 +474,59 @@ class TestRichOutput:
         fmt = OutputFormatter(OutputMode.RICH)
         tasks = [_make_task(content="Overdue", due="2020-01-01")]
         fmt.task_list(tasks)
+
+    def test_completed_list_renders(self) -> None:
+        fmt = OutputFormatter(OutputMode.RICH)
+        task = _make_task(content="Done task")
+        task.completed_at = "2026-04-09T14:30:00Z"
+        fmt.completed_list([task], title="Completed today")
+
+    def test_completed_list_empty_renders(self) -> None:
+        fmt = OutputFormatter(OutputMode.RICH)
+        fmt.completed_list([])
+
+
+class TestCompletedListOutput:
+    def test_completed_list_json(self, capsys: object) -> None:
+        fmt = OutputFormatter(OutputMode.JSON)
+        task = _make_task(content="Done task", project_id="p1")
+        task.completed_at = "2026-04-09T14:30:00Z"
+        fmt.completed_list([task], project_names={"p1": "Work"})
+
+        captured = capsys.readouterr()  # type: ignore[union-attr]
+        data = json.loads(captured.out)
+        assert data["ok"] is True
+        assert data["type"] == "completed_list"
+        assert len(data["data"]) == 1
+        assert data["data"][0]["content"] == "Done task"
+        assert data["data"][0]["completed_at"] == "2026-04-09T14:30:00Z"
+        assert data["data"][0]["project_name"] == "Work"
+
+    def test_completed_list_plain(self, capsys: object) -> None:
+        fmt = OutputFormatter(OutputMode.PLAIN)
+        task = _make_task(content="Done task", project_id="p1")
+        task.completed_at = "2026-04-09T14:30:00Z"
+        fmt.completed_list([task], project_names={"p1": "Work"})
+
+        captured = capsys.readouterr()  # type: ignore[union-attr]
+        lines = captured.out.strip().split("\n")
+        assert lines[0] == "CONTENT\tCOMPLETED\tPROJECT"
+        assert "Done task" in lines[1]
+        assert "Work" in lines[1]
+
+    def test_completed_list_empty_json(self, capsys: object) -> None:
+        fmt = OutputFormatter(OutputMode.JSON)
+        fmt.completed_list([])
+
+        captured = capsys.readouterr()  # type: ignore[union-attr]
+        data = json.loads(captured.out)
+        assert data["ok"] is True
+        assert data["type"] == "completed_list"
+        assert data["data"] == []
+
+    def test_completed_list_empty_plain(self, capsys: object) -> None:
+        fmt = OutputFormatter(OutputMode.PLAIN)
+        fmt.completed_list([])
+
+        captured = capsys.readouterr()  # type: ignore[union-attr]
+        assert "No tasks completed today." in captured.out

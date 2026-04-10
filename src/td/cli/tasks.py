@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from datetime import datetime
 from typing import Any, cast
 
 import click
@@ -26,6 +27,7 @@ from td.core.tasks import (
     create_task,
     edit_task,
     find_task_by_content,
+    get_completed_tasks,
     list_tasks,
     quick_add,
     remove_task,
@@ -404,6 +406,106 @@ def log(ctx: click.Context, week: bool) -> None:
     ]
     pnames = get_project_name_map(api)
     fmt.task_list(completed, title=title, project_names=pnames)
+
+
+def _parse_since(since_str: str) -> datetime:
+    """Parse a --since value into a datetime.
+
+    Accepts:
+    - Absolute dates: "2026-04-01"
+    - Relative strings: "7 days", "2 weeks", "1 month"
+    """
+    from datetime import timedelta
+
+    # Try absolute date first
+    try:
+        dt = datetime.strptime(since_str, "%Y-%m-%d")
+        return dt.replace(hour=0, minute=0, second=0, microsecond=0).astimezone()
+    except ValueError:
+        pass
+
+    # Try relative: "<N> <unit>"
+    parts = since_str.strip().lower().split()
+    if len(parts) == 2:
+        try:
+            count = int(parts[0])
+        except ValueError as exc:
+            raise TdValidationError(
+                f"Cannot parse date: '{since_str}'",
+                suggestion="Use 'YYYY-MM-DD' or relative like '7 days', '2 weeks'.",
+            ) from exc
+        unit = parts[1].rstrip("s")  # normalize "days" -> "day"
+        if unit == "day":
+            delta = timedelta(days=count)
+        elif unit == "week":
+            delta = timedelta(weeks=count)
+        elif unit == "month":
+            delta = timedelta(days=count * 30)
+        else:
+            raise TdValidationError(
+                f"Unknown time unit: '{parts[1]}'",
+                suggestion="Supported units: days, weeks, months.",
+            )
+        now = datetime.now().astimezone()
+        return (now - delta).replace(hour=0, minute=0, second=0, microsecond=0)
+
+    raise TdValidationError(
+        f"Cannot parse date: '{since_str}'",
+        suggestion="Use 'YYYY-MM-DD' or relative like '7 days', '2 weeks'.",
+    )
+
+
+@click.command()
+@click.argument("project_name", required=False, default=None)
+@click.option(
+    "-p",
+    "--project",
+    "project_flag",
+    help="Filter by project.",
+    shell_complete=_complete_projects,
+)
+@click.option(
+    "--since",
+    "since_str",
+    help="Show tasks completed since date (e.g. '2026-04-01', '7 days').",
+)
+@click.pass_context
+def completed(
+    ctx: click.Context,
+    project_name: str | None,
+    project_flag: str | None,
+    since_str: str | None,
+) -> None:
+    """Show completed tasks. Defaults to today.
+
+    \b
+    Examples:
+      td completed                    Completed today
+      td completed Work               Completed today in Work project
+      td completed --since "7 days"   Completed in last 7 days
+      td completed -p Work --since "2026-04-01"
+    """
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    # Resolve project: positional arg or -p flag
+    project = project_name or project_flag
+    project_id = None
+    if project:
+        project_id = resolve_project(api, project).id
+
+    # Resolve date range
+    now = datetime.now().astimezone()
+    if since_str:
+        since = _parse_since(since_str)
+        title = f"Completed since {since.strftime('%Y-%m-%d')}"
+    else:
+        since = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        title = "Completed today"
+
+    tasks = get_completed_tasks(api, since=since, until=now, project_id=project_id)
+    pnames = get_project_name_map(api)
+    fmt.completed_list(tasks, title=title, project_names=pnames)
 
 
 @click.command()

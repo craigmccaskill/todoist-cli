@@ -149,6 +149,17 @@ def _task_plain_row(
     return "\t".join(parts)
 
 
+def _format_completed_date(completed_at: str | None) -> str:
+    """Format a completed_at ISO timestamp into a readable date string."""
+    if not completed_at:
+        return ""
+    try:
+        dt = datetime.fromisoformat(str(completed_at))
+        return dt.strftime("%Y-%m-%d %H:%M")
+    except (ValueError, TypeError):
+        return str(completed_at)
+
+
 class OutputFormatter:
     """Central output formatter. Every command uses this."""
 
@@ -335,6 +346,64 @@ class OutputFormatter:
                 labels = ", ".join(f"@{lbl}" for lbl in task.labels) if task.labels else ""
                 row.append(labels)
             table.add_row(*row)
+
+        self._console.print(table)
+
+    # --- Completed tasks ---
+
+    def completed_list(
+        self,
+        tasks: list[Task],
+        title: str = "Completed today",
+        project_names: dict[str, str] | None = None,
+    ) -> None:
+        """Render a list of completed tasks with content, completed date, and project."""
+        if not tasks:
+            empty_msg = f"No tasks completed ({title.lower()})."
+            if title == "Completed today":
+                empty_msg = "No tasks completed today."
+            if self.mode == OutputMode.JSON:
+                self._json_out([], "completed_list")
+            elif self.mode == OutputMode.PLAIN:
+                click.echo(empty_msg)
+            else:
+                assert self._console is not None
+                self._console.print(f"[dim]{empty_msg}[/dim]")
+            return
+
+        if self.mode == OutputMode.JSON:
+            data = []
+            for t in tasks:
+                d = _task_to_dict(t, project_names)
+                d["completed_at"] = getattr(t, "completed_at", None)
+                data.append(d)
+            self._json_out(data, "completed_list")
+        elif self.mode == OutputMode.PLAIN:
+            click.echo("CONTENT\tCOMPLETED\tPROJECT")
+            for t in tasks:
+                completed_at = _format_completed_date(getattr(t, "completed_at", None))
+                project = project_names.get(t.project_id, "") if project_names else ""
+                click.echo(f"{t.content}\t{completed_at}\t{project}")
+        else:
+            self._rich_completed_table(tasks, title, project_names)
+
+    def _rich_completed_table(
+        self,
+        tasks: list[Task],
+        title: str,
+        project_names: dict[str, str] | None = None,
+    ) -> None:
+        assert self._console is not None
+
+        table = Table(title=title, show_lines=False)
+        table.add_column("Content")
+        table.add_column("Completed", style="green")
+        table.add_column("Project", style="dim")
+
+        for t in tasks:
+            completed_at = _format_completed_date(getattr(t, "completed_at", None))
+            project = project_names.get(t.project_id, "") if project_names else ""
+            table.add_row(t.content, completed_at, project)
 
         self._console.print(table)
 

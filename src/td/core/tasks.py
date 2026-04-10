@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
+from datetime import datetime
 from typing import Any
 
 from todoist_api_python.api import TodoistAPI
@@ -189,3 +190,22 @@ def uncomplete_task(api: TodoistAPI, task_id: str) -> bool:
 def quick_add(api: TodoistAPI, text: str) -> Task:
     """Natural language task creation via Todoist's quick-add."""
     return api.add_task_quick(text)
+
+
+def get_completed_tasks(
+    api: TodoistAPI,
+    *,
+    since: datetime,
+    until: datetime,
+    project_id: str | None = None,
+) -> list[Task]:
+    """Fetch tasks completed within a date range.
+
+    Uses completion date (when marked done), not due date.
+    If project_id is provided, filters client-side since the API endpoint
+    doesn't support project filtering.
+    """
+    tasks = _collect(api.get_completed_tasks_by_completion_date(since=since, until=until))
+    if project_id:
+        tasks = [t for t in tasks if t.project_id == project_id]
+    return tasks
