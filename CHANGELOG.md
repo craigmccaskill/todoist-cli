@@ -7,6 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0-alpha] - 2026-04-09
+
+### Added
+
+- **Unified `td add`** — one command that does the right thing (#192)
+  ```bash
+  td add buy milk tomorrow        # human at keyboard: NLP parses it
+  td add "Deploy" --due Friday    # explicit flags: literal mode
+  echo "idea" | td add            # piped input: literal mode
+  ```
+  `td quick` and `td capture` still work as hidden aliases with a deprecation notice.
+
+- **`td completed`** — see what you've done (#210)
+  ```bash
+  td completed                    # completed today
+  td completed --since "7 days"   # last week
+  td completed Work               # scoped to a project
+  ```
+
+- **`td doctor`** — diagnose your setup in one command (#213)
+  ```bash
+  td doctor
+  ✓ Python 3.12
+  ✓ Config file valid
+  ✓ API token present
+  ✓ API connection OK (3 projects)
+  ✗ Shell completions: not installed
+  ```
+
+- **Full CRUD for projects, sections, labels, and comments** (#217)
+  ```bash
+  td project-edit Work --name "Work stuff"
+  td project-delete "Old Project" -y
+  td project-archive Done
+  td section-delete Backlog -y
+  td label-edit urgent --name critical
+  td comment-delete c123 -y
+  ```
+  All destructive commands require `-y` or confirmation.
+
+- **`td completions install`** — one command to enable tab completion (#229)
+  ```bash
+  td completions              # show status
+  td completions install      # add to your shell profile
+  td completions uninstall    # remove it
+  ```
+  `td init` now offers to set up completions automatically.
+
+- **PATH collision detection** — `td init` warns if another `td` is on your PATH (#208)
+
+### Changed
+
+- **Design principle documented** — "surface the context users need to be successful, nothing more" now guides all UX decisions (#230)
+
+- **Tables show useful data, not raw IDs** — projects, sections, labels, and comments no longer display opaque IDs in Rich/Plain output. IDs remain in JSON for scripting. (#231)
+
+- **pip install from git URLs works** — version resolution fixed for blobless clones (#228)
+
+### Fixed
+
+- **Comprehensive error audit** — every HTTP status code, network timeout, corrupt cache, and invalid config now produces a human-readable message with an actionable suggestion (#227)
+
+### Internal
+
+- Updated CLAUDE.md for v0.10.0 changes (#209)
+
 ## [0.10.0-alpha] - 2026-04-09
 
 ### Added
