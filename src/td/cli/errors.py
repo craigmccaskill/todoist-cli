@@ -20,6 +20,11 @@ LABEL_NOT_FOUND = "LABEL_NOT_FOUND"
 VALIDATION_ERROR = "VALIDATION_ERROR"
 API_ERROR = "API_ERROR"
 API_RATE_LIMIT = "API_RATE_LIMIT"
+API_FORBIDDEN = "API_FORBIDDEN"
+API_TIMEOUT = "API_TIMEOUT"
+API_SERVER_ERROR = "API_SERVER_ERROR"
+NETWORK_ERROR = "NETWORK_ERROR"
+CACHE_ERROR = "CACHE_ERROR"
 DUPLICATE_TASK = "DUPLICATE_TASK"
 
 
@@ -114,6 +119,43 @@ class TdRateLimitError(TdError):
     suggestion = "Wait a moment and try again. Todoist allows 450 requests per 15 minutes."
 
 
+class TdForbiddenError(TdError):
+    """Access forbidden."""
+
+    code = API_FORBIDDEN
+    suggestion = "Check your permissions for this resource in Todoist."
+
+
+class TdTimeoutError(TdError):
+    """Request timed out."""
+
+    code = API_TIMEOUT
+    suggestion = "Check your internet connection and try again."
+
+
+class TdServerError(TdError):
+    """Todoist server error."""
+
+    code = API_SERVER_ERROR
+    suggestion = "Todoist may be experiencing issues. Try again in a few minutes."
+
+
+class TdNetworkError(TdError):
+    """Network connectivity error."""
+
+    code = NETWORK_ERROR
+    suggestion = (
+        "Check your internet connection. "
+        "If the problem persists, check https://status.todoist.com for service status."
+    )
+
+
+class TdCacheError(TdError):
+    """Cache read/write error."""
+
+    code = CACHE_ERROR
+
+
 def handle_error(error: TdError, mode: OutputMode) -> None:
     """Render a TdError to stderr in the appropriate output mode."""
     if mode == OutputMode.JSON:
@@ -149,25 +191,36 @@ def _extract_response_detail(exc: Exception) -> str:
 
 def map_api_exception(exc: Exception) -> TdError:
     """Map SDK/httpx exceptions to structured TdError subclasses."""
-    from httpx import HTTPStatusError
+    import httpx
 
-    if isinstance(exc, HTTPStatusError):
+    # Network-level errors (no HTTP response received)
+    if isinstance(exc, httpx.ConnectTimeout):
+        return TdTimeoutError(
+            "Connection timed out while reaching Todoist.",
+            suggestion="Check your internet connection and try again.",
+        )
+    if isinstance(exc, httpx.ReadTimeout):
+        return TdTimeoutError(
+            "Request timed out waiting for Todoist to respond.",
+            suggestion="Todoist may be slow. Try again in a moment.",
+        )
+    if isinstance(exc, httpx.ConnectError):
+        return TdNetworkError(
+            "Could not connect to Todoist API.",
+            suggestion=(
+                "Check your internet connection. "
+                "If the problem persists, check https://status.todoist.com for service status."
+            ),
+        )
+    if isinstance(exc, httpx.TimeoutException):
+        return TdTimeoutError(
+            "Request to Todoist timed out.",
+            suggestion="Check your internet connection and try again.",
+        )
+
+    # HTTP status errors (response received with error code)
+    if isinstance(exc, httpx.HTTPStatusError):
         status = exc.response.status_code
-        if status == 401:
-            return TdAuthError(
-                "Invalid API token.",
-                code=AUTH_INVALID,
-                suggestion="Check your token at https://app.todoist.com/app/settings/integrations/developer",
-            )
-        if status == 403:
-            return TdApiError(
-                "Access forbidden.",
-                suggestion="Check your permissions for this resource.",
-            )
-        if status == 404:
-            return TdNotFoundError("Resource not found.")
-        if status == 429:
-            return TdRateLimitError("Rate limit exceeded.")
         if status == 400:
             detail = _extract_response_detail(exc)
             message = f"Bad request: {detail}" if detail else "Bad request to Todoist API."
@@ -176,32 +229,125 @@ def map_api_exception(exc: Exception) -> TdError:
                 suggestion="Check command arguments. Use --help for usage details.",
                 details={"status_code": status},
             )
-        # Generic fallback — try to extract a useful message from the response
+        if status == 401:
+            return TdAuthError(
+                "Invalid API token.",
+                code=AUTH_INVALID,
+                suggestion="Check your token at https://app.todoist.com/app/settings/integrations/developer",
+            )
+        if status == 403:
+            return TdForbiddenError(
+                "Access forbidden. You don't have permission for this resource.",
+                suggestion="Check your permissions for this resource in Todoist.",
+            )
+        if status == 404:
+            detail = _extract_response_detail(exc)
+            message = f"Resource not found: {detail}" if detail else "Resource not found."
+            return TdNotFoundError(
+                message,
+                suggestion="Verify the task, project, or label exists. "
+                "Use `td ls` or `td projects` to see available items.",
+            )
+        if status == 408:
+            return TdTimeoutError(
+                "Request timed out on the server side.",
+                suggestion="Try again. If the problem persists, Todoist may be under heavy load.",
+                details={"status_code": status},
+            )
+        if status == 429:
+            return TdRateLimitError("Rate limit exceeded.")
+        if status == 500:
+            detail = _extract_response_detail(exc)
+            message = (
+                f"Todoist internal server error: {detail}"
+                if detail
+                else "Todoist internal server error."
+            )
+            return TdServerError(
+                message,
+                suggestion="This is a Todoist server issue. Try again in a few minutes.",
+                details={"status_code": status},
+            )
+        if status == 502:
+            return TdServerError(
+                "Todoist returned a bad gateway error.",
+                suggestion="Todoist may be deploying updates. Try again in a minute.",
+                details={"status_code": status},
+            )
+        if status == 503:
+            return TdServerError(
+                "Todoist is temporarily unavailable.",
+                suggestion="Todoist is down for maintenance or overloaded. "
+                "Check https://status.todoist.com and try again later.",
+                details={"status_code": status},
+            )
+        if status == 504:
+            return TdServerError(
+                "Todoist gateway timed out.",
+                suggestion="Todoist is responding slowly. Try again in a few minutes.",
+                details={"status_code": status},
+            )
+        # Generic fallback for other HTTP errors
         detail = _extract_response_detail(exc)
-        message = f"API error: {detail}" if detail else f"API error ({status})."
+        message = f"API error: {detail}" if detail else f"API error (HTTP {status})."
         return TdApiError(
             message,
-            suggestion="Try again or check https://todoist.com/help for service status.",
+            suggestion="Try again or check https://status.todoist.com for service status.",
             details={"status_code": status},
         )
 
-    return TdApiError(f"Unexpected error: {exc}")
+    return TdApiError(
+        f"Unexpected error: {exc}",
+        suggestion="If this persists, run with TD_DEBUG=1 for more details.",
+    )
 
 
 def map_core_exception(exc: Exception) -> TdError:
     """Map a core-layer exception to a CLI TdError, preserving code/message/suggestion."""
-    from td.core.exceptions import AuthError, TdCoreError
+    from td.core.exceptions import (
+        AuthError,
+        LabelNotFoundError,
+        ProjectNotFoundError,
+        SectionNotFoundError,
+        TdCoreError,
+    )
 
     if not isinstance(exc, TdCoreError):
-        return TdApiError(f"Unexpected error: {exc}")
+        return TdApiError(
+            f"Unexpected error: {exc}",
+            suggestion="If this persists, run with TD_DEBUG=1 for more details.",
+        )
 
     if isinstance(exc, AuthError):
         return TdAuthError(exc.message, suggestion=exc.suggestion)
+
+    if isinstance(exc, ProjectNotFoundError):
+        return TdProjectNotFoundError(
+            exc.message,
+            suggestion=exc.suggestion or "Run `td projects` to list available projects.",
+            details=exc.details,
+        )
+
+    if isinstance(exc, SectionNotFoundError):
+        return TdNotFoundError(
+            exc.message,
+            code=SECTION_NOT_FOUND,
+            suggestion=exc.suggestion or "Run `td sections -p <project>` to list sections.",
+            details=exc.details,
+        )
+
+    if isinstance(exc, LabelNotFoundError):
+        return TdNotFoundError(
+            exc.message,
+            code=LABEL_NOT_FOUND,
+            suggestion=exc.suggestion or "Run `td labels` to list available labels.",
+            details=exc.details,
+        )
 
     # Generic mapping — preserves code, message, suggestion, and details
     return TdError(
         exc.message,
         code=exc.code,
-        suggestion=exc.suggestion,
+        suggestion=exc.suggestion or "If this persists, run with TD_DEBUG=1 for more details.",
         details=exc.details,
     )
