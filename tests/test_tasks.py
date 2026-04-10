@@ -310,12 +310,12 @@ class TestCliCommands:
         mock_gc.return_value = api
         api.add_task_quick.return_value = _mock_task()
 
-        runner = CliRunner(mix_stderr=False)
+        runner = CliRunner()
         result = runner.invoke(cli, ["--json", "quick", "Buy", "milk", "tomorrow"])
 
         assert result.exit_code == 0
         api.add_task_quick.assert_called_once_with("Buy milk tomorrow")
-        assert "td quick is now td add" in result.stderr
+        assert "td quick is now td add" in result.output
 
     @patch("td.cli.tasks.get_client")
     def test_search_command(self, mock_gc: MagicMock) -> None:
@@ -473,11 +473,11 @@ class TestUnifiedAdd:
         mock_gc.return_value = api
         api.add_task.return_value = _mock_task(content="buy milk")
 
-        runner = CliRunner(mix_stderr=False)
+        runner = CliRunner()
         result = runner.invoke(cli, ["--json", "add", "--nlp", "buy", "milk", "--due", "tomorrow"])
 
         assert result.exit_code == 0
-        assert "--nlp ignored" in result.stderr
+        assert "--nlp ignored" in result.output
         # Flags override --nlp, so add_task is used
         api.add_task.assert_called_once()
         api.add_task_quick.assert_not_called()
