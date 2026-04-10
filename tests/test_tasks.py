@@ -284,13 +284,40 @@ class TestCliCommands:
         """Multi-word text is content match, not batch."""
         api = MagicMock()
         mock_gc.return_value = api
+        match = _mock_task(id="t1", content="buy milk")
+        api.get_tasks.return_value = iter([[match]])
 
         runner = CliRunner()
         result = runner.invoke(cli, ["--json", "done", "buy", "milk"])
 
         assert result.exit_code == 0
-        # Should have joined into "buy milk" and treated as single ref
-        api.get_task.assert_called_once()
+        api.complete_task.assert_called_once()
+
+    @patch("td.cli.tasks.get_client")
+    def test_done_unresolvable_text_ref_errors_early(self, mock_gc: MagicMock) -> None:
+        """Text ref with no fuzzy match should error, not hit the API."""
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_tasks.return_value = iter([[]])  # no matches
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "done", "ljasdf"])
+
+        assert result.exit_code == 1
+        assert "not found" in result.output.lower()
+        api.complete_task.assert_not_called()
+
+    @patch("td.cli.tasks.get_client")
+    def test_done_short_ref_passes_through(self, mock_gc: MagicMock) -> None:
+        """Short refs (<=2 chars) pass through as task IDs — no fuzzy match."""
+        api = MagicMock()
+        mock_gc.return_value = api
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "done", "t1"])
+
+        assert result.exit_code == 0
+        api.complete_task.assert_called_once()
 
     @patch("td.cli.tasks.get_client")
     def test_delete_with_yes(self, mock_gc: MagicMock) -> None:

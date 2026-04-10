@@ -69,7 +69,6 @@ def _resolve_task(ref: str, api: Any = None) -> str:
             task_id: str = matches[choice - 1].id
             return task_id
         if len(matches) > 1:
-            # Non-interactive: return error-like info
             from td.cli.errors import TdValidationError
 
             task_list = ", ".join(f"'{t.content}'" for t in matches[:5])
@@ -77,8 +76,15 @@ def _resolve_task(ref: str, api: Any = None) -> str:
                 f"Multiple tasks match '{ref}': {task_list}",
                 suggestion="Be more specific or use a task ID.",
             )
+        # No matches — ref looks like text but nothing matched
+        from td.cli.errors import TdNotFoundError
 
-    # Step 3: pass through as task ID
+        raise TdNotFoundError(
+            f"Task '{ref}' not found.",
+            suggestion="Use a row number from `td ls`, a task name, or a task ID.",
+        )
+
+    # Step 3: pass through as task ID (digits or short strings)
     return ref
 
 
