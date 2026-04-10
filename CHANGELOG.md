@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0-alpha] - 2026-04-09
+
+### Added
+
+- **Time-based views** — plan ahead without filter syntax (#211)
+  ```bash
+  td tomorrow              # due tomorrow
+  td upcoming              # next 7 days
+  td upcoming 3            # next 3 days
+  td overdue               # just overdue, without today mixed in
+  td overdue Work          # overdue in one project
+  ```
+
+- **`td skill install`** — auto-generate a command reference for AI agents (#214)
+  ```bash
+  td skill install         # auto-detects Claude Code
+  td skill                 # shows status, warns if stale after update
+  td skill update          # regenerate with latest commands
+  ```
+  SKILL.md includes full command reference, agent guidance, and security notes.
+  Version tracking shows when the skill file is stale.
+
+- **Positional args for `td completed`** — no more `--since "7 days"` (#243)
+  ```bash
+  td completed 7d          # last 7 days
+  td completed Work 2w     # last 2 weeks in Work
+  td completed 2026-04-01  # since a date
+  ```
+  Duration and project are auto-classified. Order doesn't matter.
+
+### Changed
+
+- **README rewritten** — leads with a morning workflow, not a feature list. Drops command table and architecture diagram. (#189)
+
+- **examples.md rewritten** — narrative workday guide instead of auto-generated command reference (#186)
+
+### Fixed
+
+- **Task refs validate before hitting the API** — `td done ljasdf` now shows "Task not found" with a suggestion instead of a raw `400 Bad Request` (#242)
+
 ## [0.11.0-alpha] - 2026-04-09
 
 ### Added
