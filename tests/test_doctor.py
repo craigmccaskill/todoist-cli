@@ -139,7 +139,7 @@ class TestCheckApiConnectivity:
         mock_api = MagicMock()
         mock_api.get_projects.return_value = [MagicMock(), MagicMock()]
 
-        with patch("td.core.doctor.TodoistAPI", return_value=mock_api):
+        with patch("todoist_api_python.api.TodoistAPI", return_value=mock_api):
             result = check_api_connectivity()
         assert result.status == "pass"
         assert "2 project(s)" in result.detail
@@ -147,7 +147,9 @@ class TestCheckApiConnectivity:
     def test_api_failure(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("TD_API_TOKEN", "bad-token")
 
-        with patch("td.core.doctor.TodoistAPI", side_effect=Exception("connection refused")):
+        with patch(
+            "todoist_api_python.api.TodoistAPI", side_effect=Exception("connection refused")
+        ):
             result = check_api_connectivity()
         assert result.status == "fail"
         assert "Failed" in result.detail
