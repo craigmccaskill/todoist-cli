@@ -286,7 +286,7 @@ class TestProjectEditCommand:
         data = json.loads(result.output)
         assert data["ok"] is True
         assert data["data"]["name"] == "Work stuff"
-        api.update_project.assert_called_once_with("p1", name="Work stuff")
+        api.update_project.assert_called_once_with("p1", name="Work stuff", color=None)
 
     @patch("td.cli.projects.get_client")
     def test_recolors_project(self, mock_gc: MagicMock) -> None:
@@ -301,7 +301,7 @@ class TestProjectEditCommand:
         result = runner.invoke(cli, ["--json", "project-edit", "Work", "--color", "blue"])
 
         assert result.exit_code == 0
-        api.update_project.assert_called_once_with("p1", color="blue")
+        api.update_project.assert_called_once_with("p1", name=None, color="blue")
 
     @patch("td.cli.projects.get_client")
     def test_edit_no_flags_errors(self, mock_gc: MagicMock) -> None:
@@ -513,7 +513,7 @@ class TestLabelEditCommand:
         data = json.loads(result.output)
         assert data["ok"] is True
         assert data["data"]["name"] == "critical"
-        api.update_label.assert_called_once_with("lbl1", name="critical")
+        api.update_label.assert_called_once_with("lbl1", name="critical", color=None)
 
     @patch("td.cli.labels.get_client")
     def test_recolors_label(self, mock_gc: MagicMock) -> None:
@@ -528,7 +528,7 @@ class TestLabelEditCommand:
         result = runner.invoke(cli, ["--json", "label-edit", "urgent", "--color", "red"])
 
         assert result.exit_code == 0
-        api.update_label.assert_called_once_with("lbl1", color="red")
+        api.update_label.assert_called_once_with("lbl1", name=None, color="red")
 
     @patch("td.cli.labels.get_client")
     def test_edit_no_flags_errors(self, mock_gc: MagicMock) -> None:
