@@ -72,10 +72,10 @@ Changelog = "https://github.com/craigmccaskill/todoist-cli/blob/main/CHANGELOG.m
 where = ["src"]
 
 [tool.setuptools.package-data]
-td = ["py.typed"]
+td = ["py.typed", "VERSION"]
 
 [tool.setuptools.dynamic]
-version = { attr = "td.__version__" }
+version = { file = "src/td/VERSION" }
 
 [tool.ruff]
 target-version = "py310"
