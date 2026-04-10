@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sys
 from collections import defaultdict
 from typing import cast
 
@@ -10,7 +9,6 @@ import click
 from todoist_api_python.models import Section
 
 from td.cli.completions import _complete_projects
-from td.cli.errors import TdValidationError
 from td.cli.output import OutputFormatter
 from td.core.client import get_client
 from td.core.projects import get_project_name_map, resolve_project
@@ -141,15 +139,9 @@ def section_delete(
         project_id = resolve_project(api, project_name).id
 
     section = resolve_section(api, " ".join(ref), project_id=project_id)
-    if not yes:
-        if not sys.stdout.isatty():
-            raise TdValidationError(
-                "Cannot confirm deletion in non-interactive mode.",
-                suggestion="Use --yes flag to skip confirmation.",
-            )
-        if not click.confirm(f'Delete section "{section.name}"?'):
-            click.echo("Aborted.")
-            return
+    if not yes and not click.confirm(f'Delete section "{section.name}"?', default=False):
+        click.echo("Aborted.")
+        return
 
     delete_section(api, section.id)
     fmt.success(

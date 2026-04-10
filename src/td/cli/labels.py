@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sys
 from typing import cast
 
 import click
@@ -95,15 +94,9 @@ def label_delete(ctx: click.Context, ref: tuple[str, ...], yes: bool) -> None:
     fmt = _get_formatter(ctx)
 
     label = resolve_label(api, " ".join(ref))
-    if not yes:
-        if not sys.stdout.isatty():
-            raise TdValidationError(
-                "Cannot confirm deletion in non-interactive mode.",
-                suggestion="Use --yes flag to skip confirmation.",
-            )
-        if not click.confirm(f'Delete label "{label.name}"?'):
-            click.echo("Aborted.")
-            return
+    if not yes and not click.confirm(f'Delete label "{label.name}"?', default=False):
+        click.echo("Aborted.")
+        return
 
     delete_label(api, label.id)
     fmt.success(

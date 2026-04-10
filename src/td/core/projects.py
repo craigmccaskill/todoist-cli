@@ -92,12 +92,7 @@ def update_project(
     color: str | None = None,
 ) -> Project:
     """Update a project's name and/or color."""
-    kwargs: dict[str, str] = {}
-    if name is not None:
-        kwargs["name"] = name
-    if color is not None:
-        kwargs["color"] = color
-    return api.update_project(project_id, **kwargs)
+    return api.update_project(project_id, name=name, color=color)
 
 
 def delete_project(api: TodoistAPI, project_id: str) -> None:

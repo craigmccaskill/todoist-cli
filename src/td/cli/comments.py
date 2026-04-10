@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sys
 from typing import Any, cast
 
 import click
@@ -114,15 +113,9 @@ def comment_delete(ctx: click.Context, comment_id: str, yes: bool) -> None:
     api = get_client()
     fmt = _get_formatter(ctx)
 
-    if not yes:
-        if not sys.stdout.isatty():
-            raise TdValidationError(
-                "Cannot confirm deletion in non-interactive mode.",
-                suggestion="Use --yes flag to skip confirmation.",
-            )
-        if not click.confirm(f"Delete comment {comment_id}?"):
-            click.echo("Aborted.")
-            return
+    if not yes and not click.confirm(f"Delete comment {comment_id}?", default=False):
+        click.echo("Aborted.")
+        return
 
     api.delete_comment(comment_id)
     fmt.success(

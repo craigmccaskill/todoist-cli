@@ -59,12 +59,7 @@ def update_label(
     color: str | None = None,
 ) -> Label:
     """Update a label's name and/or color."""
-    kwargs: dict[str, str] = {}
-    if name is not None:
-        kwargs["name"] = name
-    if color is not None:
-        kwargs["color"] = color
-    return api.update_label(label_id, **kwargs)
+    return api.update_label(label_id, name=name, color=color)
 
 
 def delete_label(api: TodoistAPI, label_id: str) -> None:
