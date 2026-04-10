@@ -111,7 +111,7 @@ Two caches in `~/.cache/td/` (respects `XDG_CACHE_HOME`):
 - `last_results.json` — row-number-to-task-ID mapping from last list command (10 min TTL)
 - `names.json` — project/label/section name mappings (5 min TTL)
 
-TTLs are currently hardcoded (see issue #127).
+TTLs are configurable via `cache_ttl_results` and `cache_ttl_names` in `config.toml` (defaults: 600s and 300s).
 
 ### Command registration
 
@@ -170,8 +170,6 @@ pytest tests/test_tasks.py -k "test_sort"  # Single test by name
 - Coverage minimum is 85%, enforced by `--cov-fail-under=85`
 
 ## Known Architectural Issues
-
-- Cache TTLs (10 min results, 5 min names) are hardcoded — issue #127
 
 ### Textual 8.x gotcha
 
