@@ -196,6 +196,49 @@ Assert structural invariants that should never be violated:
 
 These tests are cheap to write, rarely change, and catch entire categories of bugs at once.
 
+## Design Principle
+
+**Surface the context users need to be successful, nothing more.**
+
+Every command, error message, and output should be measured against this. The CLI should feel
+like a tool built for the person using it, not a wrapper around an API.
+
+### Accept what the user means, not what the system needs
+
+The common case should be flag-free. If a command has one obvious argument, accept it
+positionally. Flags exist for disambiguation and advanced use, not basic operations.
+
+```bash
+td sections Blog          # obvious intent — scope to project
+td completed Work         # same pattern
+td ls -p Work --sort due  # flags for the less common case
+```
+
+### Show what's useful, not what the API returns
+
+Rich and Plain modes are for humans. IDs belong in JSON output for scripting.
+
+- Tables show row numbers, names, dates — not opaque IDs
+- Empty states explain what to do next, not just "no results"
+- Success messages confirm what happened in human terms
+
+### Help the user recover when things go wrong
+
+Every error should answer three questions: what happened, why, and what to do next.
+
+- Ambiguous input triggers a picker instead of an error
+- Missing arguments launch interactive mode instead of printing usage
+- Suggestions are specific: "Run `td projects` to see available names"
+
+### Progressive disclosure
+
+The simple case is simple. Power features are available but not in the way.
+
+```bash
+td add call dentist                              # day one
+td add "call dentist" -p Health --due tomorrow   # week two
+```
+
 ## Code Style
 
 - **Framework**: Click (not Typer) — we own the output/schema/completions layer
@@ -214,6 +257,14 @@ These tests are cheap to write, rarely change, and catch entire categories of bu
 5. Add tests in `tests/`
 6. Update the schema test expected commands set
 7. Run `td schema` to verify the command appears in the manifest
+
+**Design checklist** (measure every new command against the design principle):
+
+- [ ] Common case is flag-free — obvious positional args accepted
+- [ ] Tables show useful context, not raw IDs
+- [ ] Errors include a message, reason, and suggestion
+- [ ] Empty states guide the user on what to do
+- [ ] Rich/JSON/Plain modes all work and are consistent
 
 ## Releasing
 
