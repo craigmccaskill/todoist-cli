@@ -138,11 +138,14 @@ def _register_commands() -> None:
         ls,
         move,
         next_task,
+        overdue,
         quick,
         search,
         show,
         today,
+        tomorrow,
         undo,
+        upcoming,
     )
 
     cli.add_command(init)
@@ -155,6 +158,9 @@ def _register_commands() -> None:
     cli.add_command(ls)
     cli.add_command(inbox)
     cli.add_command(today)
+    cli.add_command(tomorrow)
+    cli.add_command(upcoming)
+    cli.add_command(overdue)
     cli.add_command(next_task)
     cli.add_command(log)
     cli.add_command(completed)

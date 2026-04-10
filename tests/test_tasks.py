@@ -237,6 +237,58 @@ class TestCliCommands:
         assert data["type"] == "task_list"
 
     @patch("td.cli.tasks.get_client")
+    def test_tomorrow_command(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.filter_tasks.return_value = iter([[_mock_task(content="Morning standup")]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "tomorrow"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["type"] == "task_list"
+        api.filter_tasks.assert_called_once_with(query="tomorrow")
+
+    @patch("td.cli.tasks.get_client")
+    def test_upcoming_command_default(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.filter_tasks.return_value = iter([[_mock_task()]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "upcoming"])
+
+        assert result.exit_code == 0
+        api.filter_tasks.assert_called_once_with(query="7 days")
+
+    @patch("td.cli.tasks.get_client")
+    def test_upcoming_custom_days(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.filter_tasks.return_value = iter([[]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "upcoming", "3"])
+
+        assert result.exit_code == 0
+        api.filter_tasks.assert_called_once_with(query="3 days")
+
+    @patch("td.cli.tasks.get_client")
+    def test_overdue_command(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.filter_tasks.return_value = iter([[_mock_task(content="Late task")]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "overdue"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["type"] == "task_list"
+        api.filter_tasks.assert_called_once_with(query="overdue")
+
+    @patch("td.cli.tasks.get_client")
     def test_done_command(self, mock_gc: MagicMock) -> None:
         api = MagicMock()
         mock_gc.return_value = api
