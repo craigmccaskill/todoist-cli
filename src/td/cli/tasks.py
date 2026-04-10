@@ -504,8 +504,10 @@ def _parse_since(since_str: str) -> datetime:
 
     Accepts:
     - Absolute dates: "2026-04-01"
+    - Compact formats: "7d" (days), "2w" (weeks), "1m" (months)
     - Relative strings: "7 days", "2 weeks", "1 month"
     """
+    import re
     from datetime import timedelta
 
     # Try absolute date first
@@ -515,6 +517,20 @@ def _parse_since(since_str: str) -> datetime:
     except ValueError:
         pass
 
+    # Try compact format: "7d", "2w", "1m"
+    compact = re.fullmatch(r"(\d+)([dwm])", since_str.strip().lower())
+    if compact:
+        count = int(compact.group(1))
+        unit = compact.group(2)
+        if unit == "d":
+            delta = timedelta(days=count)
+        elif unit == "w":
+            delta = timedelta(weeks=count)
+        else:  # "m"
+            delta = timedelta(days=count * 30)
+        now = datetime.now().astimezone()
+        return (now - delta).replace(hour=0, minute=0, second=0, microsecond=0)
+
     # Try relative: "<N> <unit>"
     parts = since_str.strip().lower().split()
     if len(parts) == 2:
@@ -523,7 +539,11 @@ def _parse_since(since_str: str) -> datetime:
         except ValueError as exc:
             raise TdValidationError(
                 f"Cannot parse date: '{since_str}'",
-                suggestion="Use 'YYYY-MM-DD' or relative like '7 days', '2 weeks'.",
+                suggestion=(
+                    "Use a compact format like '7d', '2w', '1m', "
+                    "or 'YYYY-MM-DD', or '7 days'.\n"
+                    "  Try: td completed 7d"
+                ),
             ) from exc
         unit = parts[1].rstrip("s")  # normalize "days" -> "day"
         if unit == "day":
@@ -535,60 +555,128 @@ def _parse_since(since_str: str) -> datetime:
         else:
             raise TdValidationError(
                 f"Unknown time unit: '{parts[1]}'",
-                suggestion="Supported units: days, weeks, months.",
+                suggestion=(
+                    "Supported units: d (days), w (weeks), m (months).\n  Try: td completed 7d"
+                ),
             )
         now = datetime.now().astimezone()
         return (now - delta).replace(hour=0, minute=0, second=0, microsecond=0)
 
     raise TdValidationError(
         f"Cannot parse date: '{since_str}'",
-        suggestion="Use 'YYYY-MM-DD' or relative like '7 days', '2 weeks'.",
+        suggestion=(
+            "Use a compact format like '7d', '2w', '1m', "
+            "or 'YYYY-MM-DD', or '7 days'.\n"
+            "  Try: td completed 7d"
+        ),
     )
 
 
+def _is_duration(arg: str) -> bool:
+    """Return True if arg looks like a compact duration (e.g. '7d', '2w', '1m')."""
+    import re
+
+    return bool(re.fullmatch(r"\d+[dwm]", arg.strip().lower()))
+
+
+def _is_date(arg: str) -> bool:
+    """Return True if arg looks like an absolute date (YYYY-MM-DD)."""
+    import re
+
+    return bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", arg.strip()))
+
+
+def _classify_completed_args(
+    args: tuple[str, ...],
+) -> tuple[str | None, str | None]:
+    """Classify positional args into (since, project).
+
+    Each arg is checked in order:
+    - Matches \\d+[dwm] -> duration (since)
+    - Matches YYYY-MM-DD -> absolute date (since)
+    - Otherwise -> project name
+
+    Returns (since_value, project_name). Raises on duplicates.
+    """
+    since: str | None = None
+    project: str | None = None
+
+    for arg in args:
+        if _is_duration(arg) or _is_date(arg):
+            if since is not None:
+                raise TdValidationError(
+                    f"Multiple durations/dates given: '{since}' and '{arg}'.",
+                    suggestion="Provide only one duration or date.\n  Try: td completed 7d Work",
+                )
+            since = arg
+        else:
+            if project is not None:
+                raise TdValidationError(
+                    f"Multiple project names given: '{project}' and '{arg}'.",
+                    suggestion="Provide only one project name.\n  Try: td completed Work 7d",
+                )
+            project = arg
+
+    return since, project
+
+
 @click.command()
-@click.argument("project_name", required=False, default=None)
+@click.argument("args", nargs=-1)
 @click.option(
     "-p",
     "--project",
     "project_flag",
-    help="Filter by project.",
+    help="Filter by project (also accepted as positional arg).",
     shell_complete=_complete_projects,
 )
 @click.option(
     "--since",
     "since_str",
-    help="Show tasks completed since date (e.g. '2026-04-01', '7 days').",
+    help="Since date/duration (also accepted as positional arg, e.g. '7d').",
 )
 @click.pass_context
 def completed(
     ctx: click.Context,
-    project_name: str | None,
+    args: tuple[str, ...],
     project_flag: str | None,
     since_str: str | None,
 ) -> None:
     """Show completed tasks. Defaults to today.
 
     \b
-    Examples:
+    Positional args are auto-classified (order doesn't matter):
       td completed                    Completed today
-      td completed Work               Completed today in Work project
-      td completed --since "7 days"   Completed in last 7 days
-      td completed -p Work --since "2026-04-01"
+      td completed 7d                 Last 7 days
+      td completed 2w                 Last 2 weeks
+      td completed 1m                 Last month
+      td completed Work               Today, in Work project
+      td completed Work 7d            Last 7 days in Work
+      td completed 7d Work            Same — order doesn't matter
+      td completed 2026-04-01         Since absolute date
+
+    \b
+    Flags are also available (override positional args):
+      td completed --since "7 days"   Verbose relative date
+      td completed -p Work            Explicit project flag
     """
     api = get_client()
     fmt = _get_formatter(ctx)
 
-    # Resolve project: positional arg or -p flag
-    project = project_name or project_flag
+    # Classify positional args
+    pos_since, pos_project = _classify_completed_args(args)
+
+    # Flags override positional args
+    project = project_flag or pos_project
+    since_value = since_str or pos_since
+
     project_id = None
     if project:
         project_id = resolve_project(api, project).id
 
     # Resolve date range
     now = datetime.now().astimezone()
-    if since_str:
-        since = _parse_since(since_str)
+    if since_value:
+        since = _parse_since(since_value)
         title = f"Completed since {since.strftime('%Y-%m-%d')}"
     else:
         since = now.replace(hour=0, minute=0, second=0, microsecond=0)
