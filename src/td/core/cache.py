@@ -86,7 +86,7 @@ def load_result_cache(max_age: int | None = None) -> dict[str, str]:
             return {}
         ids: dict[str, str] = data.get("ids", {})
         return ids
-    except (json.JSONDecodeError, KeyError):
+    except (json.JSONDecodeError, KeyError, OSError):
         return {}
 
 
@@ -150,5 +150,5 @@ def load_name_cache(max_age: int | None = None) -> dict[str, Any]:
             return {}
         result: dict[str, Any] = data
         return result
-    except (json.JSONDecodeError, KeyError):
+    except (json.JSONDecodeError, KeyError, OSError):
         return {}

@@ -33,6 +33,7 @@ class TdGroup(click.Group):
         except Exception as e:
             if isinstance(e, click.ClickException | SystemExit):
                 raise
+            # Handle network/httpx errors and any other unhandled exceptions
             td_error = map_api_exception(e)
             mode = self._get_mode(ctx)
             handle_error(td_error, mode)
