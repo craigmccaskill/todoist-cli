@@ -2,13 +2,23 @@
 
 from __future__ import annotations
 
+import sys
 from typing import cast
 
 import click
 
+from td.cli.errors import TdValidationError
 from td.cli.output import OutputFormatter
 from td.core.client import get_client
-from td.core.projects import _collect_projects, create_project, resolve_project
+from td.core.projects import (
+    _collect_projects,
+    archive_project,
+    create_project,
+    delete_project,
+    resolve_project,
+    unarchive_project,
+    update_project,
+)
 
 
 def _get_formatter(ctx: click.Context) -> OutputFormatter:
@@ -61,3 +71,112 @@ def project_add(
         is_favorite=favorite,
     )
     fmt.item_created("project", project)
+
+
+@click.command(name="project-edit")
+@click.argument("ref", nargs=-1, required=True)
+@click.option("--name", help="New project name.")
+@click.option("--color", help="New project color.")
+@click.pass_context
+def project_edit(
+    ctx: click.Context,
+    ref: tuple[str, ...],
+    name: str | None,
+    color: str | None,
+) -> None:
+    """Rename or recolor a project. Ref is a name or ID.
+
+    \b
+    Examples:
+      td project-edit Work --name "Work stuff"
+      td project-edit Personal --color blue
+    """
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    if not name and not color:
+        raise TdValidationError(
+            "Nothing to update.",
+            suggestion="Provide --name and/or --color.",
+        )
+
+    project = resolve_project(api, " ".join(ref))
+    updated = update_project(api, project.id, name=name, color=color)
+    fmt.success(
+        f"Updated project: {updated.name}",
+        {"project_id": updated.id, "name": updated.name},
+    )
+
+
+@click.command(name="project-delete")
+@click.argument("ref", nargs=-1, required=True)
+@click.option("-y", "--yes", is_flag=True, help="Skip confirmation.")
+@click.pass_context
+def project_delete(ctx: click.Context, ref: tuple[str, ...], yes: bool) -> None:
+    """Delete a project. Ref is a name or ID.
+
+    \b
+    Examples:
+      td project-delete "Old Project" -y
+    """
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    project = resolve_project(api, " ".join(ref))
+    if not yes:
+        if not sys.stdout.isatty():
+            raise TdValidationError(
+                "Cannot confirm deletion in non-interactive mode.",
+                suggestion="Use --yes flag to skip confirmation.",
+            )
+        if not click.confirm(f'Delete project "{project.name}"?'):
+            click.echo("Aborted.")
+            return
+
+    delete_project(api, project.id)
+    fmt.success(
+        f"Deleted project: {project.name}",
+        {"project_id": project.id, "name": project.name},
+    )
+
+
+@click.command(name="project-archive")
+@click.argument("ref", nargs=-1, required=True)
+@click.pass_context
+def project_archive(ctx: click.Context, ref: tuple[str, ...]) -> None:
+    """Archive a project. Ref is a name or ID.
+
+    \b
+    Examples:
+      td project-archive "Old Project"
+    """
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    project = resolve_project(api, " ".join(ref))
+    archive_project(api, project.id)
+    fmt.success(
+        f"Archived project: {project.name}",
+        {"project_id": project.id, "name": project.name},
+    )
+
+
+@click.command(name="project-unarchive")
+@click.argument("ref", nargs=-1, required=True)
+@click.pass_context
+def project_unarchive(ctx: click.Context, ref: tuple[str, ...]) -> None:
+    """Unarchive a project. Ref is a name or ID.
+
+    \b
+    Examples:
+      td project-unarchive "Old Project"
+    """
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    project = resolve_project(api, " ".join(ref))
+    unarchive_project(api, project.id)
+    fmt.success(
+        f"Unarchived project: {project.name}",
+        {"project_id": project.id, "name": project.name},
+    )

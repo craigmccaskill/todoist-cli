@@ -50,3 +50,13 @@ def resolve_section(api: TodoistAPI, name_or_id: str, *, project_id: str | None 
         f"Section '{name_or_id}' not found",
         suggestion="Run `td sections -p <project>` to list sections.",
     )
+
+
+def update_section(api: TodoistAPI, section_id: str, *, name: str) -> Section:
+    """Rename a section."""
+    return api.update_section(section_id, name=name)
+
+
+def delete_section(api: TodoistAPI, section_id: str) -> None:
+    """Delete a section."""
+    api.delete_section(section_id)
