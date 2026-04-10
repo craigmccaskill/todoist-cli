@@ -9,6 +9,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+try:
+    import tomllib  # type: ignore[import-not-found]
+except ModuleNotFoundError:
+    import tomli as tomllib
+
 from td import __version__
 from td.core.config import get_config_path, load_config
 
@@ -65,11 +70,6 @@ def check_config_file() -> CheckResult:
         )
 
     try:
-        try:
-            import tomllib  # type: ignore[import-not-found]
-        except ModuleNotFoundError:
-            import tomli as tomllib  # type: ignore[import-not-found,no-redef]
-
         with open(path, "rb") as f:
             tomllib.load(f)
         return CheckResult(
