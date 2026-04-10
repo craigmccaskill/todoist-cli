@@ -436,6 +436,119 @@ def today(ctx: click.Context, sort_by: str | None, reverse_sort: bool) -> None:
     fmt.task_list(tasks, title="Today", project_names=pnames)
 
 
+@click.command()
+@click.argument("project_name", required=False)
+@click.option(
+    "-p",
+    "--project",
+    "project_flag",
+    help="Scope to a project.",
+    shell_complete=_complete_projects,
+)
+@click.pass_context
+def tomorrow(
+    ctx: click.Context,
+    project_name: str | None,
+    project_flag: str | None,
+) -> None:
+    """Show tasks due tomorrow.
+
+    \b
+    Examples:
+      td tomorrow           All tasks due tomorrow
+      td tomorrow Work      Tomorrow's tasks in Work project
+    """
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    project = project_name or project_flag
+    tasks = list_tasks(api, filter_query="tomorrow")
+    if project:
+        pid = resolve_project(api, project).id
+        tasks = [t for t in tasks if t.project_id == pid]
+    pnames = get_project_name_map(api)
+    fmt.task_list(tasks, title="Tomorrow", project_names=pnames)
+
+
+@click.command()
+@click.argument("args", nargs=-1)
+@click.option(
+    "-p",
+    "--project",
+    "project_flag",
+    help="Scope to a project.",
+    shell_complete=_complete_projects,
+)
+@click.pass_context
+def upcoming(
+    ctx: click.Context,
+    args: tuple[str, ...],
+    project_flag: str | None,
+) -> None:
+    """Show tasks due in the next N days (default: 7).
+
+    \b
+    Examples:
+      td upcoming           Next 7 days
+      td upcoming 3         Next 3 days
+      td upcoming Work      Next 7 days in Work project
+      td upcoming 3 Work    Next 3 days in Work
+    """
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    # Classify positional args: digits = days, text = project
+    days = 7
+    project = project_flag
+    for arg in args:
+        if arg.isdigit():
+            days = int(arg)
+        elif not project:
+            project = arg
+
+    tasks = list_tasks(api, filter_query=f"{days} days")
+    if project:
+        pid = resolve_project(api, project).id
+        tasks = [t for t in tasks if t.project_id == pid]
+    pnames = get_project_name_map(api)
+    fmt.task_list(tasks, title=f"Next {days} days", project_names=pnames)
+
+
+@click.command()
+@click.argument("project_name", required=False)
+@click.option(
+    "-p",
+    "--project",
+    "project_flag",
+    help="Scope to a project.",
+    shell_complete=_complete_projects,
+)
+@click.pass_context
+def overdue(
+    ctx: click.Context,
+    project_name: str | None,
+    project_flag: str | None,
+) -> None:
+    """Show only overdue tasks.
+
+    \b
+    Unlike td today, this excludes tasks due today.
+    Examples:
+      td overdue            All overdue tasks
+      td overdue Work       Overdue tasks in Work project
+    """
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    project = project_name or project_flag
+    tasks = list_tasks(api, filter_query="overdue")
+    if project:
+        pid = resolve_project(api, project).id
+        tasks = [t for t in tasks if t.project_id == pid]
+    pnames = get_project_name_map(api)
+    fmt.task_list(tasks, title="Overdue", project_names=pnames)
+
+
 @click.command(name="next")
 @click.option(
     "-p",
