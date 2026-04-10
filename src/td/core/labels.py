@@ -49,3 +49,19 @@ def resolve_label(api: TodoistAPI, name_or_id: str) -> Label:
         f"Label '{name_or_id}' not found",
         suggestion="Run `td labels` to list available labels.",
     )
+
+
+def update_label(
+    api: TodoistAPI,
+    label_id: str,
+    *,
+    name: str | None = None,
+    color: str | None = None,
+) -> Label:
+    """Update a label's name and/or color."""
+    return api.update_label(label_id, name=name, color=color)
+
+
+def delete_label(api: TodoistAPI, label_id: str) -> None:
+    """Delete a label."""
+    api.delete_label(label_id)

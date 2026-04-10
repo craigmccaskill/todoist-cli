@@ -84,6 +84,32 @@ def get_project_name_map(api: TodoistAPI) -> dict[str, str]:
     return {p.id: p.name for p in projects}
 
 
+def update_project(
+    api: TodoistAPI,
+    project_id: str,
+    *,
+    name: str | None = None,
+    color: str | None = None,
+) -> Project:
+    """Update a project's name and/or color."""
+    return api.update_project(project_id, name=name, color=color)
+
+
+def delete_project(api: TodoistAPI, project_id: str) -> None:
+    """Delete a project."""
+    api.delete_project(project_id)
+
+
+def archive_project(api: TodoistAPI, project_id: str) -> None:
+    """Archive a project."""
+    api.archive_project(project_id)
+
+
+def unarchive_project(api: TodoistAPI, project_id: str) -> None:
+    """Unarchive a project."""
+    api.unarchive_project(project_id)
+
+
 def get_inbox_project(api: TodoistAPI) -> Project:
     """Find the Inbox project."""
     projects = _collect_projects(api)

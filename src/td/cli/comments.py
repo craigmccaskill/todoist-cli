@@ -6,6 +6,7 @@ from typing import Any, cast
 
 import click
 
+from td.cli.errors import TdValidationError
 from td.cli.output import OutputFormatter
 from td.core.client import get_client
 
@@ -61,3 +62,63 @@ def comments(ctx: click.Context, task_ref: str | None) -> None:
 
     all_comments = [c for page in api.get_comments(task_id=task_id) for c in page]
     fmt.comment_list(all_comments)
+
+
+@click.command(name="comment-edit")
+@click.argument("comment_id")
+@click.argument("content", nargs=-1)
+@click.option("--content", "content_flag", help="New comment content.")
+@click.pass_context
+def comment_edit(
+    ctx: click.Context,
+    comment_id: str,
+    content: tuple[str, ...],
+    content_flag: str | None,
+) -> None:
+    """Update a comment's content. Content as positional args or --content flag.
+
+    \b
+    Examples:
+      td comment-edit abc123 "Updated text"
+      td comment-edit abc123 --content "Updated text"
+    """
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    new_content = content_flag or (" ".join(content) if content else "")
+    if not new_content:
+        raise TdValidationError(
+            "No content provided.",
+            suggestion="Provide new content as an argument or with --content.",
+        )
+
+    result = api.update_comment(comment_id, content=new_content)
+    fmt.success(
+        f"Updated comment {comment_id}",
+        {"comment_id": result.id, "content": result.content},
+    )
+
+
+@click.command(name="comment-delete")
+@click.argument("comment_id")
+@click.option("-y", "--yes", is_flag=True, help="Skip confirmation.")
+@click.pass_context
+def comment_delete(ctx: click.Context, comment_id: str, yes: bool) -> None:
+    """Delete a comment by ID.
+
+    \b
+    Examples:
+      td comment-delete abc123 -y
+    """
+    api = get_client()
+    fmt = _get_formatter(ctx)
+
+    if not yes and not click.confirm(f"Delete comment {comment_id}?", default=False):
+        click.echo("Aborted.")
+        return
+
+    api.delete_comment(comment_id)
+    fmt.success(
+        f"Deleted comment {comment_id}",
+        {"comment_id": comment_id},
+    )

@@ -1,4 +1,4 @@
-"""Tests for organization commands (projects, sections, labels)."""
+"""Tests for organization commands (projects, sections, labels, comments)."""
 
 from __future__ import annotations
 
@@ -39,6 +39,19 @@ def _mock_label(**overrides: object) -> MagicMock:
     lbl.name = overrides.get("name", "urgent")
     lbl.to_dict.return_value = {"id": lbl.id, "name": lbl.name}
     return lbl
+
+
+def _mock_comment(**overrides: object) -> MagicMock:
+    cmt = MagicMock()
+    cmt.id = overrides.get("id", "c1")
+    cmt.content = overrides.get("content", "A comment")
+    cmt.posted_at = overrides.get("posted_at", "2026-04-09T12:00:00Z")
+    cmt.to_dict.return_value = {
+        "id": cmt.id,
+        "content": cmt.content,
+        "posted_at": cmt.posted_at,
+    }
+    return cmt
 
 
 class TestProjectsCommand:
@@ -251,3 +264,405 @@ class TestLabelsCommand:
         assert result.exit_code == 0
         data = json.loads(result.output)
         assert len(data["data"]) == 1
+
+
+# --- Project edit/delete/archive/unarchive ---
+
+
+class TestProjectEditCommand:
+    @patch("td.cli.projects.get_client")
+    def test_renames_project(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        proj = _mock_project(name="Work", id="p1")
+        api.get_projects.return_value = iter([[proj]])
+        updated = _mock_project(name="Work stuff", id="p1")
+        api.update_project.return_value = updated
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "project-edit", "Work", "--name", "Work stuff"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["ok"] is True
+        assert data["data"]["name"] == "Work stuff"
+        api.update_project.assert_called_once_with("p1", name="Work stuff", color=None)
+
+    @patch("td.cli.projects.get_client")
+    def test_recolors_project(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        proj = _mock_project(name="Work", id="p1")
+        api.get_projects.return_value = iter([[proj]])
+        updated = _mock_project(name="Work", id="p1")
+        api.update_project.return_value = updated
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "project-edit", "Work", "--color", "blue"])
+
+        assert result.exit_code == 0
+        api.update_project.assert_called_once_with("p1", name=None, color="blue")
+
+    @patch("td.cli.projects.get_client")
+    def test_edit_no_flags_errors(self, mock_gc: MagicMock) -> None:
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "project-edit", "Work"])
+
+        assert result.exit_code == 1
+
+
+class TestProjectDeleteCommand:
+    @patch("td.cli.projects.get_client")
+    def test_deletes_with_yes(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        proj = _mock_project(name="Old", id="p1")
+        api.get_projects.return_value = iter([[proj]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "project-delete", "Old", "-y"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["ok"] is True
+        api.delete_project.assert_called_once_with("p1")
+
+    @patch("td.cli.projects.get_client")
+    def test_delete_confirms_in_tty(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        proj = _mock_project(name="Old", id="p1")
+        api.get_projects.return_value = iter([[proj]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "project-delete", "Old"], input="y\n")
+
+        assert result.exit_code == 0
+        api.delete_project.assert_called_once_with("p1")
+
+    @patch("td.cli.projects.get_client")
+    def test_delete_aborts_on_no(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        proj = _mock_project(name="Old", id="p1")
+        api.get_projects.return_value = iter([[proj]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "project-delete", "Old"], input="n\n")
+
+        assert result.exit_code == 0
+        api.delete_project.assert_not_called()
+
+    @patch("td.cli.projects.get_client")
+    def test_delete_not_found(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_projects.return_value = iter([[]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "project-delete", "Nonexistent", "-y"])
+
+        assert result.exit_code == 1
+
+
+class TestProjectArchiveCommand:
+    @patch("td.cli.projects.get_client")
+    def test_archives_project(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        proj = _mock_project(name="Work", id="p1")
+        api.get_projects.return_value = iter([[proj]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "project-archive", "Work"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["ok"] is True
+        api.archive_project.assert_called_once_with("p1")
+
+
+class TestProjectUnarchiveCommand:
+    @patch("td.cli.projects.get_client")
+    def test_unarchives_project(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        proj = _mock_project(name="Work", id="p1")
+        api.get_projects.return_value = iter([[proj]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "project-unarchive", "Work"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["ok"] is True
+        api.unarchive_project.assert_called_once_with("p1")
+
+
+# --- Section edit/delete ---
+
+
+class TestSectionEditCommand:
+    @patch("td.cli.sections.get_client")
+    def test_renames_section(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        proj = _mock_project(name="Work", id="p1")
+        api.get_projects.return_value = iter([[proj]])
+        sec = _mock_section(name="Backlog", id="s1", project_id="p1")
+        api.get_sections.return_value = iter([[sec]])
+        updated = _mock_section(name="Active", id="s1")
+        api.update_section.return_value = updated
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli, ["--json", "section-edit", "Backlog", "--name", "Active", "-p", "Work"]
+        )
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["ok"] is True
+        assert data["data"]["name"] == "Active"
+        api.update_section.assert_called_once_with("s1", name="Active")
+
+    @patch("td.cli.sections.get_client")
+    def test_renames_section_without_project(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        sec = _mock_section(name="Backlog", id="s1")
+        api.get_sections.return_value = iter([[sec]])
+        updated = _mock_section(name="Active", id="s1")
+        api.update_section.return_value = updated
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "section-edit", "Backlog", "--name", "Active"])
+
+        assert result.exit_code == 0
+        api.update_section.assert_called_once_with("s1", name="Active")
+
+
+class TestSectionDeleteCommand:
+    @patch("td.cli.sections.get_client")
+    def test_deletes_with_yes(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        sec = _mock_section(name="Old", id="s1")
+        api.get_sections.return_value = iter([[sec]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "section-delete", "Old", "-y"])
+
+        assert result.exit_code == 0
+        api.delete_section.assert_called_once_with("s1")
+
+    @patch("td.cli.sections.get_client")
+    def test_delete_confirms_in_tty(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        sec = _mock_section(name="Old", id="s1")
+        api.get_sections.return_value = iter([[sec]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "section-delete", "Old"], input="y\n")
+
+        assert result.exit_code == 0
+        api.delete_section.assert_called_once_with("s1")
+
+    @patch("td.cli.sections.get_client")
+    def test_delete_aborts_on_no(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        sec = _mock_section(name="Old", id="s1")
+        api.get_sections.return_value = iter([[sec]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "section-delete", "Old"], input="n\n")
+
+        assert result.exit_code == 0
+        api.delete_section.assert_not_called()
+
+    @patch("td.cli.sections.get_client")
+    def test_delete_not_found(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_sections.return_value = iter([[]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "section-delete", "Nonexistent", "-y"])
+
+        assert result.exit_code == 1
+
+
+# --- Label edit/delete ---
+
+
+class TestLabelEditCommand:
+    @patch("td.cli.labels.get_client")
+    def test_renames_label(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        lbl = _mock_label(name="urgent", id="lbl1")
+        api.get_labels.return_value = iter([[lbl]])
+        updated = _mock_label(name="critical", id="lbl1")
+        api.update_label.return_value = updated
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "label-edit", "urgent", "--name", "critical"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["ok"] is True
+        assert data["data"]["name"] == "critical"
+        api.update_label.assert_called_once_with("lbl1", name="critical", color=None)
+
+    @patch("td.cli.labels.get_client")
+    def test_recolors_label(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        lbl = _mock_label(name="urgent", id="lbl1")
+        api.get_labels.return_value = iter([[lbl]])
+        updated = _mock_label(name="urgent", id="lbl1")
+        api.update_label.return_value = updated
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "label-edit", "urgent", "--color", "red"])
+
+        assert result.exit_code == 0
+        api.update_label.assert_called_once_with("lbl1", name=None, color="red")
+
+    @patch("td.cli.labels.get_client")
+    def test_edit_no_flags_errors(self, mock_gc: MagicMock) -> None:
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "label-edit", "urgent"])
+
+        assert result.exit_code == 1
+
+
+class TestLabelDeleteCommand:
+    @patch("td.cli.labels.get_client")
+    def test_deletes_with_yes(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        lbl = _mock_label(name="old", id="lbl1")
+        api.get_labels.return_value = iter([[lbl]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "label-delete", "old", "-y"])
+
+        assert result.exit_code == 0
+        api.delete_label.assert_called_once_with("lbl1")
+
+    @patch("td.cli.labels.get_client")
+    def test_delete_confirms_in_tty(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        lbl = _mock_label(name="old", id="lbl1")
+        api.get_labels.return_value = iter([[lbl]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "label-delete", "old"], input="y\n")
+
+        assert result.exit_code == 0
+        api.delete_label.assert_called_once_with("lbl1")
+
+    @patch("td.cli.labels.get_client")
+    def test_delete_aborts_on_no(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        lbl = _mock_label(name="old", id="lbl1")
+        api.get_labels.return_value = iter([[lbl]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "label-delete", "old"], input="n\n")
+
+        assert result.exit_code == 0
+        api.delete_label.assert_not_called()
+
+    @patch("td.cli.labels.get_client")
+    def test_delete_not_found(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_labels.return_value = iter([[]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "label-delete", "nonexistent", "-y"])
+
+        assert result.exit_code == 1
+
+
+# --- Comment edit/delete ---
+
+
+class TestCommentEditCommand:
+    @patch("td.cli.comments.get_client")
+    def test_edits_comment_positional(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        updated = _mock_comment(id="c1", content="Updated text")
+        api.update_comment.return_value = updated
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "comment-edit", "c1", "Updated", "text"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["ok"] is True
+        assert data["data"]["content"] == "Updated text"
+        api.update_comment.assert_called_once_with("c1", content="Updated text")
+
+    @patch("td.cli.comments.get_client")
+    def test_edits_comment_flag(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        updated = _mock_comment(id="c1", content="New content")
+        api.update_comment.return_value = updated
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "comment-edit", "c1", "--content", "New content"])
+
+        assert result.exit_code == 0
+        api.update_comment.assert_called_once_with("c1", content="New content")
+
+    @patch("td.cli.comments.get_client")
+    def test_edit_no_content_errors(self, mock_gc: MagicMock) -> None:
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "comment-edit", "c1"])
+
+        assert result.exit_code == 1
+
+
+class TestCommentDeleteCommand:
+    @patch("td.cli.comments.get_client")
+    def test_deletes_with_yes(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "comment-delete", "c1", "-y"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["ok"] is True
+        api.delete_comment.assert_called_once_with("c1")
+
+    @patch("td.cli.comments.get_client")
+    def test_delete_confirms_in_tty(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "comment-delete", "c1"], input="y\n")
+
+        assert result.exit_code == 0
+        api.delete_comment.assert_called_once_with("c1")
+
+    @patch("td.cli.comments.get_client")
+    def test_delete_aborts_on_no(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "comment-delete", "c1"], input="n\n")
+
+        assert result.exit_code == 0
+        api.delete_comment.assert_not_called()
