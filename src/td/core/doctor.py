@@ -66,7 +66,7 @@ def check_config_file() -> CheckResult:
 
     try:
         try:
-            import tomllib
+            import tomllib  # type: ignore[import-not-found]
         except ModuleNotFoundError:
             import tomli as tomllib  # type: ignore[import-not-found,no-redef]
 
