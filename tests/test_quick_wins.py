@@ -35,12 +35,13 @@ class TestCapture:
         mock_gc.return_value = api
         api.add_task.return_value = _mock_task(content="call dentist")
 
-        runner = CliRunner()
+        runner = CliRunner(mix_stderr=False)
         result = runner.invoke(cli, ["--json", "capture", "call", "dentist"])
 
         assert result.exit_code == 0
         data = json.loads(result.output)
         assert data["ok"] is True
+        assert "td capture is now td add --literal" in result.stderr
 
 
 class TestStdinPiping:
@@ -63,10 +64,11 @@ class TestStdinPiping:
         mock_gc.return_value = api
         api.add_task_quick.return_value = _mock_task()
 
-        runner = CliRunner()
+        runner = CliRunner(mix_stderr=False)
         result = runner.invoke(cli, ["--json", "quick"], input="Buy milk tomorrow\n")
 
         assert result.exit_code == 0
+        assert "td quick is now td add" in result.stderr
 
 
 class TestDebugFlag:

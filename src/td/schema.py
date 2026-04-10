@@ -59,6 +59,8 @@ def generate_schema(cli_group: click.Group) -> dict[str, Any]:
     """Walk the Click command tree and produce a capability manifest."""
     commands: dict[str, Any] = {}
     for name, cmd in sorted(cli_group.commands.items()):
+        if getattr(cmd, "hidden", False):
+            continue
         commands[name] = _command_schema(cmd)
 
     return {
