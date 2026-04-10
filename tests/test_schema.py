@@ -65,6 +65,7 @@ class TestSchemaCommand:
             "init",
             "completions",
             "schema",
+            "skill",
         }
         assert set(data["commands"].keys()) == expected
 

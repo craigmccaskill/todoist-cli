@@ -124,6 +124,7 @@ def _register_commands() -> None:
     from td.cli.review import review
     from td.cli.schema_cmd import schema
     from td.cli.sections import section_add, section_delete, section_edit, sections
+    from td.cli.skill_cmd import skill
     from td.cli.tasks import (
         add,
         capture,
@@ -185,6 +186,7 @@ def _register_commands() -> None:
     cli.add_command(comment_delete)
     cli.add_command(rate_limit)
     cli.add_command(review)
+    cli.add_command(skill)
 
 
 _register_commands()
