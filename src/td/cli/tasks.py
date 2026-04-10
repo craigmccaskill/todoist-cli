@@ -127,6 +127,41 @@ def _require_task_ref(task_ref: tuple[str, ...], api: Any, *, use_id: bool = Fal
     )
 
 
+def _has_explicit_flags(
+    project_name: str | None,
+    priority: int | None,
+    due: str | None,
+    labels: tuple[str, ...],
+    section_name: str | None,
+) -> bool:
+    """Return True if any structured flags were provided."""
+    return bool(project_name or priority or due or labels or section_name)
+
+
+def _should_use_nlp(
+    *,
+    literal: bool,
+    nlp: bool,
+    has_flags: bool,
+    is_tty: bool,
+) -> bool:
+    """Determine whether to use NLP (quick_add) or literal (add_task).
+
+    Resolution order:
+    1. --literal flag -> always literal
+    2. Explicit structured flags -> always literal (flags need add_task)
+    3. --nlp flag -> always NLP
+    4. TTY detection: TTY -> NLP, non-TTY -> literal
+    """
+    if literal:
+        return False
+    if has_flags:
+        return False
+    if nlp:
+        return True
+    return is_tty
+
+
 @click.command()
 @click.argument("content", nargs=-1)
 @click.option(
@@ -163,6 +198,16 @@ def _require_task_ref(task_ref: tuple[str, ...], api: Any, *, use_id: bool = Fal
     is_flag=True,
     help="Skip if identical task already exists.",
 )
+@click.option(
+    "--literal",
+    is_flag=True,
+    help="Skip NLP, use structured add_task (default in non-TTY).",
+)
+@click.option(
+    "--nlp",
+    is_flag=True,
+    help="Force NLP quick-add even in non-TTY mode.",
+)
 @click.pass_context
 def add(
     ctx: click.Context,
@@ -174,14 +219,29 @@ def add(
     description: str | None,
     section_name: str | None,
     idempotent: bool,
+    literal: bool,
+    nlp: bool,
 ) -> None:
-    """Create a new task. Reads from stdin if no content argument.
+    """Create a new task with smart mode detection.
 
     \b
-    Examples:
-      td add Buy milk -p Errands
-      td add Deploy hotfix --due tomorrow --priority 1
-      echo "Review PR" | td add
+    In a terminal (TTY), uses Todoist's NLP engine by default:
+      td add buy milk tomorrow
+      td add review auth PR for work p1
+
+    \b
+    When piped or scripted (non-TTY), uses structured mode by default:
+      td add "Deploy v2" --project Releases --priority 1
+      echo "buy milk" | td add
+
+    \b
+    Override flags:
+      --literal    Skip NLP, always use structured add_task
+      --nlp        Force NLP even in non-TTY mode
+
+    \b
+    Explicit flags (--project, --priority, --due, etc.) always use
+    structured mode regardless of TTY detection.
     """
     api = get_client()
     fmt = _get_formatter(ctx)
@@ -192,6 +252,31 @@ def add(
             suggestion="Provide content as an argument or pipe via stdin.",
         )
 
+    if (
+        nlp
+        and not literal
+        and _has_explicit_flags(project_name, priority, due, labels, section_name)
+    ):
+        click.echo(
+            "Warning: --nlp ignored because structured flags were provided. "
+            "Remove --project/--priority/--due/--label/--section to use NLP.",
+            err=True,
+        )
+
+    has_flags = _has_explicit_flags(project_name, priority, due, labels, section_name)
+    use_nlp = _should_use_nlp(
+        literal=literal,
+        nlp=nlp,
+        has_flags=has_flags,
+        is_tty=sys.stdin.isatty(),
+    )
+
+    if use_nlp:
+        task = quick_add(api, text)
+        fmt.item_created("task", task)
+        return
+
+    # Structured (literal) path
     if section_name and not project_name:
         raise TdValidationError(
             "--section requires --project.",
@@ -733,19 +818,12 @@ def delete(ctx: click.Context, task_ref: tuple[str, ...], yes: bool, use_id: boo
     )
 
 
-@click.command()
+@click.command(hidden=True)
 @click.argument("text", nargs=-1)
 @click.pass_context
 def quick(ctx: click.Context, text: tuple[str, ...]) -> None:
-    """Natural language task creation. Reads from stdin if no args.
-
-    Todoist parses dates, priorities, projects, and labels from the text.
-
-    \b
-    Examples:
-      td quick "Buy milk tomorrow p1 #Errands"
-      td quick "Call dentist next Monday"
-    """
+    """Natural language task creation (deprecated: use td add --nlp)."""
+    click.echo("Note: td quick is now td add. See td add --help.", err=True)
     api = get_client()
     fmt = _get_formatter(ctx)
 
@@ -781,14 +859,12 @@ def show(ctx: click.Context, task_ref: tuple[str, ...], use_id: bool) -> None:
     fmt.task_detail(task, project_name=project_name)
 
 
-@click.command()
+@click.command(hidden=True)
 @click.argument("text", nargs=-1, required=True)
 @click.pass_context
 def capture(ctx: click.Context, text: tuple[str, ...]) -> None:
-    """Quick-capture to inbox — no parsing, no flags, minimal output.
-
-    Example: td capture call dentist about appointment
-    """
+    """Quick-capture to inbox (deprecated: use td add --literal)."""
+    click.echo("Note: td capture is now td add --literal. See td add --help.", err=True)
     api = get_client()
     fmt = _get_formatter(ctx)
 

@@ -27,7 +27,6 @@ class TestSchemaCommand:
 
         expected = {
             "add",
-            "capture",
             "comment",
             "comments",
             "completed",
@@ -42,7 +41,6 @@ class TestSchemaCommand:
             "log",
             "focus",
             "move",
-            "quick",
             "search",
             "show",
             "undo",

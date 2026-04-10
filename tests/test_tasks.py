@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
@@ -304,7 +305,7 @@ class TestCliCommands:
         assert data["ok"] is True
 
     @patch("td.cli.tasks.get_client")
-    def test_quick_command(self, mock_gc: MagicMock) -> None:
+    def test_quick_command_deprecated(self, mock_gc: MagicMock) -> None:
         api = MagicMock()
         mock_gc.return_value = api
         api.add_task_quick.return_value = _mock_task()
@@ -314,6 +315,7 @@ class TestCliCommands:
 
         assert result.exit_code == 0
         api.add_task_quick.assert_called_once_with("Buy milk tomorrow")
+        assert "td quick is now td add" in result.output
 
     @patch("td.cli.tasks.get_client")
     def test_search_command(self, mock_gc: MagicMock) -> None:
@@ -359,3 +361,123 @@ class TestCliCommands:
         data = json.loads(result.output)
         assert data["data"]["created"] is False
         api.add_task.assert_not_called()
+
+
+class TestUnifiedAdd:
+    """Tests for unified add command with NLP/literal mode switching."""
+
+    @patch("td.cli.tasks.get_client")
+    def test_non_tty_uses_literal_by_default(self, mock_gc: MagicMock) -> None:
+        """CliRunner is non-TTY, so add should use add_task (literal)."""
+        api = MagicMock()
+        mock_gc.return_value = api
+        task = _mock_task(content="Deploy v2")
+        api.add_task.return_value = task
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "add", "Deploy", "v2"])
+
+        assert result.exit_code == 0
+        api.add_task.assert_called_once()
+        api.add_task_quick.assert_not_called()
+
+    @patch("td.cli.tasks.get_client")
+    @patch("td.cli.tasks.sys")
+    def test_tty_uses_nlp_by_default(self, mock_sys: MagicMock, mock_gc: MagicMock) -> None:
+        """In TTY mode with no flags, add should use quick_add (NLP)."""
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.add_task_quick.return_value = _mock_task(content="buy milk tomorrow")
+        mock_sys.stdin.isatty.return_value = True
+        mock_sys.stdout = sys.stdout
+        mock_sys.stderr = sys.stderr
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "add", "buy", "milk", "tomorrow"])
+
+        assert result.exit_code == 0
+        api.add_task_quick.assert_called_once_with("buy milk tomorrow")
+        api.add_task.assert_not_called()
+
+    @patch("td.cli.tasks.get_client")
+    def test_literal_flag_forces_add_task(self, mock_gc: MagicMock) -> None:
+        """--literal should always use add_task even in TTY."""
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.add_task.return_value = _mock_task(content="buy milk")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "add", "--literal", "buy", "milk"])
+
+        assert result.exit_code == 0
+        api.add_task.assert_called_once()
+        api.add_task_quick.assert_not_called()
+
+    @patch("td.cli.tasks.get_client")
+    def test_nlp_flag_forces_quick_add(self, mock_gc: MagicMock) -> None:
+        """--nlp should always use quick_add even in non-TTY."""
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.add_task_quick.return_value = _mock_task(content="buy milk tomorrow")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "add", "--nlp", "buy", "milk", "tomorrow"])
+
+        assert result.exit_code == 0
+        api.add_task_quick.assert_called_once_with("buy milk tomorrow")
+        api.add_task.assert_not_called()
+
+    @patch("td.cli.tasks.get_client")
+    @patch("td.cli.tasks.sys")
+    def test_explicit_flags_override_tty_nlp(
+        self, mock_sys: MagicMock, mock_gc: MagicMock
+    ) -> None:
+        """Explicit flags (--project, --due, etc.) force literal even in TTY."""
+        api = MagicMock()
+        mock_gc.return_value = api
+        mock_sys.stdin.isatty.return_value = True
+        mock_sys.stdout = sys.stdout
+        mock_sys.stderr = sys.stderr
+
+        proj = MagicMock()
+        proj.id = "p1"
+        proj.name = "Work"
+        api.get_projects.return_value = iter([[proj]])
+        api.add_task.return_value = _mock_task(content="Deploy v2")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "add", "Deploy", "v2", "-p", "Work"])
+
+        assert result.exit_code == 0
+        api.add_task.assert_called_once()
+        api.add_task_quick.assert_not_called()
+
+    @patch("td.cli.tasks.get_client")
+    def test_pipe_stdin_uses_literal(self, mock_gc: MagicMock) -> None:
+        """Piped stdin should use literal mode."""
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.add_task.return_value = _mock_task(content="buy milk")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "add"], input="buy milk\n")
+
+        assert result.exit_code == 0
+        api.add_task.assert_called_once()
+        api.add_task_quick.assert_not_called()
+
+    @patch("td.cli.tasks.get_client")
+    def test_nlp_with_flags_warns_and_uses_literal(self, mock_gc: MagicMock) -> None:
+        """--nlp with structured flags should warn and fall back to literal."""
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.add_task.return_value = _mock_task(content="buy milk")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "add", "--nlp", "buy", "milk", "--due", "tomorrow"])
+
+        assert result.exit_code == 0
+        assert "--nlp ignored" in result.output
+        # Flags override --nlp, so add_task is used
+        api.add_task.assert_called_once()
+        api.add_task_quick.assert_not_called()

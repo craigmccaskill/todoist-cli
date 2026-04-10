@@ -39,8 +39,7 @@ class TestCapture:
         result = runner.invoke(cli, ["--json", "capture", "call", "dentist"])
 
         assert result.exit_code == 0
-        data = json.loads(result.output)
-        assert data["ok"] is True
+        assert "td capture is now td add --literal" in result.output
 
 
 class TestStdinPiping:
@@ -67,6 +66,7 @@ class TestStdinPiping:
         result = runner.invoke(cli, ["--json", "quick"], input="Buy milk tomorrow\n")
 
         assert result.exit_code == 0
+        assert "td quick is now td add" in result.output
 
 
 class TestDebugFlag:
