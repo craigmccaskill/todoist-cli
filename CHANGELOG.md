@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Internal
 
+- **Project board conventions codified and board restructured** — field definitions and dependency tracking now documented in `CONTRIBUTING.md`, with the GitHub Project updated to match.
+  - **New `Tier` field** added to the project with five values: `Needs triage` (default), `Trivial`, `Standard`, `Needs ADR`, `Exploratory`. Captures the pre-work ritual each issue needs.
+  - **`Status` restructured.** Added `Ready`, `In flight`, and `Blocked`. Removed dead `Sprint` and `In Progress` options.
+  - **`AI Platform` theme removed.** The two affected items (#15 Natural language actions and #27 MCP server mode) were bumped to `P1` and left without a theme (to be retagged during re-triage).
+  - **`Priority` gains explicit definitions** (`P0` through `P3`) in `CONTRIBUTING.md` without any renaming or retagging.
+  - **Dependency tracking convention documented.** Hierarchical via GitHub task lists, cross-cutting via `Blocks:` / `Blocked by:` keywords in the issue body.
+  - **Merge → Done codified.** Merging a PR now automatically moves the linked issue's `Status` to `Done` via GitHub Projects automation. Rule documented in the Branch → PR → Merge section of `CONTRIBUTING.md`.
+
 - **Architecture Decision Records** — design decisions now have a durable home in `docs/decisions/` (#224). Eight retroactive ADRs capture decisions already baked into the code: design principle (#230), JSON output envelope, priority mapping, task reference resolution order, `core/`/`cli/` boundary, schema as AI contract, cache TTLs, and Click-over-Typer.
   ```
   # Citeable from PRs and commits
