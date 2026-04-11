@@ -57,4 +57,5 @@ document, not a decision. Trim before accepting.
 | [0006](0006-schema-as-ai-contract.md) | Schema as the AI Contract    | Accepted |
 | [0007](0007-row-number-cache-ttl.md) | Row-Number Cache TTLs         | Accepted |
 | [0008](0008-click-over-typer.md) | Click over Typer                   | Accepted |
+| [0010](0010-triage-framework.md) | Issue triage decision framework    | Accepted |
 | [0011](0011-dependency-tracking.md) | Dependency tracking between issues | Accepted |
