@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **`Status` restructured.** Added `Ready`, `In flight`, and `Blocked`. Removed dead `Sprint` and `In Progress` options.
   - **`AI Platform` theme removed.** The two affected items (#15 Natural language actions and #27 MCP server mode) were bumped to `P1` and left without a theme (to be retagged during re-triage).
   - **`Priority` gains explicit definitions** (`P0` through `P3`) in `CONTRIBUTING.md` without any renaming or retagging.
+  - **Triage decision framework** captured in ADR-0010. Checklist-style rubric walked for every issue leaving `Needs triage`. Classifies `Tier`, `Size`, `Priority` with worked examples and edge cases. No automation in v1 (rubric discipline only).
   - **Dependency tracking convention documented** (captured in ADR-0011). Hierarchical via GitHub task lists, cross-cutting via `Blocks:` / `Blocked by:` keywords in the issue body.
   - **Merge → Done codified.** Merging a PR now automatically moves the linked issue's `Status` to `Done` via GitHub Projects automation. Rule documented in the Branch → PR → Merge section of `CONTRIBUTING.md`.
 
