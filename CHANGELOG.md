@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ```
   ADRs use the Nygard template (one page, immutable once accepted, superseded rather than edited). The directory is indexed at `docs/decisions/README.md` and rendered in the docs site under "Design Decisions".
 
+  ADR-0001 (Design Principle) explicitly captures a **CLI surface boundary** rule: the `td` public command tree is reserved for end users of Todoist. Project maintenance tooling (triage helpers, release scripts, dependency audits, contributor onboarding, etc.) does not ship in the public CLI. Maintainer tooling lives in Claude skills, GitHub Actions, or scripts under `.github/` or `scripts/`. The rule is reinforced by a matching checklist item in `CONTRIBUTING.md`'s "Adding a New Command" section.
+
 - **`CLAUDE.md` scoped for attention routing** — new "About this file" meta-section establishes the *catastrophic-omission test* for what belongs in the file (content whose absence causes high-cost rework that no other mechanism catches, capped at three tier-1 principles at a time). The existing "Adding a New Command" section is replaced with "Adding a New Command or Changing Output Shape", carrying a 4-bullet summary of the design principle plus pointers to ADR-0001 and the decisions index. Agents see the principle *before* writing code, not after shipping against it — the failure mode that produced #250.
 
 - **`CONTRIBUTING.md` restructured to prevent the #250 pattern**

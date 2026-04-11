@@ -80,3 +80,15 @@ for the CRUD verb grammar consequence). The principle is prescriptive
 but not mechanically enforceable. Defense in depth: this ADR,
 `CLAUDE.md`'s scoped "Adding a New Command or Changing Output Shape"
 subsection, and `CONTRIBUTING.md`'s three-tier pre-work ritual.
+
+**CLI surface boundary.** The principle implies a scope rule:
+the `td` public command tree is reserved for end users of Todoist.
+Project maintenance tooling (triage helpers, release scripts,
+dependency audits, contributor onboarding, and similar) does not
+belong in the public CLI. Maintainer tooling lives in Claude
+skills, GitHub Actions, or maintainer scripts under `.github/` or
+`scripts/`. This keeps the CLI's identity coherent and prevents
+drift from *"what users need"* toward *"what the project happens
+to need during its own development."* A command like `td triage`
+or `td release` fails this rule and should be implemented
+elsewhere.

@@ -336,6 +336,10 @@ and CHANGELOG entries are the right tools for tactical changes.
 - [ ] Empty states guide the user on what to do
 - [ ] Rich/JSON/Plain modes all work and are consistent
 - [ ] If this command introduces or changes a design decision (command grammar, output shape, invariant), a proposed ADR is linked before the PR opens
+- [ ] This command serves end users of Todoist, not project maintainers.
+      Maintainer tooling (triage, release, audits) belongs in Claude
+      skills, GitHub Actions, or scripts under `.github/` or `scripts/`,
+      not the public CLI. See ADR-0001 "CLI surface boundary".
 
 ## Releasing
 
