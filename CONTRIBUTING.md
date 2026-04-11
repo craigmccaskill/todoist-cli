@@ -126,6 +126,84 @@ producing the following patterns:
   gets applied unevenly. Consider splitting into two milestones when
   the work types diverge.
 
+### Project board conventions
+
+The GitHub Project classifies every issue across five single-select
+fields. These conventions are enforced during triage so the
+classification stays current.
+
+**`Status`** — where the work is in its lifecycle:
+
+| Value | Meaning |
+|---|---|
+| `Backlog` | Filed, not yet scheduled. Default for new issues. |
+| `Ready` | Triage complete. Prepared to be picked up. |
+| `In flight` | PR is open for this work. Set automatically when the PR opens. |
+| `Blocked` | Waiting on something external (e.g. PEP resolution, upstream fix). Manual. |
+| `Done` | PR merged or issue closed. Set automatically. |
+
+**`Tier`** — what kind of work is this, and how much pre-work it requires:
+
+| Value | Meaning |
+|---|---|
+| `Needs triage` | Default for new issues until classified. |
+| `Trivial` | Typo, one-liner, dependency bump. No pre-work required. |
+| `Standard` | Single command, single bug, single refactor. 5-item pre-work comment required. |
+| `Needs ADR` | New command grammar, output shape change, new architectural invariant. Standard comment plus a proposed ADR linked before the PR opens. |
+| `Exploratory` | Spike or research. Scope the investigation, then decide whether to proceed. |
+
+**`Priority`** — how urgent it is:
+
+| Value | Meaning |
+|---|---|
+| `P0` | Literal emergency. Production broken or security issue live. Drop everything. |
+| `P1` | Important. Pick up soon, before normal rotation. |
+| `P2` | Normal. Default for new work. |
+| `P3` | Someday. Backlog of ideas without deadlines. |
+
+**`Size`** — rough effort estimate, orthogonal to `Tier`:
+
+| Value | Meaning |
+|---|---|
+| `S` | Small, a few hours at most. |
+| `M` | Medium, most of a day. |
+| `L` | Large, multiple days. Consider splitting if possible. |
+
+**`Theme`** — category of work, for cross-cutting views:
+
+| Value | Meaning |
+|---|---|
+| `Infrastructure` | CI, build, packaging, deps, tooling, cross-cutting machinery. |
+| `DX` | Contributor experience (working on the codebase). |
+| `UX` | End-user experience (using the CLI). |
+| `Polish` | Cosmetic refinement, copy, small behavioral cleanup. |
+
+**Mandatory at triage:** `Tier`, `Size`, and `Priority` must all be
+set before an issue leaves the triage queue. `Theme` and labels are
+strongly encouraged but not blocking.
+
+### Dependency tracking
+
+Dependencies between issues come in two shapes. Track them in two
+different places:
+
+**Hierarchical** (parent with children). Use a GitHub task list in
+the parent issue referencing the children. GitHub automatically
+surfaces the "tracked by" relationship on each child. Good for epic
+and sub-issue relationships.
+
+**Cross-cutting** (A blocks B, but they aren't parent/child). Add
+formal keywords to the issue body (*not* comments, so they stay
+visible above the fold and are grep-able across the repo):
+
+```
+Blocks: #N
+Blocked by: #N
+```
+
+Check both during milestone planning to avoid scheduling work that
+can't start yet.
+
 ### Before starting work
 
 Different kinds of change need different amounts of pre-work. Classify
@@ -176,6 +254,12 @@ why in the PR.
 4. Open a PR with `Closes #X` in the body (or multiple `Closes #X` for themed work)
 5. CI must pass
 6. Squash merge to main
+
+Merging a PR automatically moves the linked issue's `Status` to
+`Done` via GitHub Projects automation. No manual board update
+required. Opening a PR similarly moves the linked issue to
+`In flight` so the board reflects in-flight work without manual
+touches.
 
 Feature branches merge directly to main. No long-lived release branches.
 Keep PRs focused — one issue per PR when possible.
