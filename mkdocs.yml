@@ -45,6 +45,16 @@ nav:
     - Structured Output: ai/output.md
     - Error Handling: ai/errors.md
     - Idempotency: ai/idempotency.md
+  - Design Decisions:
+    - Overview: decisions/README.md
+    - "ADR-0001: Design Principle": decisions/0001-design-principle.md
+    - "ADR-0002: Output Envelope": decisions/0002-output-envelope.md
+    - "ADR-0003: Priority Mapping": decisions/0003-priority-mapping.md
+    - "ADR-0004: Task Reference Resolution": decisions/0004-task-ref-resolution.md
+    - "ADR-0005: Import Boundary": decisions/0005-core-cli-boundary.md
+    - "ADR-0006: Schema as AI Contract": decisions/0006-schema-as-ai-contract.md
+    - "ADR-0007: Cache TTLs": decisions/0007-row-number-cache-ttl.md
+    - "ADR-0008: Click over Typer": decisions/0008-click-over-typer.md
   - Contributing: contributing.md
 
 markdown_extensions:

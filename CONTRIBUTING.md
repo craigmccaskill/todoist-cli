@@ -99,9 +99,45 @@ After assigning issues, prepare each one before coding starts:
 
 Document all of this in issue comments so the plan is visible to anyone picking up the work.
 
+#### Batch anti-patterns
+
+The milestone process above works for batches of similar small work
+(fixes, refactors, additive options). It breaks down when it starts
+producing the following patterns:
+
+- **Rolling multiple design decisions into one batch issue.**
+  *"Complete CRUD for X"* is a category, not an issue. Each command
+  with design variance gets its own issue. Batch-scoped issues hide
+  per-command decisions under a single checkbox, and the *"Before
+  starting work"* comment applies once to the category when it should
+  apply to every design decision inside it. This is the pattern that
+  produced issue #250.
+- **Dumping 20 issues into a milestone in 20 minutes.** That's a
+  backlog dump, not a plan. Plan issues are individually decomposed
+  and prioritized before execution starts. If the milestone-planning
+  session felt like a brainstorm, the plan is not ready.
+- **Treating dashboard progress as a forcing function.** An 18-of-20
+  milestone is not a reason to skip reconsidering the 19th issue. The
+  release can wait. If the *"X of Y closed"* count is the thing
+  pressuring you to push through a design call you're uncertain
+  about, stop and re-examine.
+- **Heterogeneous issues in a single milestone.** A mix of small-bug
+  work and design-heavy work in one batch means the pre-work rigor
+  gets applied unevenly. Consider splitting into two milestones when
+  the work types diverge.
+
 ### Before starting work
 
-Before coding on an issue, add a comment to the issue with:
+Different kinds of change need different amounts of pre-work. Classify
+the issue first, then apply the matching ritual.
+
+| Tier | Examples | Pre-work required |
+|---|---|---|
+| **Trivial** | typo, one-line fix, dependency bump, CI tweak | Optional: commit message is enough |
+| **Standard** | single command, single bug fix, single refactor | A comment on the issue with the five items below, before a branch exists |
+| **Design-affecting** | new command grammar, output shape change, new architectural invariant | Standard comment **plus** a proposed ADR linked in the issue before the PR opens (see *Architecture Decision Records* below) |
+
+**Standard pre-work comment (five items):**
 
 1. **Root cause** — what you found during investigation
 2. **Approach** — what you'll do and why
@@ -109,8 +145,15 @@ Before coding on an issue, add a comment to the issue with:
 4. **Definition of done** — how do we verify this is actually fixed?
 5. **Testing** — what new tests are needed, if any?
 
-This creates a paper trail for decisions, catches bad assumptions early, and helps future
-contributors understand context without re-investigating.
+**Size triggers.** Any change over 200 lines or touching more than
+three modules cannot be classified as *Trivial*. It must be at least
+*Standard*, and the author must explicitly consider whether it
+crosses into *Design-affecting*. Size alone does not force the
+Design-affecting tier, but it forces the question.
+
+This creates a paper trail for decisions, catches bad assumptions
+early, and helps future contributors understand context without
+re-investigating.
 
 ### Bug fixes require regression tests
 
@@ -198,6 +241,10 @@ These tests are cheap to write, rarely change, and catch entire categories of bu
 
 ## Design Principle
 
+> **Canonical version:** [ADR-0001: Design Principle](docs/decisions/0001-design-principle.md).
+> The content below is a human-readable mirror. Updates to the principle
+> are made via a superseding ADR, then mirrored back to this section.
+
 **Surface the context users need to be successful, nothing more.**
 
 Every command, error message, and output should be measured against this. The CLI should feel
@@ -239,6 +286,29 @@ td add call dentist                              # day one
 td add "call dentist" -p Health --due tomorrow   # week two
 ```
 
+## Architecture Decision Records
+
+Design decisions that matter live in
+[`docs/decisions/`](docs/decisions/README.md) as Architecture Decision
+Records (ADRs). Each ADR is a one-page Nygard-format document capturing
+a single decision: context, decision, consequences. See the
+[decisions README](docs/decisions/README.md) for the full format,
+immutability rules, scope heuristic, and writing process.
+
+**When an ADR is required.** A proposed ADR must be linked in the
+issue *before* the PR opens if the change:
+
+- Introduces a new command grammar or renames an existing one
+- Changes the JSON output envelope (see ADR-0002) or adds a new
+  `type` value
+- Changes the interpretation of the design principle in ADR-0001
+- Adds or changes an architectural invariant (example: the `core/` to
+  `cli/` import boundary from ADR-0005)
+- Supersedes or deprecates an existing accepted ADR
+
+Everything else does not need an ADR. Code comments, commit messages,
+and CHANGELOG entries are the right tools for tactical changes.
+
 ## Code Style
 
 - **Framework**: Click (not Typer) — we own the output/schema/completions layer
@@ -265,6 +335,7 @@ td add "call dentist" -p Health --due tomorrow   # week two
 - [ ] Errors include a message, reason, and suggestion
 - [ ] Empty states guide the user on what to do
 - [ ] Rich/JSON/Plain modes all work and are consistent
+- [ ] If this command introduces or changes a design decision (command grammar, output shape, invariant), a proposed ADR is linked before the PR opens
 
 ## Releasing
 
