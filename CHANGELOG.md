@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Internal
+
+- **Architecture Decision Records** — design decisions now have a durable home in `docs/decisions/` (#224). Eight retroactive ADRs capture decisions already baked into the code: design principle (#230), JSON output envelope, priority mapping, task reference resolution order, `core/`/`cli/` boundary, schema as AI contract, cache TTLs, and Click-over-Typer.
+  ```
+  # Citeable from PRs and commits
+  "implements ADR-0003"
+  "diverges from ADR-0001, see new ADR-0009"
+  ```
+  ADRs use the Nygard template (one page, immutable once accepted, superseded rather than edited). The directory is indexed at `docs/decisions/README.md` and rendered in the docs site under "Design Decisions".
+
+  ADR-0001 (Design Principle) explicitly captures a **CLI surface boundary** rule: the `td` public command tree is reserved for end users of Todoist. Project maintenance tooling (triage helpers, release scripts, dependency audits, contributor onboarding, etc.) does not ship in the public CLI. Maintainer tooling lives in Claude skills, GitHub Actions, or scripts under `.github/` or `scripts/`. The rule is reinforced by a matching checklist item in `CONTRIBUTING.md`'s "Adding a New Command" section.
+
+- **`CLAUDE.md` scoped for attention routing** — new "About this file" meta-section establishes the *catastrophic-omission test* for what belongs in the file (content whose absence causes high-cost rework that no other mechanism catches, capped at three tier-1 principles at a time). The existing "Adding a New Command" section is replaced with "Adding a New Command or Changing Output Shape", carrying a 4-bullet summary of the design principle plus pointers to ADR-0001 and the decisions index. Agents see the principle *before* writing code, not after shipping against it — the failure mode that produced #250.
+
+- **`CONTRIBUTING.md` restructured to prevent the #250 pattern**
+  - Design Principle section now references ADR-0001 as the canonical version
+  - New Architecture Decision Records section documenting when an ADR is required (new command grammar, output envelope changes, new architectural invariants, supersessions)
+  - Milestones section gains a **Batch anti-patterns** callout addressing the specific failure modes that produced #250: rolling multiple design decisions into one batch issue, dumping 20 issues into a milestone in 20 minutes, treating dashboard progress as a forcing function, heterogeneous work in one milestone
+  - "Before starting work" is now **tiered** — Trivial / Standard / Design-affecting — with different pre-work rituals per tier, so a typo fix and a 10-command CRUD surface no longer get the same ceremony
+  - Size triggers (>200 lines or >3 modules) bump work out of the Trivial tier and force explicit consideration of whether it crosses into Design-affecting
+  - "Adding a New Command" checklist gains an explicit ADR check as its final item
+
+- **Docs site** gains a "Design Decisions" nav section listing all eight retroactive ADRs. `docs/contributing.md` gains minimal pointers to the design principle and `docs/decisions/` for discoverability from the public docs.
+
 ## [0.12.0-alpha] - 2026-04-09
 
 ### Added

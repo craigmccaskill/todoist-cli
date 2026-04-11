@@ -1,5 +1,18 @@
 # CLAUDE.md — Project context for AI assistants
 
+## About this file
+
+Loaded at the start of every session. Content must pass the
+*catastrophic-omission test*: would its absence cause high-cost rework
+that no other mechanism catches? Frequency of relevance is not the
+test; consequences of failure are.
+
+- Max 3 tier-1 principles at any time
+- Task-specific guidance lives in scoped subsections, not at the top
+  level
+- Content is removed when a stronger mechanism (CI check, linter,
+  architectural test) replaces it
+
 ## What is this?
 
 `td` — an AI-native Todoist CLI built for humans and AI agents. Python 3.10+, alpha (v0.12.0-alpha).
@@ -140,7 +153,28 @@ Conventional Commits: `<type>(<scope>): <description>`
 - **Scopes (optional):** tasks, output, errors, config, core, ci, deps
 - **Branches:** `feat/description`, `fix/description`, `docs/description`
 
-## Adding a New Command
+## Adding a New Command or Changing Output Shape
+
+Before writing code, the work must conform to the design principle
+(ADR-0001):
+
+- **Accept what the user means, not what the system needs.** The
+  common case should be flag-free. Flags are for disambiguation.
+- **Show what's useful, not what the API returns.** Tables show rows,
+  names, and dates, not opaque IDs. Empty states explain what to do
+  next.
+- **Help the user recover when things go wrong.** Every error answers
+  what happened, why, and what to do next. Ambiguous input triggers a
+  picker, not a failure.
+- **Progressive disclosure.** The simple case stays simple. Power
+  features exist but stay out of the way.
+
+For full rationale, read
+[docs/decisions/0001-design-principle.md](docs/decisions/0001-design-principle.md).
+For other ADRs that may apply, check
+[docs/decisions/README.md](docs/decisions/README.md).
+
+### Mechanical checklist
 
 1. Business logic in `td/core/<module>.py`
 2. Click command in `td/cli/<module>.py`

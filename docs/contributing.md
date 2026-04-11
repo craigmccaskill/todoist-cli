@@ -34,6 +34,11 @@ The core is a library. The CLI is one frontend. The TUI is another. Both share t
 
 ## Adding a Command
 
+Before writing code, the work must conform to the design principle in
+[ADR-0001](decisions/0001-design-principle.md). Check
+[`docs/decisions/`](decisions/README.md) for any other ADRs that apply
+to your change.
+
 1. Add business logic to `src/td/core/` (if needed)
 2. Add the Click command to `src/td/cli/`
 3. Register in `src/td/cli/__init__.py`
@@ -47,3 +52,11 @@ The core is a library. The CLI is one frontend. The TUI is another. Both share t
 - **mypy strict**: no `Any` without good reason
 - **85% coverage minimum**: enforced in CI
 - **ruff**: linting and formatting
+
+## Design Decisions
+
+Significant architectural and design decisions are captured in
+[`docs/decisions/`](decisions/README.md) as Architecture Decision
+Records (ADRs). Start with
+[ADR-0001: Design Principle](decisions/0001-design-principle.md) for
+the rules every command is measured against.
