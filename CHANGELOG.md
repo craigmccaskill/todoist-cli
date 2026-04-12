@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0-alpha] - 2026-04-11
+
 ### Changed
 
 - **CRUD commands reshaped into entity groups** (#250, [ADR-0009](docs/decisions/0009-crud-verb-grammar.md)). The 13 hyphenated CRUD commands now live under entity groups that match how humans (and `gh`, `docker`, `kubectl`) already talk about their work.
