@@ -47,6 +47,56 @@ class TestGenerateSkillContent:
         assert "### td quick" not in content
         assert "### td capture" not in content
 
+    def test_entity_group_verbs_are_emitted(self) -> None:
+        """ADR-0009 reshaped CRUD commands into entity groups. The skill
+        generator must recurse into groups so agents see every verb
+        as a fully-qualified invocation (``td project add``) rather than
+        just a bare group header."""
+        schema = generate_schema(cli)
+        content = generate_skill_content(schema)
+
+        # Every primary-path entity-group verb must appear.
+        assert "### td project add" in content
+        assert "### td project edit" in content
+        assert "### td project delete" in content
+        assert "### td project archive" in content
+        assert "### td project unarchive" in content
+        assert "### td project list" in content
+        assert "### td section add" in content
+        assert "### td section edit" in content
+        assert "### td section delete" in content
+        assert "### td label add" in content
+        assert "### td label edit" in content
+        assert "### td label delete" in content
+        assert "### td comment add" in content
+        assert "### td comment edit" in content
+        assert "### td comment delete" in content
+
+    def test_deprecated_hyphenated_names_absent(self) -> None:
+        """The 13 hyphenated CRUD commands from v0.12.x are hidden in
+        v0.13.0 and must not appear in the generated skill content.
+        Agents that see ``td project-add`` in the skill file would
+        surface the deprecation warning to users unnecessarily."""
+        schema = generate_schema(cli)
+        content = generate_skill_content(schema)
+
+        for old in (
+            "### td project-add",
+            "### td project-edit",
+            "### td project-delete",
+            "### td project-archive",
+            "### td project-unarchive",
+            "### td section-add",
+            "### td section-edit",
+            "### td section-delete",
+            "### td label-add",
+            "### td label-edit",
+            "### td label-delete",
+            "### td comment-edit",
+            "### td comment-delete",
+        ):
+            assert old not in content, f"Deprecated alias still in skill content: {old}"
+
 
 class TestInstallUninstall:
     def test_install_creates_file(self, tmp_path: Path) -> None:

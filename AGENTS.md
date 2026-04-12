@@ -35,12 +35,21 @@ Set `TD_API_TOKEN` env var (preferred for agents), or run `td init` interactivel
 - `td delete <ref> --yes` — delete task (same ref formats, `--yes` to skip confirmation)
 - `td comment <ref> <text>` — add a comment to a task
 - `td comments <ref>` — list comments on a task
+- `td comment edit <id> <text>` — update a comment
+- `td comment delete <id> -y` — delete a comment
 - `td projects` — list all projects
-- `td project-add <name>` — create a project (`--parent`, `--favorite`)
+- `td project add <name>` — create a project (`--parent`, `--favorite`)
+- `td project edit <ref> --name <new>` — rename or recolor a project
+- `td project delete <ref> -y` — delete a project
+- `td project archive <ref>` / `td project unarchive <ref>`
 - `td sections -p <project>` — list sections in a project
-- `td section-add <name> -p <project>` — create a section in a project
+- `td section add <name> -p <project>` — create a section in a project
+- `td section edit <ref> --name <new>` — rename a section
+- `td section delete <ref> -y` — delete a section
 - `td labels` — list all labels
-- `td label-add <name>` — create a label
+- `td label add <name>` — create a label
+- `td label edit <ref> --name <new>` — rename or recolor a label
+- `td label delete <ref> -y` — delete a label
 - `td review` — interactive TUI inbox review. `-p` for a project, `-f` for a filter. Requires `[interactive]` extra
 - `td rate-limit` — show API rate limit status from cached response headers (no API call)
 - `td schema` — full capability manifest as JSON

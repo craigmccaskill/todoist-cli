@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **CRUD commands reshaped into entity groups** (#250, [ADR-0009](docs/decisions/0009-crud-verb-grammar.md)). The 13 hyphenated CRUD commands now live under entity groups that match how humans (and `gh`, `docker`, `kubectl`) already talk about their work.
+  ```bash
+  # Before (v0.12.x)              # After (v0.13.0+)
+  td project-add Work             td project add Work
+  td project-edit Work --name W2  td project edit Work --name W2
+  td section-add Backlog -p Blog  td section add Backlog -p Blog
+  td label-add urgent             td label add urgent
+  td comment-edit abc123 "text"   td comment edit abc123 "text"
+  ```
+  All four entity groups (`project`, `section`, `label`, `comment`) expose the same verb vocabulary: `list`, `add`, `edit`, `delete` — plus `archive`/`unarchive` on `project`. The group help (`td project --help`) lists the verbs.
+
+  **What's preserved:**
+  - `td projects`, `td sections`, `td labels`, `td comments` — the flat plural aliases for the list case are permanent and not deprecated ([ADR-0001](docs/decisions/0001-design-principle.md) cites `td sections Blog` as a canonical example). Prefer them for muscle memory.
+  - `td comment <task_ref> <text>` — the flat shortcut for adding a comment without typing `add` is permanent.
+    ```bash
+    td comment 1 "Picked up 2%, not whole"       # still works
+    td comment "buy milk" "Got oat milk instead" # still works
+    ```
+
+  **Schema shape is additive** ([ADR-0006](docs/decisions/0006-schema-ai-contract.md)). Group commands gain a nested `commands` key in `td schema` output. Agents walking the top level now see `project`/`section`/`label`/`comment` as groups with subcommand trees rather than flat `project-*` entries. Flat command shape is unchanged. Agents that cached the old hyphenated CRUD names should re-fetch the schema on upgrade.
+  ```bash
+  td schema | jq '.commands.project.commands | keys'
+  # ["add","archive","delete","edit","list","unarchive"]
+  ```
+
+### Deprecated
+
+- **13 hyphenated CRUD names** deprecated in favor of the entity-group forms above. Old names still work in v0.13.0 but print a one-line stderr notice on every invocation. They are removed in v0.14.0.
+  ```
+  Note: td project-add is now td project add. The old name will be removed in v0.14.0.
+  ```
+  Affected: `project-add`, `project-edit`, `project-delete`, `project-archive`, `project-unarchive`, `section-add`, `section-edit`, `section-delete`, `label-add`, `label-edit`, `label-delete`, `comment-edit`, `comment-delete`.
+
 ### Internal
 
 - **Plan mode default, research-before-implement pattern, and ADR review checklist.** Three complementary safeguards against the #250 class of failure, adding the last three decisions from the workflow improvement plan:

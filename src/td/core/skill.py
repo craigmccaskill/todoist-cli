@@ -57,6 +57,48 @@ def needs_update(agent: str) -> bool:
     return ver != __version__
 
 
+def _emit_command(lines: list[str], path: str, cmd_info: dict[str, Any]) -> None:
+    """Emit a single command section. Recurses into groups so that entity
+    groups introduced by ADR-0009 (project, section, label, comment)
+    expose their verbs to agents as fully-qualified invocations like
+    ``td project add`` rather than a bare group header.
+    """
+    desc = cmd_info.get("description", "").split("\n")[0].strip()
+    lines.append(f"### td {path}")
+    lines.append("")
+    if desc:
+        lines.append(desc)
+        lines.append("")
+
+    args = cmd_info.get("arguments", [])
+    if args:
+        for arg in args:
+            req = " (required)" if arg.get("required") else ""
+            lines.append(f"- `{arg['name']}` — {arg['type']}{req}")
+        lines.append("")
+
+    opts = cmd_info.get("options", [])
+    if opts:
+        for opt in opts:
+            flags = ", ".join(opt.get("flags", []))
+            help_text = opt.get("help", "")
+            if opt.get("is_flag"):
+                lines.append(f"- `{flags}` — {help_text}")
+            else:
+                default = opt.get("default")
+                default_str = f" (default: {default})" if default is not None else ""
+                lines.append(f"- `{flags}` — {help_text}{default_str}")
+        lines.append("")
+
+    # Recurse into group subcommands. The schema emits a ``commands`` key
+    # on group entries (see schema._command_schema) so an agent walking
+    # this file sees every invocable verb, not just the group name.
+    subcommands = cmd_info.get("commands")
+    if subcommands:
+        for sub_name, sub_info in sorted(subcommands.items()):
+            _emit_command(lines, f"{path} {sub_name}", sub_info)
+
+
 def generate_skill_content(schema: dict[str, Any]) -> str:
     """Generate SKILL.md content from the command schema."""
     lines: list[str] = []
@@ -92,34 +134,7 @@ def generate_skill_content(schema: dict[str, Any]) -> str:
     lines.append("")
 
     for cmd_name, cmd_info in sorted(schema.get("commands", {}).items()):
-        desc = cmd_info.get("description", "").split("\n")[0].strip()
-        lines.append(f"### td {cmd_name}")
-        lines.append("")
-        if desc:
-            lines.append(desc)
-            lines.append("")
-
-        # Arguments
-        args = cmd_info.get("arguments", [])
-        if args:
-            for arg in args:
-                req = " (required)" if arg.get("required") else ""
-                lines.append(f"- `{arg['name']}` — {arg['type']}{req}")
-            lines.append("")
-
-        # Options
-        opts = cmd_info.get("options", [])
-        if opts:
-            for opt in opts:
-                flags = ", ".join(opt.get("flags", []))
-                help_text = opt.get("help", "")
-                if opt.get("is_flag"):
-                    lines.append(f"- `{flags}` — {help_text}")
-                else:
-                    default = opt.get("default")
-                    default_str = f" (default: {default})" if default is not None else ""
-                    lines.append(f"- `{flags}` — {help_text}{default_str}")
-            lines.append("")
+        _emit_command(lines, cmd_name, cmd_info)
 
     # Environment variables
     lines.append("## Environment variables")
