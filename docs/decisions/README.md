@@ -60,3 +60,4 @@ document, not a decision. Trim before accepting.
 | [0009](0009-crud-verb-grammar.md) | CRUD verb grammar for entity commands | Accepted |
 | [0010](0010-triage-framework.md) | Issue triage decision framework    | Accepted |
 | [0011](0011-dependency-tracking.md) | Dependency tracking between issues | Accepted |
+| [0012](0012-browse-command.md) | Browse command for opening in browser | Accepted |
