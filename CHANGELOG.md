@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Internal
 
+- **Project automation workflow** — `.github/workflows/project-automation.yml` implements the `Status` transitions that `CONTRIBUTING.md`'s Branch → PR → Merge section codified. Behavior:
+  - New issues are auto-added to the GitHub Project with default `Status = Backlog`
+  - PR opened with `Closes #N` → linked issues move to `Status = In flight`
+  - Issue closed (directly or via merged PR) → `Status = Done`
+  - Issue reopened → `Status = Backlog`
+
+  Requires a repo secret `PROJECT_TOKEN` (a Personal Access Token with `project` and `repo` scopes) because the default `GITHUB_TOKEN` cannot write to Projects v2 on user-owned projects.
+
 - **Project board conventions codified and board restructured** — field definitions and dependency tracking now documented in `CONTRIBUTING.md`, with the GitHub Project updated to match.
   - **New `Tier` field** added to the project with five values: `Needs triage` (default), `Trivial`, `Standard`, `Needs ADR`, `Exploratory`. Captures the pre-work ritual each issue needs.
   - **`Status` restructured.** Added `Ready`, `In flight`, and `Blocked`. Removed dead `Sprint` and `In Progress` options.

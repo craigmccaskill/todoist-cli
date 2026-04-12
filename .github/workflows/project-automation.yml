@@ -1,0 +1,172 @@
+name: Project Automation
+
+# Keeps the GitHub Project (td — AI-Native Todoist CLI) in sync with
+# issue and PR state without manual board updates. See CONTRIBUTING.md
+# "Branch → PR → Merge" section for the codified rules this workflow
+# implements.
+#
+# Requires a repository secret named PROJECT_TOKEN: a Personal Access
+# Token with `project` and `repo` scopes. The default GITHUB_TOKEN
+# cannot write to Projects v2 on user-owned projects.
+
+on:
+  issues:
+    types: [opened, closed, reopened]
+  pull_request:
+    types: [opened, reopened, closed]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+env:
+  PROJECT_URL: https://github.com/users/craigmccaskill/projects/1
+  PROJECT_ID: PVT_kwHOAAGp384BSn7s
+  STATUS_FIELD_ID: PVTSSF_lAHOAAGp384BSn7szhAGnog
+  STATUS_BACKLOG: ca806499
+  STATUS_IN_FLIGHT: cfabb01d
+  STATUS_DONE: 4652251c
+
+jobs:
+  # Auto-add every newly opened issue to the project. Default Status is
+  # Backlog (handled by the board's field default). No PRs are auto-added;
+  # PRs drive issue Status transitions via the other jobs below.
+  auto-add-issue:
+    if: github.event_name == 'issues' && github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/add-to-project@v1
+        with:
+          project-url: ${{ env.PROJECT_URL }}
+          github-token: ${{ secrets.PROJECT_TOKEN }}
+
+  # When an issue is closed, move its project item to Done.
+  # When an issue is reopened, move it back to Backlog so it re-enters
+  # the normal triage flow.
+  issue-status-update:
+    if: github.event_name == 'issues' && (github.event.action == 'closed' || github.event.action == 'reopened')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve target status
+        id: target
+        run: |
+          if [ "${{ github.event.action }}" = "closed" ]; then
+            echo "option_id=${STATUS_DONE}" >> "$GITHUB_OUTPUT"
+          else
+            echo "option_id=${STATUS_BACKLOG}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update issue Status
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+          TARGET_OPTION_ID: ${{ steps.target.outputs.option_id }}
+        run: |
+          set -euo pipefail
+
+          ITEM_ID=$(gh api graphql \
+            -f query='query($id: ID!) {
+              node(id: $id) {
+                ... on Issue {
+                  projectItems(first: 10) {
+                    nodes { id project { id } }
+                  }
+                }
+              }
+            }' \
+            -f id="$ISSUE_NODE_ID" \
+            --jq ".data.node.projectItems.nodes[] | select(.project.id == \"$PROJECT_ID\") | .id")
+
+          if [ -z "$ITEM_ID" ]; then
+            echo "Issue not in project, skipping"
+            exit 0
+          fi
+
+          gh api graphql \
+            -f query='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+              updateProjectV2ItemFieldValue(input: {
+                projectId: $projectId
+                itemId: $itemId
+                fieldId: $fieldId
+                value: { singleSelectOptionId: $optionId }
+              }) {
+                projectV2Item { id }
+              }
+            }' \
+            -f projectId="$PROJECT_ID" \
+            -f itemId="$ITEM_ID" \
+            -f fieldId="$STATUS_FIELD_ID" \
+            -f optionId="$TARGET_OPTION_ID"
+
+  # When a PR is opened (or reopened), find the issues it will close
+  # (via "Closes #N" / "Fixes #N" / "Resolves #N" keywords) and move
+  # them to In flight. The PR merge → issue Done transition is handled
+  # by GitHub's native behavior (merge closes linked issues) plus the
+  # issue-status-update job above.
+  pr-opened-in-flight:
+    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Move linked issues to In flight
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          PR_NODE_ID: ${{ github.event.pull_request.node_id }}
+        run: |
+          set -euo pipefail
+
+          LINKED_ISSUES=$(gh api graphql \
+            -f query='query($id: ID!) {
+              node(id: $id) {
+                ... on PullRequest {
+                  closingIssuesReferences(first: 10) {
+                    nodes { id number }
+                  }
+                }
+              }
+            }' \
+            -f id="$PR_NODE_ID" \
+            --jq '.data.node.closingIssuesReferences.nodes[].id')
+
+          if [ -z "$LINKED_ISSUES" ]; then
+            echo "PR does not close any issues, skipping"
+            exit 0
+          fi
+
+          for ISSUE_NODE_ID in $LINKED_ISSUES; do
+            ITEM_ID=$(gh api graphql \
+              -f query='query($id: ID!) {
+                node(id: $id) {
+                  ... on Issue {
+                    projectItems(first: 10) {
+                      nodes { id project { id } }
+                    }
+                  }
+                }
+              }' \
+              -f id="$ISSUE_NODE_ID" \
+              --jq ".data.node.projectItems.nodes[] | select(.project.id == \"$PROJECT_ID\") | .id")
+
+            if [ -z "$ITEM_ID" ]; then
+              echo "Linked issue $ISSUE_NODE_ID not in project, skipping"
+              continue
+            fi
+
+            gh api graphql \
+              -f query='mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+                updateProjectV2ItemFieldValue(input: {
+                  projectId: $projectId
+                  itemId: $itemId
+                  fieldId: $fieldId
+                  value: { singleSelectOptionId: $optionId }
+                }) {
+                  projectV2Item { id }
+                }
+              }' \
+              -f projectId="$PROJECT_ID" \
+              -f itemId="$ITEM_ID" \
+              -f fieldId="$STATUS_FIELD_ID" \
+              -f optionId="$STATUS_IN_FLIGHT"
+
+            echo "Moved linked issue to In flight: $ISSUE_NODE_ID"
+          done
