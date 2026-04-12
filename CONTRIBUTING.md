@@ -256,10 +256,11 @@ why in the PR.
 6. Squash merge to main
 
 Merging a PR automatically moves the linked issue's `Status` to
-`Done` via GitHub Projects automation. No manual board update
-required. Opening a PR similarly moves the linked issue to
-`In flight` so the board reflects in-flight work without manual
-touches.
+`Done`, and opening a PR that references an issue (via `Closes #N`
+or a similar keyword) moves the linked issue to `In flight`. Both
+transitions run on GitHub Projects v2 built-in workflows (the
+*Pull request merged* and *Pull request linked to issue* rules).
+No manual board updates required, no PAT or GitHub App needed.
 
 Feature branches merge directly to main. No long-lived release branches.
 Keep PRs focused — one issue per PR when possible.
