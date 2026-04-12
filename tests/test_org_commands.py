@@ -94,7 +94,7 @@ class TestProjectAddCommand:
         api.add_project.return_value = proj
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "project-add", "New", "Project"])
+        result = runner.invoke(cli, ["--json", "project", "add", "New", "Project"])
 
         assert result.exit_code == 0
         data = json.loads(result.output)
@@ -113,7 +113,7 @@ class TestProjectAddCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            cli, ["--json", "project-add", "Sub", "Project", "--parent", "Work"]
+            cli, ["--json", "project", "add", "Sub", "Project", "--parent", "Work"]
         )
 
         assert result.exit_code == 0
@@ -127,7 +127,7 @@ class TestProjectAddCommand:
         api.add_project.return_value = _mock_project(name="Fav", is_favorite=True)
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "project-add", "Fav", "--favorite"])
+        result = runner.invoke(cli, ["--json", "project", "add", "Fav", "--favorite"])
 
         assert result.exit_code == 0
         _, kwargs = api.add_project.call_args
@@ -205,7 +205,7 @@ class TestSectionAddCommand:
         api.add_section.return_value = _mock_section(name="In Progress")
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "section-add", "In", "Progress", "-p", "Work"])
+        result = runner.invoke(cli, ["--json", "section", "add", "In", "Progress", "-p", "Work"])
 
         assert result.exit_code == 0
         data = json.loads(result.output)
@@ -216,7 +216,7 @@ class TestSectionAddCommand:
     @patch("td.cli.sections.get_client")
     def test_section_add_requires_project(self, mock_gc: MagicMock) -> None:
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "section-add", "Test"])
+        result = runner.invoke(cli, ["--json", "section", "add", "Test"])
 
         assert result.exit_code != 0
         assert "project" in result.output.lower() or "required" in result.output.lower()
@@ -244,7 +244,7 @@ class TestLabelsCommand:
         api.add_label.return_value = _mock_label(name="important")
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "label-add", "important"])
+        result = runner.invoke(cli, ["--json", "label", "add", "important"])
 
         assert result.exit_code == 0
         data = json.loads(result.output)
@@ -280,7 +280,7 @@ class TestProjectEditCommand:
         api.update_project.return_value = updated
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "project-edit", "Work", "--name", "Work stuff"])
+        result = runner.invoke(cli, ["--json", "project", "edit", "Work", "--name", "Work stuff"])
 
         assert result.exit_code == 0
         data = json.loads(result.output)
@@ -298,7 +298,7 @@ class TestProjectEditCommand:
         api.update_project.return_value = updated
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "project-edit", "Work", "--color", "blue"])
+        result = runner.invoke(cli, ["--json", "project", "edit", "Work", "--color", "blue"])
 
         assert result.exit_code == 0
         api.update_project.assert_called_once_with("p1", name=None, color="blue")
@@ -306,7 +306,7 @@ class TestProjectEditCommand:
     @patch("td.cli.projects.get_client")
     def test_edit_no_flags_errors(self, mock_gc: MagicMock) -> None:
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "project-edit", "Work"])
+        result = runner.invoke(cli, ["--json", "project", "edit", "Work"])
 
         assert result.exit_code == 1
 
@@ -320,7 +320,7 @@ class TestProjectDeleteCommand:
         api.get_projects.return_value = iter([[proj]])
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "project-delete", "Old", "-y"])
+        result = runner.invoke(cli, ["--json", "project", "delete", "Old", "-y"])
 
         assert result.exit_code == 0
         data = json.loads(result.output)
@@ -335,7 +335,7 @@ class TestProjectDeleteCommand:
         api.get_projects.return_value = iter([[proj]])
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "project-delete", "Old"], input="y\n")
+        result = runner.invoke(cli, ["--json", "project", "delete", "Old"], input="y\n")
 
         assert result.exit_code == 0
         api.delete_project.assert_called_once_with("p1")
@@ -348,7 +348,7 @@ class TestProjectDeleteCommand:
         api.get_projects.return_value = iter([[proj]])
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "project-delete", "Old"], input="n\n")
+        result = runner.invoke(cli, ["--json", "project", "delete", "Old"], input="n\n")
 
         assert result.exit_code == 0
         api.delete_project.assert_not_called()
@@ -360,7 +360,7 @@ class TestProjectDeleteCommand:
         api.get_projects.return_value = iter([[]])
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "project-delete", "Nonexistent", "-y"])
+        result = runner.invoke(cli, ["--json", "project", "delete", "Nonexistent", "-y"])
 
         assert result.exit_code == 1
 
@@ -374,7 +374,7 @@ class TestProjectArchiveCommand:
         api.get_projects.return_value = iter([[proj]])
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "project-archive", "Work"])
+        result = runner.invoke(cli, ["--json", "project", "archive", "Work"])
 
         assert result.exit_code == 0
         data = json.loads(result.output)
@@ -391,7 +391,7 @@ class TestProjectUnarchiveCommand:
         api.get_projects.return_value = iter([[proj]])
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "project-unarchive", "Work"])
+        result = runner.invoke(cli, ["--json", "project", "unarchive", "Work"])
 
         assert result.exit_code == 0
         data = json.loads(result.output)
@@ -416,7 +416,7 @@ class TestSectionEditCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            cli, ["--json", "section-edit", "Backlog", "--name", "Active", "-p", "Work"]
+            cli, ["--json", "section", "edit", "Backlog", "--name", "Active", "-p", "Work"]
         )
 
         assert result.exit_code == 0
@@ -435,7 +435,7 @@ class TestSectionEditCommand:
         api.update_section.return_value = updated
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "section-edit", "Backlog", "--name", "Active"])
+        result = runner.invoke(cli, ["--json", "section", "edit", "Backlog", "--name", "Active"])
 
         assert result.exit_code == 0
         api.update_section.assert_called_once_with("s1", name="Active")
@@ -450,7 +450,7 @@ class TestSectionDeleteCommand:
         api.get_sections.return_value = iter([[sec]])
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "section-delete", "Old", "-y"])
+        result = runner.invoke(cli, ["--json", "section", "delete", "Old", "-y"])
 
         assert result.exit_code == 0
         api.delete_section.assert_called_once_with("s1")
@@ -463,7 +463,7 @@ class TestSectionDeleteCommand:
         api.get_sections.return_value = iter([[sec]])
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "section-delete", "Old"], input="y\n")
+        result = runner.invoke(cli, ["--json", "section", "delete", "Old"], input="y\n")
 
         assert result.exit_code == 0
         api.delete_section.assert_called_once_with("s1")
@@ -476,7 +476,7 @@ class TestSectionDeleteCommand:
         api.get_sections.return_value = iter([[sec]])
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "section-delete", "Old"], input="n\n")
+        result = runner.invoke(cli, ["--json", "section", "delete", "Old"], input="n\n")
 
         assert result.exit_code == 0
         api.delete_section.assert_not_called()
@@ -488,7 +488,7 @@ class TestSectionDeleteCommand:
         api.get_sections.return_value = iter([[]])
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "section-delete", "Nonexistent", "-y"])
+        result = runner.invoke(cli, ["--json", "section", "delete", "Nonexistent", "-y"])
 
         assert result.exit_code == 1
 
@@ -507,7 +507,7 @@ class TestLabelEditCommand:
         api.update_label.return_value = updated
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "label-edit", "urgent", "--name", "critical"])
+        result = runner.invoke(cli, ["--json", "label", "edit", "urgent", "--name", "critical"])
 
         assert result.exit_code == 0
         data = json.loads(result.output)
@@ -525,7 +525,7 @@ class TestLabelEditCommand:
         api.update_label.return_value = updated
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "label-edit", "urgent", "--color", "red"])
+        result = runner.invoke(cli, ["--json", "label", "edit", "urgent", "--color", "red"])
 
         assert result.exit_code == 0
         api.update_label.assert_called_once_with("lbl1", name=None, color="red")
@@ -533,7 +533,7 @@ class TestLabelEditCommand:
     @patch("td.cli.labels.get_client")
     def test_edit_no_flags_errors(self, mock_gc: MagicMock) -> None:
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "label-edit", "urgent"])
+        result = runner.invoke(cli, ["--json", "label", "edit", "urgent"])
 
         assert result.exit_code == 1
 
@@ -547,7 +547,7 @@ class TestLabelDeleteCommand:
         api.get_labels.return_value = iter([[lbl]])
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "label-delete", "old", "-y"])
+        result = runner.invoke(cli, ["--json", "label", "delete", "old", "-y"])
 
         assert result.exit_code == 0
         api.delete_label.assert_called_once_with("lbl1")
@@ -560,7 +560,7 @@ class TestLabelDeleteCommand:
         api.get_labels.return_value = iter([[lbl]])
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "label-delete", "old"], input="y\n")
+        result = runner.invoke(cli, ["--json", "label", "delete", "old"], input="y\n")
 
         assert result.exit_code == 0
         api.delete_label.assert_called_once_with("lbl1")
@@ -573,7 +573,7 @@ class TestLabelDeleteCommand:
         api.get_labels.return_value = iter([[lbl]])
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "label-delete", "old"], input="n\n")
+        result = runner.invoke(cli, ["--json", "label", "delete", "old"], input="n\n")
 
         assert result.exit_code == 0
         api.delete_label.assert_not_called()
@@ -585,7 +585,7 @@ class TestLabelDeleteCommand:
         api.get_labels.return_value = iter([[]])
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "label-delete", "nonexistent", "-y"])
+        result = runner.invoke(cli, ["--json", "label", "delete", "nonexistent", "-y"])
 
         assert result.exit_code == 1
 
@@ -602,7 +602,7 @@ class TestCommentEditCommand:
         api.update_comment.return_value = updated
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "comment-edit", "c1", "Updated", "text"])
+        result = runner.invoke(cli, ["--json", "comment", "edit", "c1", "Updated", "text"])
 
         assert result.exit_code == 0
         data = json.loads(result.output)
@@ -618,7 +618,9 @@ class TestCommentEditCommand:
         api.update_comment.return_value = updated
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "comment-edit", "c1", "--content", "New content"])
+        result = runner.invoke(
+            cli, ["--json", "comment", "edit", "c1", "--content", "New content"]
+        )
 
         assert result.exit_code == 0
         api.update_comment.assert_called_once_with("c1", content="New content")
@@ -626,7 +628,7 @@ class TestCommentEditCommand:
     @patch("td.cli.comments.get_client")
     def test_edit_no_content_errors(self, mock_gc: MagicMock) -> None:
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "comment-edit", "c1"])
+        result = runner.invoke(cli, ["--json", "comment", "edit", "c1"])
 
         assert result.exit_code == 1
 
@@ -638,7 +640,7 @@ class TestCommentDeleteCommand:
         mock_gc.return_value = api
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "comment-delete", "c1", "-y"])
+        result = runner.invoke(cli, ["--json", "comment", "delete", "c1", "-y"])
 
         assert result.exit_code == 0
         data = json.loads(result.output)
@@ -651,7 +653,7 @@ class TestCommentDeleteCommand:
         mock_gc.return_value = api
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "comment-delete", "c1"], input="y\n")
+        result = runner.invoke(cli, ["--json", "comment", "delete", "c1"], input="y\n")
 
         assert result.exit_code == 0
         api.delete_comment.assert_called_once_with("c1")
@@ -662,7 +664,283 @@ class TestCommentDeleteCommand:
         mock_gc.return_value = api
 
         runner = CliRunner()
-        result = runner.invoke(cli, ["--json", "comment-delete", "c1"], input="n\n")
+        result = runner.invoke(cli, ["--json", "comment", "delete", "c1"], input="n\n")
 
         assert result.exit_code == 0
         api.delete_comment.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# Deprecation shims (ADR-0009)
+#
+# Each hyphenated alias from v0.12.x is kept as a hidden shim through
+# v0.13.0 and removed in v0.14.0. These tests verify: (1) the old name
+# still dispatches to the underlying action, and (2) a one-line
+# deprecation notice is printed to stderr.
+# ---------------------------------------------------------------------------
+
+
+DEPRECATION_TEXT = "is now td"
+
+
+class TestDeprecationShims:
+    @patch("td.cli.projects.get_client")
+    def test_project_add_shim(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.add_project.return_value = _mock_project(name="Foo", id="p99")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "project-add", "Foo"])
+
+        assert result.exit_code == 0
+        assert DEPRECATION_TEXT in result.stderr
+        assert "td project-add is now td project add" in result.stderr
+        api.add_project.assert_called_once()
+
+    @patch("td.cli.projects.get_client")
+    def test_project_edit_shim(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_projects.return_value = iter([[_mock_project(name="Work", id="p1")]])
+        api.update_project.return_value = _mock_project(name="Work stuff", id="p1")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "project-edit", "Work", "--name", "Work stuff"])
+
+        assert result.exit_code == 0
+        assert "td project-edit is now td project edit" in result.stderr
+        api.update_project.assert_called_once_with("p1", name="Work stuff", color=None)
+
+    @patch("td.cli.projects.get_client")
+    def test_project_delete_shim(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_projects.return_value = iter([[_mock_project(name="Old", id="p1")]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "project-delete", "Old", "-y"])
+
+        assert result.exit_code == 0
+        assert "td project-delete is now td project delete" in result.stderr
+        api.delete_project.assert_called_once_with("p1")
+
+    @patch("td.cli.projects.get_client")
+    def test_project_archive_shim(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_projects.return_value = iter([[_mock_project(name="Work", id="p1")]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "project-archive", "Work"])
+
+        assert result.exit_code == 0
+        assert "td project-archive is now td project archive" in result.stderr
+        api.archive_project.assert_called_once_with("p1")
+
+    @patch("td.cli.projects.get_client")
+    def test_project_unarchive_shim(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_projects.return_value = iter([[_mock_project(name="Work", id="p1")]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "project-unarchive", "Work"])
+
+        assert result.exit_code == 0
+        assert "td project-unarchive is now td project unarchive" in result.stderr
+        api.unarchive_project.assert_called_once_with("p1")
+
+    @patch("td.cli.sections.get_client")
+    def test_section_add_shim(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_projects.return_value = iter([[_mock_project(name="Work", id="p1")]])
+        api.add_section.return_value = _mock_section(name="Backlog")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "section-add", "Backlog", "-p", "Work"])
+
+        assert result.exit_code == 0
+        assert "td section-add is now td section add" in result.stderr
+        api.add_section.assert_called_once_with(name="Backlog", project_id="p1")
+
+    @patch("td.cli.sections.get_client")
+    def test_section_edit_shim(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_sections.return_value = iter([[_mock_section(name="Backlog", id="s1")]])
+        api.update_section.return_value = _mock_section(name="Active", id="s1")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "section-edit", "Backlog", "--name", "Active"])
+
+        assert result.exit_code == 0
+        assert "td section-edit is now td section edit" in result.stderr
+        api.update_section.assert_called_once_with("s1", name="Active")
+
+    @patch("td.cli.sections.get_client")
+    def test_section_delete_shim(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_sections.return_value = iter([[_mock_section(name="Old", id="s1")]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "section-delete", "Old", "-y"])
+
+        assert result.exit_code == 0
+        assert "td section-delete is now td section delete" in result.stderr
+        api.delete_section.assert_called_once_with("s1")
+
+    @patch("td.cli.labels.get_client")
+    def test_label_add_shim(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.add_label.return_value = _mock_label(name="urgent")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "label-add", "urgent"])
+
+        assert result.exit_code == 0
+        assert "td label-add is now td label add" in result.stderr
+        api.add_label.assert_called_once_with(name="urgent")
+
+    @patch("td.cli.labels.get_client")
+    def test_label_edit_shim(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_labels.return_value = iter([[_mock_label(name="urgent", id="lbl1")]])
+        api.update_label.return_value = _mock_label(name="critical", id="lbl1")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "label-edit", "urgent", "--name", "critical"])
+
+        assert result.exit_code == 0
+        assert "td label-edit is now td label edit" in result.stderr
+        api.update_label.assert_called_once_with("lbl1", name="critical", color=None)
+
+    @patch("td.cli.labels.get_client")
+    def test_label_delete_shim(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.get_labels.return_value = iter([[_mock_label(name="old", id="lbl1")]])
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "label-delete", "old", "-y"])
+
+        assert result.exit_code == 0
+        assert "td label-delete is now td label delete" in result.stderr
+        api.delete_label.assert_called_once_with("lbl1")
+
+    @patch("td.cli.comments.get_client")
+    def test_comment_edit_shim(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.update_comment.return_value = _mock_comment(id="c1", content="Updated")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "comment-edit", "c1", "Updated"])
+
+        assert result.exit_code == 0
+        assert "td comment-edit is now td comment edit" in result.stderr
+        api.update_comment.assert_called_once_with("c1", content="Updated")
+
+    @patch("td.cli.comments.get_client")
+    def test_comment_delete_shim(self, mock_gc: MagicMock) -> None:
+        api = MagicMock()
+        mock_gc.return_value = api
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "comment-delete", "c1", "-y"])
+
+        assert result.exit_code == 0
+        assert "td comment-delete is now td comment delete" in result.stderr
+        api.delete_comment.assert_called_once_with("c1")
+
+
+# ---------------------------------------------------------------------------
+# Comment group flat shortcut (ADR-0009)
+#
+# ``td comment <task_ref> <text>`` must keep working without an explicit
+# ``add`` verb. Implemented via a custom ``CommentGroup.resolve_command``
+# that delegates to the ``add`` subcommand when the first positional
+# argument isn't a known subcommand name. See comments.py for details.
+# ---------------------------------------------------------------------------
+
+
+def _mock_task(**overrides: object) -> MagicMock:
+    t = MagicMock()
+    t.id = overrides.get("id", "t1")
+    t.content = overrides.get("content", "buy milk")
+    t.is_completed = overrides.get("is_completed", False)
+    return t
+
+
+class TestCommentGroupFallback:
+    @patch("td.cli.tasks.get_client")
+    @patch("td.cli.comments.get_client")
+    def test_flat_shortcut_routes_to_add(
+        self, mock_gc_comments: MagicMock, mock_gc_tasks: MagicMock
+    ) -> None:
+        api = MagicMock()
+        mock_gc_comments.return_value = api
+        mock_gc_tasks.return_value = api
+        api.get_task.return_value = _mock_task(id="t1", content="buy milk")
+        api.add_comment.return_value = _mock_comment(id="c1", content="Got oat milk")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "comment", "t1", "Got", "oat", "milk"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["ok"] is True
+        api.add_comment.assert_called_once_with(content="Got oat milk", task_id="t1")
+
+    @patch("td.cli.tasks.get_client")
+    @patch("td.cli.comments.get_client")
+    def test_explicit_add_subcommand(
+        self, mock_gc_comments: MagicMock, mock_gc_tasks: MagicMock
+    ) -> None:
+        """``td comment add <task_ref> <text>`` behaves identically to the
+        flat shortcut and is the discoverable form for agents."""
+        api = MagicMock()
+        mock_gc_comments.return_value = api
+        mock_gc_tasks.return_value = api
+        api.get_task.return_value = _mock_task(id="t1", content="buy milk")
+        api.add_comment.return_value = _mock_comment(id="c1", content="Got oat milk")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "comment", "add", "t1", "Got", "oat", "milk"])
+
+        assert result.exit_code == 0
+        api.add_comment.assert_called_once_with(content="Got oat milk", task_id="t1")
+
+    @patch("td.cli.comments.get_client")
+    def test_edit_subcommand_not_caught_by_fallthrough(self, mock_gc: MagicMock) -> None:
+        """A known subcommand name as first arg must dispatch to the
+        subcommand, not fall through to ``add``. This is the single
+        disambiguation cost the plan calls out: a task literally named
+        after a verb routes to the verb. Users disambiguate with
+        ``td comment add edit "text"``."""
+        api = MagicMock()
+        mock_gc.return_value = api
+        api.update_comment.return_value = _mock_comment(id="c1", content="New")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "comment", "edit", "c1", "--content", "New"])
+
+        assert result.exit_code == 0
+        api.update_comment.assert_called_once_with("c1", content="New")
+        api.add_comment.assert_not_called()
+
+    def test_group_help_renders(self) -> None:
+        runner = CliRunner()
+        result = runner.invoke(cli, ["comment", "--help"])
+
+        # The group help prints even though our error wrapper catches a
+        # SystemExit on group --help. Assert the help content is present.
+        assert "Manage task comments" in result.output
+        assert "add" in result.output
+        assert "edit" in result.output
+        assert "delete" in result.output
+        assert "list" in result.output

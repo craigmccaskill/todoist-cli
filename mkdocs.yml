@@ -55,6 +55,7 @@ nav:
     - "ADR-0006: Schema as AI Contract": decisions/0006-schema-as-ai-contract.md
     - "ADR-0007: Cache TTLs": decisions/0007-row-number-cache-ttl.md
     - "ADR-0008: Click over Typer": decisions/0008-click-over-typer.md
+    - "ADR-0009: CRUD Verb Grammar": decisions/0009-crud-verb-grammar.md
     - "ADR-0010: Triage Framework": decisions/0010-triage-framework.md
     - "ADR-0011: Dependency Tracking": decisions/0011-dependency-tracking.md
   - Contributing: contributing.md

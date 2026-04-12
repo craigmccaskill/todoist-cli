@@ -402,19 +402,19 @@ def generate() -> str:
     output = run_cmd(["--json", "projects", "-s", "Work"], make_api())
     example("Search projects.", 'td --json projects -s "Work"', output)
 
-    # --- td project-add ---
-    output = run_cmd(["--json", "project-add", "Side Projects"], make_api())
-    example("Create a new project.", 'td --json project-add "Side Projects"', output)
+    # --- td project add ---
+    output = run_cmd(["--json", "project", "add", "Side Projects"], make_api())
+    example("Create a new project.", 'td --json project add "Side Projects"', output)
 
     # --- td sections ---
     output = run_cmd(["--json", "sections", "-p", "Work"], make_api())
     example("List sections in a project.", 'td --json sections -p "Work"', output)
 
-    # --- td section-add ---
-    output = run_cmd(["--json", "section-add", "In Progress", "-p", "Work"], make_api())
+    # --- td section add ---
+    output = run_cmd(["--json", "section", "add", "In Progress", "-p", "Work"], make_api())
     example(
         "Create a new section in a project.",
-        'td --json section-add "In Progress" -p "Work"',
+        'td --json section add "In Progress" -p "Work"',
         output,
     )
 
@@ -425,9 +425,9 @@ def generate() -> str:
     output = run_cmd(["--plain", "labels"], make_api())
     example("List labels (plain mode).", "td --plain labels", output)
 
-    # --- td label-add ---
-    output = run_cmd(["--json", "label-add", "urgent"], make_api())
-    example("Create a new label.", "td --json label-add urgent", output)
+    # --- td label add ---
+    output = run_cmd(["--json", "label", "add", "urgent"], make_api())
+    example("Create a new label.", "td --json label add urgent", output)
 
     # --- td schema ---
     heading("AI-Native Commands")
@@ -484,19 +484,23 @@ def generate() -> str:
         "delete",
         "quick",
         "comment",
+        "comment add",
         "comments",
+        "project",
+        "project add",
         "projects",
-        "project-add",
+        "section",
+        "section add",
         "sections",
-        "section-add",
+        "label",
+        "label add",
         "labels",
-        "label-add",
         "review",
         "rate-limit",
         "schema",
     ]
     for cmd in cmds:
-        output = run_cmd([cmd, "--help"])
+        output = run_cmd([*cmd.split(), "--help"])
         example("", f"td {cmd} --help", output)
 
     return "\n".join(lines)

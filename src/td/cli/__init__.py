@@ -111,8 +111,9 @@ def _register_commands() -> None:
     from td.cli.comments import comment, comment_delete, comment_edit, comments
     from td.cli.config_cmd import completions, init
     from td.cli.doctor import doctor
-    from td.cli.labels import label_add, label_delete, label_edit, labels
+    from td.cli.labels import label, label_add, label_delete, label_edit, labels
     from td.cli.projects import (
+        project,
         project_add,
         project_archive,
         project_delete,
@@ -123,7 +124,13 @@ def _register_commands() -> None:
     from td.cli.rate_limit import rate_limit
     from td.cli.review import review
     from td.cli.schema_cmd import schema
-    from td.cli.sections import section_add, section_delete, section_edit, sections
+    from td.cli.sections import (
+        section,
+        section_add,
+        section_delete,
+        section_edit,
+        sections,
+    )
     from td.cli.skill_cmd import skill
     from td.cli.tasks import (
         add,
@@ -151,8 +158,6 @@ def _register_commands() -> None:
     cli.add_command(init)
     cli.add_command(completions)
     cli.add_command(doctor)
-    cli.add_command(comment)
-    cli.add_command(comments)
     cli.add_command(schema)
     cli.add_command(add)
     cli.add_command(ls)
@@ -174,17 +179,25 @@ def _register_commands() -> None:
     cli.add_command(show)
     cli.add_command(undo)
     cli.add_command(search)
+    # Entity groups (primary surface per ADR-0009).
+    cli.add_command(project)
+    cli.add_command(section)
+    cli.add_command(label)
+    cli.add_command(comment)
+    # Permanent flat plural aliases for the list case (ADR-0001).
     cli.add_command(projects)
+    cli.add_command(sections)
+    cli.add_command(labels)
+    cli.add_command(comments)
+    # Hidden deprecated CRUD shims removed in v0.14.0 (ADR-0009).
     cli.add_command(project_add)
     cli.add_command(project_edit)
     cli.add_command(project_delete)
     cli.add_command(project_archive)
     cli.add_command(project_unarchive)
-    cli.add_command(sections)
     cli.add_command(section_add)
     cli.add_command(section_edit)
     cli.add_command(section_delete)
-    cli.add_command(labels)
     cli.add_command(label_add)
     cli.add_command(label_edit)
     cli.add_command(label_delete)

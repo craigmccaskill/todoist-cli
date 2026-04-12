@@ -43,8 +43,16 @@ def _param_schema(param: click.Parameter) -> dict[str, Any]:
 
 
 def _command_schema(cmd: click.Command) -> dict[str, Any]:
-    """Extract schema for a single command."""
-    return {
+    """Extract schema for a single command (leaf or group).
+
+    When ``cmd`` is a :class:`click.Group`, the returned schema also
+    carries a nested ``commands`` dict describing the group's non-hidden
+    subcommands. This lets agents walk an entity group (``project``,
+    ``section``, ``label``, ``comment``) and discover its verbs without
+    guessing at flat name prefixes. See ADR-0009 for the entity-group
+    grammar and ADR-0006 for the AI contract implications.
+    """
+    schema: dict[str, Any] = {
         "description": cmd.help or "",
         "arguments": [_param_schema(p) for p in cmd.params if isinstance(p, click.Argument)],
         "options": [
@@ -53,6 +61,14 @@ def _command_schema(cmd: click.Command) -> dict[str, Any]:
             if isinstance(p, click.Option) and p.name not in ("help",)
         ],
     }
+    if isinstance(cmd, click.Group):
+        subcommands: dict[str, Any] = {}
+        for sub_name, sub_cmd in sorted(cmd.commands.items()):
+            if getattr(sub_cmd, "hidden", False):
+                continue
+            subcommands[sub_name] = _command_schema(sub_cmd)
+        schema["commands"] = subcommands
+    return schema
 
 
 def generate_schema(cli_group: click.Group) -> dict[str, Any]:
