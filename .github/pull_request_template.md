@@ -20,3 +20,4 @@
 - [ ] CHANGELOG.md updated under `[Unreleased]` (Added / Changed / Fixed / Internal)
 - [ ] Bug fixes include a regression test
 - [ ] Help text updated for new/changed commands
+- [ ] This change conforms to the design principle (ADR-0001), or a new/superseding ADR is linked explaining the divergence
