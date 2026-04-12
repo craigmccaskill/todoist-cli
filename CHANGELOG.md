@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **`Priority` gains explicit definitions** (`P0` through `P3`) in `CONTRIBUTING.md` without any renaming or retagging.
   - **Triage decision framework** captured in ADR-0010. Checklist-style rubric walked for every issue leaving `Needs triage`. Classifies `Tier`, `Size`, `Priority` with worked examples and edge cases. No automation in v1 (rubric discipline only).
   - **Dependency tracking convention documented** (captured in ADR-0011). Hierarchical via GitHub task lists, cross-cutting via `Blocks:` / `Blocked by:` keywords in the issue body.
-  - **Merge → Done codified.** Merging a PR now automatically moves the linked issue's `Status` to `Done` via GitHub Projects automation. Rule documented in the Branch → PR → Merge section of `CONTRIBUTING.md`.
+  - **Board transitions automated via native Projects v2 workflows.** Merging a PR moves the linked issue's `Status` to `Done`; opening a PR with `Closes #N` moves the linked issue to `In flight`. Both run on GitHub's built-in Projects v2 workflows (`Pull request merged` and `Pull request linked to issue`). No PAT, GitHub App, or repo secret required. Rules documented in the Branch → PR → Merge section of `CONTRIBUTING.md`.
 
 - **Architecture Decision Records** — design decisions now have a durable home in `docs/decisions/` (#224). Eight retroactive ADRs capture decisions already baked into the code: design principle (#230), JSON output envelope, priority mapping, task reference resolution order, `core/`/`cli/` boundary, schema as AI contract, cache TTLs, and Click-over-Typer.
   ```
