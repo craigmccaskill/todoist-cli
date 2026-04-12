@@ -55,6 +55,18 @@ td done buy milk          # fuzzy match by name
 
 Made a mistake? `td undo 2`.
 
+## Organize
+
+```bash
+td project add "Q3 Planning"
+td section add "In Progress" -p Work
+td label add urgent
+td comment 2 "Picked up 2%, not whole"
+```
+
+Each entity group has `add`, `edit`, `delete`, and `list`. The flat
+shortcuts you'd expect work too: `td projects`, `td sections`, `td labels`.
+
 ## See one project
 
 ```bash

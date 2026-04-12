@@ -433,8 +433,15 @@ PRs squash merge to main continuously. The CHANGELOG accumulates under `[Unrelea
 A release is cut when a milestone reaches 100% completion:
 
 1. Review `[Unreleased]` in CHANGELOG to confirm the version bump
-2. Run `make release VERSION=x.y.z`
-3. After CI passes and PR merges, tag and push
+2. Review `README.md` — does it reflect new commands, changed workflows,
+   or removed features? The README is most users' first contact with the
+   project; stale examples undermine trust
+3. Run `make release VERSION=x.y.z`
+4. After CI passes and PR merges, tag and push
+5. Update the GitHub Release body with the CHANGELOG content (human
+   narrative at top, auto-generated PR list in a collapsed `<details>`
+   section). ADR links should use absolute GitHub URLs so they're
+   clickable from the releases page
 
 Critical bug fixes get a PATCH release immediately without waiting for a milestone.
 
