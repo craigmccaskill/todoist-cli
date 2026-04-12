@@ -29,11 +29,37 @@ env:
   STATUS_DONE: 4652251c
 
 jobs:
+  # Gate all other jobs behind the presence of PROJECT_TOKEN. When the
+  # secret is not set, every automation job is skipped cleanly (no
+  # failed checks on PRs). Craig enables the automation by creating
+  # the PROJECT_TOKEN secret; no code change needed.
+  check-token:
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - name: Check for PROJECT_TOKEN
+        id: check
+        env:
+          TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "PROJECT_TOKEN not configured. Automation jobs will skip."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "PROJECT_TOKEN is configured. Automation jobs will run."
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
   # Auto-add every newly opened issue to the project. Default Status is
   # Backlog (handled by the board's field default). No PRs are auto-added;
   # PRs drive issue Status transitions via the other jobs below.
   auto-add-issue:
-    if: github.event_name == 'issues' && github.event.action == 'opened'
+    needs: check-token
+    if: >-
+      needs.check-token.outputs.enabled == 'true' &&
+      github.event_name == 'issues' &&
+      github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/add-to-project@v1
@@ -45,7 +71,11 @@ jobs:
   # When an issue is reopened, move it back to Backlog so it re-enters
   # the normal triage flow.
   issue-status-update:
-    if: github.event_name == 'issues' && (github.event.action == 'closed' || github.event.action == 'reopened')
+    needs: check-token
+    if: >-
+      needs.check-token.outputs.enabled == 'true' &&
+      github.event_name == 'issues' &&
+      (github.event.action == 'closed' || github.event.action == 'reopened')
     runs-on: ubuntu-latest
     steps:
       - name: Resolve target status
@@ -105,7 +135,11 @@ jobs:
   # by GitHub's native behavior (merge closes linked issues) plus the
   # issue-status-update job above.
   pr-opened-in-flight:
-    if: github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'reopened')
+    needs: check-token
+    if: >-
+      needs.check-token.outputs.enabled == 'true' &&
+      github.event_name == 'pull_request' &&
+      (github.event.action == 'opened' || github.event.action == 'reopened')
     runs-on: ubuntu-latest
     steps:
       - name: Move linked issues to In flight
