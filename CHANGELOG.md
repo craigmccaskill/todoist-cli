@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Internal
 
+- **Plan mode default, research-before-implement pattern, and ADR review checklist.** Three complementary safeguards against the #250 class of failure, adding the last three decisions from the workflow improvement plan:
+  - **Plan mode is now the default for `feat(tasks|output|cli)` work.** `CLAUDE.md`'s "Adding a New Command or Changing Output Shape" subsection instructs Claude Code to enter plan mode, explore, write a plan, and get approval before touching code for anything in those scopes. Bug fixes, docs, CI, and no-observable-behavior refactors are explicitly out of scope to avoid a default tax.
+  - **Research-before-implement pattern for delegated work.** When delegating via the Agent tool for changes that add a command, modify output, or touch an architectural invariant, spawn a Plan agent first. The Plan agent reads applicable ADRs (especially ADR-0001), inspects existing patterns, and proposes an approach with open questions. Implementation agent only runs after the research is reviewed. A full Plan agent prompt template lives in `CLAUDE.md`.
+  - **PR template design-principle checklist item.** `.github/pull_request_template.md` gains one checklist line asking whether the change conforms to ADR-0001 (or links a new/superseding ADR). Review-time safety net, self-enforced, cheap.
+
 - **Project board conventions codified and board restructured** — field definitions and dependency tracking now documented in `CONTRIBUTING.md`, with the GitHub Project updated to match.
   - **New `Tier` field** added to the project with five values: `Needs triage` (default), `Trivial`, `Standard`, `Needs ADR`, `Exploratory`. Captures the pre-work ritual each issue needs.
   - **`Status` restructured.** Added `Ready`, `In flight`, and `Blocked`. Removed dead `Sprint` and `In Progress` options.

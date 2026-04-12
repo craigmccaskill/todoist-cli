@@ -174,6 +174,55 @@ For full rationale, read
 For other ADRs that may apply, check
 [docs/decisions/README.md](docs/decisions/README.md).
 
+### Default to plan mode for feature work
+
+Before writing any code for changes in the `feat(tasks|output|cli)`
+conventional-commit scopes, enter plan mode. Explore the relevant
+code (read-only), form a concrete implementation plan, and exit plan
+mode only once the plan is written and reviewed. Do not skip planning
+because the task *"looks simple"*. These scopes are where design
+decisions live, and the cost of shipping a wrong command design is a
+retroactive redesign under the ADR process.
+
+Out of scope: `fix(*)`, `docs`, `ci`, `chore`, and refactors that do
+not change observable behavior. Plan mode for those is optional and
+should not become a default tax.
+
+### Research-before-implement for delegated work
+
+When delegating implementation work to a background agent via the
+Agent tool for changes that add a new command, modify output shape,
+or touch an architectural invariant, spawn a **Plan agent first** to
+do research. Review the Plan agent's output before spawning the
+implementation agent.
+
+**Plan agent prompt template:**
+
+    Research task for #<issue>. Do NOT write code.
+
+    1. Read docs/decisions/README.md and identify ADRs that apply
+       to this work
+    2. Read the relevant ADRs in full (especially ADR-0001)
+    3. Read existing commands in the same area
+       (e.g. src/td/cli/tasks.py) to understand current patterns
+
+    Output a proposal with:
+
+    - Which ADRs apply and what they constrain
+    - Existing patterns to reuse (with file paths)
+    - Two or three alternative approaches with tradeoffs
+    - Recommended approach with rationale
+    - Open questions that need user decisions before implementation
+
+    Keep the output under 500 words.
+
+Only after reviewing the research output and resolving any open
+questions should you spawn the implementation agent, passing the
+approved approach and a reference to the research findings. This is
+the pattern that catches the #250 class of failure: a Plan agent
+that reads ADR-0001 before any implementation exists will flag
+design-principle violations before code is written.
+
 ### Mechanical checklist
 
 1. Business logic in `td/core/<module>.py`
