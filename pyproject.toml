@@ -47,7 +47,7 @@ lint = [
     "mypy",
 ]
 interactive = [
-    "textual>=0.50",
+    "textual>=8.2.3",
 ]
 docs = [
     "mkdocs-material",
