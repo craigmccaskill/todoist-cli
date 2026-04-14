@@ -31,7 +31,7 @@ dependencies = [
     "todoist-api-python>=3.2,<5",
     "rich>=13.0,<15",
     "tomli>=2.0; python_version < '3.11'",
-    "tomli-w>=1.0,<2",
+    "tomli-w>=1.2.0,<2",
 ]
 
 [project.optional-dependencies]
