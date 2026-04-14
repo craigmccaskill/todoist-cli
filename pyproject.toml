@@ -36,7 +36,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-    "pytest>=8",
+    "pytest>=9.0.3",
     "pytest-asyncio",
     "pytest-cov",
     "pytest-mock",
